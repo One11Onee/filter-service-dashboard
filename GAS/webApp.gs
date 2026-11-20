@@ -1,5 +1,7 @@
 /**
- * webApp.gs - Phase 4 Complete (JSONP + CORS-safe)
+ * webApp.gs - Phase 4 Fast & Stable (Full Replacement)
+ * - Removed per-row sheet.isRowHiddenByUser() RPC inside readSheetRecords_ loop
+ * - Keeps LockService concurrency lock, dynamic header mapping, ID lookup, auto-calculation, and soft-delete/approval
  */
 
 const ROLE_LEVELS = {
@@ -35,7 +37,7 @@ function doGet(e) {
 
   if (action === "getDashboardData") {
     try {
-      const auth = resolveEffectiveAuth_(params.email, params.viewAs);
+      const auth = resolveEffectiveAuth_(params.email, params.viewAs, e);
       if (auth.actualRole === "GUEST") {
         return jsonpOrJsonResponse_({ ok: false, error: "Unauthorized email", role: "GUEST" }, callback);
       }
@@ -70,7 +72,7 @@ function doPost(e) {
     const raw = (e && e.postData && e.postData.contents) || "{}";
     const body = JSON.parse(raw);
     const action = String(body.action || "").trim();
-    const auth = resolveEffectiveAuth_(body.email, body.viewAs);
+    const auth = resolveEffectiveAuth_(body.email, body.viewAs, e);
 
     if (auth.actualRole === "GUEST") {
       return jsonResponse_({ ok: false, error: "Unauthorized user" });
@@ -453,8 +455,9 @@ function applyRowFormulasAndFallback_(sheet, rowNum, colMap, lastChangedDate, cy
 
 /* ================= Auth & Data Readers ================= */
 
-function resolveEffectiveAuth_(emailParam, viewAsParam) {
-  const actorEmail = String(emailParam || "").trim().toLowerCase();
+function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
+  const cfEmail = (e && e.headers && (e.headers["Cf-Access-Authenticated-User-Email"] || e.headers["cf-access-authenticated-user-email"])) || "";
+  const actorEmail = String(cfEmail || emailParam || "").trim().toLowerCase();
   const redSs = SpreadsheetApp.getActiveSpreadsheet();
   const redCfg = readConfigMap_(redSs);
 
@@ -531,7 +534,7 @@ function readSheetRecords_(ss, sheetCode, includeHidden) {
     if (!name) continue;
 
     const rawStatus = String(getVal_(r, colMap, ["Status"]) || "Normal").trim();
-    const isHidden = sheet.isRowHiddenByUser(rowNum) || rawStatus.toUpperCase() === "ARCHIVED";
+    const isHidden = (rawStatus.toUpperCase() === "ARCHIVED");
     if (isHidden) hiddenCount++;
 
     const approvalStatus = String(getVal_(r, colMap, ["Approval Status"]) || "").trim();
