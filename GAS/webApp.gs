@@ -1,9 +1,12 @@
 /**
- * webApp.gs - Ultra-Fast & Security-Hardened Backend
- * - Dynamic IT_Config driven role labels (Atira, Hafila, Ms. Lai, Boss, IT) & sheet permissions
- * - Zero per-row RPC calls (10x-20x faster loading) + CacheService 60s caching with instant invalidation on write
- * - Strict sheet access enforcement (Atira & Hafila locked to RED, Ms. Lai locked to GREEN, unless overridden in IT_Config)
- * - Soft-delete (Archive & Hide) + Restore + Approval workflow + Audit Logs
+ * webApp.gs - V3 Instant-Load & Batch-Save Edition
+ * - Clean display names (Hafila, Atira, Ms. Lai, Boss, IT Admin) without (Admin A/H/L) suffixes
+ * - Default sorting by ID ascending
+ * - Supports single actions + batchSave (commit multiple row edits/done/delete in one request)
+ * - Soft-delete ("Hide" in backend, "Delete" in UI):
+ *     * Only Atira (and IT) has BOTH "Delete" and "Request Delete"
+ *     * Hafila / Ms. Lai / Boss / IT have direct "Delete" (Archive & Hide)
+ *     * Deletion requests can be approved/rejected by Hafila, Boss, or IT Admin
  */
 
 const ROLE_LEVELS = {
@@ -15,7 +18,7 @@ const ROLE_LEVELS = {
   "GUEST": 0
 };
 
-const CACHE_TTL_SEC = 60;
+const CACHE_TTL_SEC = 120;
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
@@ -51,7 +54,7 @@ function doGet(e) {
       const allowedSheets = getAllowedSheetsForRole_(auth.effectiveRole, auth.config);
       let sheetCode = String(params.sheet || "").trim().toUpperCase();
       if (!allowedSheets.includes(sheetCode)) {
-        sheetCode = allowedSheets[0]; // Enforce default allowed sheet
+        sheetCode = allowedSheets[0];
       }
 
       const includeHidden = (ROLE_LEVELS[auth.effectiveRole] >= 60);
@@ -81,7 +84,7 @@ function doGet(e) {
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
-  lock.waitLock(12000);
+  lock.waitLock(15000);
 
   try {
     const raw = (e && e.postData && e.postData.contents) || "{}";
@@ -96,7 +99,7 @@ function doPost(e) {
     const allowedSheets = getAllowedSheetsForRole_(auth.effectiveRole, auth.config);
     let sheetCode = String(body.sheet || "").trim().toUpperCase();
     if (!allowedSheets.includes(sheetCode)) {
-      throw new Error(`Access denied: Role ${auth.roleDisplayName} is not authorized to modify ${sheetCode} sheet.`);
+      throw new Error(`Access denied: ${auth.roleDisplayName} cannot modify ${sheetCode} sheet.`);
     }
 
     const ss = getTargetSpreadsheet_(sheetCode);
@@ -106,6 +109,10 @@ function doPost(e) {
 
     let result;
     switch (action) {
+      case "batchSave":
+        assertMinRole_(auth.effectiveRole, 40);
+        result = handleBatchSave_(ss, sheetCode, body.operations || [], auth.effectiveRole, auth.actorEmail, actorLabel);
+        break;
       case "createRecord":
         assertMinRole_(auth.effectiveRole, 40);
         result = handleCreateRecord_(ss, sheetCode, body.payload || {}, auth.actorEmail, actorLabel);
@@ -120,11 +127,13 @@ function doPost(e) {
         break;
       case "directHide":
         assertMinRole_(auth.effectiveRole, 40);
-        result = handleSoftHideById_(ss, sheetCode, body.id, body.reason || "Deleted via Dashboard", "DELETE_ARCHIVE", auth.actorEmail, actorLabel);
+        result = handleSoftHideById_(ss, sheetCode, body.id, body.reason || "Deleted (Hidden) via Dashboard", "DELETE_HIDE", auth.actorEmail, actorLabel);
         break;
       case "requestDelete":
-        assertMinRole_(auth.effectiveRole, 40);
-        result = handleRequestDelete_(ss, sheetCode, body.id, body.reason || "Requested deletion", auth.actorEmail, actorLabel);
+        if (auth.effectiveRole !== "ADMIN_A" && auth.effectiveRole !== "IT") {
+          throw new Error("Only Atira or IT Admin can submit deletion requests.");
+        }
+        result = handleRequestDelete_(ss, sheetCode, body.id, body.reason || "Deletion approval requested", auth.actorEmail, actorLabel);
         break;
       case "approveDelete":
         assertMinRole_(auth.effectiveRole, 60);
@@ -151,11 +160,119 @@ function doPost(e) {
   }
 }
 
+/* ================= Batch Save Engine (1 Request for Multiple Edits) ================= */
+
+function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, actorLabel) {
+  if (!Array.isArray(operations) || operations.length === 0) {
+    return { ok: true, count: 0, message: "No changes to save." };
+  }
+
+  const sheet = ss.getSheetByName("Sheet 1");
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return { ok: false, message: "Sheet is empty." };
+
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
+  const colMap = buildHeaderIndexMap_(headers);
+  const idColIdx = (colMap["第 1 列"] !== undefined) ? colMap["第 1 列"] : 0;
+
+  const allRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  const idToIndex = {};
+  for (let i = 0; i < allRows.length; i++) {
+    const idKey = String(allRows[i][idColIdx]).trim();
+    if (idKey) idToIndex[idKey] = i;
+  }
+
+  const nowDate = new Date();
+  const rowsToHide = [];
+  const formulaRows = new Set();
+  const logsToAppend = [];
+  let appliedCount = 0;
+
+  for (let k = 0; k < operations.length; k++) {
+    const op = operations[k];
+    const targetId = String(op.id || "").trim();
+    const rowIdx = idToIndex[targetId];
+    if (rowIdx === undefined) continue;
+
+    const rowNum = rowIdx + 2;
+    const rowArr = allRows[rowIdx];
+    const custName = String(getVal_(rowArr, colMap, ["Name"]) || "");
+    const type = String(op.type || "").trim();
+
+    if (type === "update") {
+      const payload = op.payload || {};
+      const editable = ["Name", "Filter / Service Name", "Phone Number", "Machine usage", "Last Changed Date", "Change Cycle (Days)"];
+      const changed = [];
+      for (let f = 0; f < editable.length; f++) {
+        const field = editable[f];
+        if (Object.prototype.hasOwnProperty.call(payload, field) && colMap[field] !== undefined) {
+          let val = payload[field];
+          if (field === "Last Changed Date" && val) {
+            const d = parseValidDate_(val);
+            if (d) val = d;
+          } else if (field === "Change Cycle (Days)" && val !== "") {
+            val = Number(val);
+          } else if (field === "Machine usage") {
+            val = (val === true || String(val).toUpperCase() === "TRUE");
+          }
+          rowArr[colMap[field]] = val;
+          changed.push(`${field}=${String(val)}`);
+        }
+      }
+      formulaRows.add(rowNum);
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "BATCH_UPDATE", "Batch Save", "", changed.join("; "), String(rowNum)]);
+      appliedCount++;
+    } else if (type === "confirmDone") {
+      const cycleDays = Number(getVal_(rowArr, colMap, ["Change Cycle (Days)"]) || 180);
+      const nextDateObj = computeNextChangeDate_(nowDate, cycleDays);
+      const nextDateStr = Utilities.formatDate(nextDateObj, Session.getScriptTimeZone(), "dd/MM/yy");
+      if (colMap["Last Changed Date"] !== undefined) rowArr[colMap["Last Changed Date"]] = nowDate;
+      if (colMap["Notification Status"] !== undefined) rowArr[colMap["Notification Status"]] = false;
+      formulaRows.add(rowNum);
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "CONFIRM_DONE", "Batch Save", "", `Last:${formatShortDate_(nowDate)}|Next:${nextDateStr}`, String(rowNum)]);
+      appliedCount++;
+    } else if (type === "directHide") {
+      if (colMap["Status"] !== undefined) rowArr[colMap["Status"]] = "Archived";
+      if (colMap["Notification Status"] !== undefined) rowArr[colMap["Notification Status"]] = true;
+      rowsToHide.push(rowNum);
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "DELETE_HIDE", op.reason || "Batch Delete", "", "Status:Archived|Hidden:true", String(rowNum)]);
+      appliedCount++;
+    } else if (type === "requestDelete") {
+      if (effectiveRole !== "ADMIN_A" && effectiveRole !== "IT") continue;
+      if (colMap["Approval Status"] !== undefined) rowArr[colMap["Approval Status"]] = "PENDING_DELETE";
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "REQ_DELETE", op.reason || "Batch Request Delete", "", "Approval:PENDING_DELETE", String(rowNum)]);
+      appliedCount++;
+    }
+  }
+
+  sheet.getRange(2, 1, allRows.length, lastCol).setValues(allRows);
+
+  formulaRows.forEach(rNum => {
+    const rArr = allRows[rNum - 2];
+    const lastD = parseValidDate_(getVal_(rArr, colMap, ["Last Changed Date"])) || nowDate;
+    const cycD = Number(getVal_(rArr, colMap, ["Change Cycle (Days)"]) || 180);
+    applyRowFormulasAndFallback_(sheet, rNum, colMap, lastD, cycD);
+  });
+
+  for (let h = 0; h < rowsToHide.length; h++) {
+    sheet.hideRows(rowsToHide[h]);
+  }
+
+  const logSheet = ss.getSheetByName("_Audit_Log");
+  if (logSheet && logsToAppend.length > 0) {
+    logSheet.getRange(logSheet.getLastRow() + 1, 1, logsToAppend.length, logsToAppend[0].length).setValues(logsToAppend);
+  }
+
+  SpreadsheetApp.flush();
+  return { ok: true, count: appliedCount, message: `Saved ${appliedCount} change(s) successfully.` };
+}
+
 /* ================= Cache Management ================= */
 
 function getCachedSheetRecords_(sheetCode, includeHidden) {
   const cache = CacheService.getScriptCache();
-  const cacheKey = `WF_DATA_${sheetCode}_${includeHidden ? "ALL" : "ACTIVE"}`;
+  const cacheKey = `WF_V3_${sheetCode}_${includeHidden ? "ALL" : "ACTIVE"}`;
   const cachedStr = cache.get(cacheKey);
   if (cachedStr) {
     try {
@@ -177,12 +294,12 @@ function getCachedSheetRecords_(sheetCode, includeHidden) {
 function invalidateSheetCache_(sheetCode) {
   const cache = CacheService.getScriptCache();
   cache.removeAll([
-    `WF_DATA_${sheetCode}_ALL`,
-    `WF_DATA_${sheetCode}_ACTIVE`
+    `WF_V3_${sheetCode}_ALL`,
+    `WF_V3_${sheetCode}_ACTIVE`
   ]);
 }
 
-/* ================= Actions ================= */
+/* ================= Single Actions ================= */
 
 function handleConfirmDoneById_(sheetCode, targetId, actorEmail, roleLabel) {
   const ss = getTargetSpreadsheet_(sheetCode);
@@ -268,7 +385,7 @@ function handleSoftHideById_(ss, sheetCode, targetId, reason, actionType, actorE
     rowNum
   );
 
-  return { ok: true, id: targetId, message: `Deleted/Archived "${custName}" (recoverable by Hafila/Boss/IT).` };
+  return { ok: true, id: targetId, message: `Deleted (hidden) "${custName}".` };
 }
 
 function handleRequestDelete_(ss, sheetCode, targetId, reason, actorEmail, roleLabel) {
@@ -298,7 +415,7 @@ function handleRequestDelete_(ss, sheetCode, targetId, reason, actorEmail, roleL
     rowNum
   );
 
-  return { ok: true, id: targetId, message: `Deletion approval requested for "${custName}".` };
+  return { ok: true, id: targetId, message: `Deletion request sent for "${custName}".` };
 }
 
 function handleRejectDelete_(ss, sheetCode, targetId, reason, actorEmail, roleLabel) {
@@ -509,7 +626,7 @@ function applyRowFormulasAndFallback_(sheet, rowNum, colMap, lastChangedDate, cy
   }
 }
 
-/* ================= Auth, Configurable Labels & Permissions ================= */
+/* ================= Auth, Clean Display Names & Permissions ================= */
 
 function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
   const cfEmail = (e && e.headers && (e.headers["Cf-Access-Authenticated-User-Email"] || e.headers["cf-access-authenticated-user-email"])) || "";
@@ -525,7 +642,6 @@ function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
     } catch (_) {}
   }
 
-  // Merge configs (RED config acts as master, GREEN fills any missing keys)
   const mergedCfg = Object.assign({}, greenCfg, redCfg);
 
   let actualRole = "GUEST";
@@ -543,7 +659,6 @@ function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
     effectiveRole = viewAs;
   }
 
-  // Configurable human display names from IT_Config (e.g. NAME_ADMIN_A = Atira)
   const roleLabels = {
     "IT": String(mergedCfg["NAME_IT"] || "IT Admin").trim(),
     "BOSS": String(mergedCfg["NAME_BOSS"] || "Boss").trim(),
@@ -563,13 +678,6 @@ function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
   };
 }
 
-/**
- * Configurable Sheet Permissions via IT_Config:
- * Default strict isolation:
- * - IT / BOSS -> ["RED", "GREEN"]
- * - ADMIN_H (Hafila) / ADMIN_A (Atira) -> ["RED"] (unless SHEETS_ADMIN_H / SHEETS_ADMIN_A set in IT_Config)
- * - ADMIN_L (Ms. Lai) -> ["GREEN"] (unless SHEETS_ADMIN_L set in IT_Config)
- */
 function getAllowedSheetsForRole_(effectiveRole, config) {
   const customKey = `SHEETS_${effectiveRole}`;
   if (config && config[customKey]) {
