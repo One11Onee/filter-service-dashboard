@@ -6,179 +6,301 @@
   <title>Filter Service & Dispatch Dashboard</title>
   <style>
     :root {
-      --bg: #f6f8fa;
+      --bg: #f3f5f8;
       --card: #ffffff;
-      --text: #1f2328;
-      --muted: #656d76;
-      --border: #d0d7de;
-      --table-head: #f6f8fa;
-      --kpi-bg: #fbfcfd;
-      --primary: #0969da;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --table-head: #f9fafb;
+      --table-hover: #f3f4f6;
+      --kpi-bg: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
       --primary-text: #ffffff;
-      --danger-bg: #ffebe9;
-      --danger-text: #82071e;
-      --warn-bg: #fff8c5;
-      --warn-text: #633c01;
-      --ok-bg: #dafbe1;
-      --ok-text: #116329;
-      --hidden-bg: #f0f2f5;
+      --danger-bg: #fee2e2;
+      --danger-row: #fef2f2;
+      --danger-text: #991b1b;
+      --warn-bg: #fef3c7;
+      --warn-row: #fffbeb;
+      --warn-text: #92400e;
+      --ok-bg: #dcfce7;
+      --ok-text: #166534;
+      --hidden-bg: #f3f4f6;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     }
 
     :root[data-theme="dark"] {
-      --bg: #0d1117;
-      --card: #161b22;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --border: #30363d;
-      --table-head: #1c2128;
-      --kpi-bg: #0d1117;
-      --primary: #2f81f7;
+      --bg: #0b0f17;
+      --card: #111827;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --table-head: #161f30;
+      --table-hover: #1a2438;
+      --kpi-bg: #111827;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
       --primary-text: #ffffff;
-      --danger-bg: rgba(248, 81, 73, 0.16);
-      --danger-text: #ff7b72;
-      --warn-bg: rgba(210, 153, 34, 0.18);
-      --warn-text: #e3b341;
-      --ok-bg: rgba(46, 160, 67, 0.18);
-      --ok-text: #3fb950;
-      --hidden-bg: #21262d;
+      --danger-bg: rgba(239, 68, 68, 0.2);
+      --danger-row: rgba(239, 68, 68, 0.12);
+      --danger-text: #fca5a5;
+      --warn-bg: rgba(245, 158, 11, 0.2);
+      --warn-row: rgba(245, 158, 11, 0.12);
+      --warn-text: #fcd34d;
+      --ok-bg: rgba(34, 197, 94, 0.2);
+      --ok-text: #86efac;
+      --hidden-bg: #1f2937;
+      --shadow: 0 1px 3px rgba(0,0,0,0.35);
     }
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --bg: #0d1117;
-        --card: #161b22;
-        --text: #e6edf3;
-        --muted: #8b949e;
-        --border: #30363d;
-        --table-head: #1c2128;
-        --kpi-bg: #0d1117;
-        --primary: #2f81f7;
+        --bg: #0b0f17;
+        --card: #111827;
+        --text: #f3f4f6;
+        --muted: #9ca3af;
+        --border: #1f2937;
+        --table-head: #161f30;
+        --table-hover: #1a2438;
+        --kpi-bg: #111827;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
         --primary-text: #ffffff;
-        --danger-bg: rgba(248, 81, 73, 0.16);
-        --danger-text: #ff7b72;
-        --warn-bg: rgba(210, 153, 34, 0.18);
-        --warn-text: #e3b341;
-        --ok-bg: rgba(46, 160, 67, 0.18);
-        --ok-text: #3fb950;
-        --hidden-bg: #21262d;
+        --danger-bg: rgba(239, 68, 68, 0.2);
+        --danger-row: rgba(239, 68, 68, 0.12);
+        --danger-text: #fca5a5;
+        --warn-bg: rgba(245, 158, 11, 0.2);
+        --warn-row: rgba(245, 158, 11, 0.12);
+        --warn-text: #fcd34d;
+        --ok-bg: rgba(34, 197, 94, 0.2);
+        --ok-text: #86efac;
+        --hidden-bg: #1f2937;
+        --shadow: 0 1px 3px rgba(0,0,0,0.35);
       }
     }
 
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--text); transition: background-color 0.2s ease, color 0.2s ease; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-size: 13px; }
+
+    /* Compact Sticky Header */
     header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
+      padding: 8px 16px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
+      box-shadow: var(--shadow);
     }
-    .brand { font-weight: 700; font-size: 16px; }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .brand-wrap { display: flex; align-items: center; gap: 10px; }
+    .brand { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; letter-spacing: -0.01em; }
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--primary);
+    }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
     select, input, button {
-      padding: 6px 10px;
+      padding: 5px 10px;
       border-radius: 6px;
       border: 1px solid var(--border);
-      font-size: 13px;
+      font-size: 12.5px;
       background: var(--card);
       color: var(--text);
+      height: 30px;
     }
-    button { cursor: pointer; font-weight: 500; }
-    button:hover { filter: brightness(0.96); }
+    button {
+      cursor: pointer;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    button:hover { background: var(--table-hover); }
     button.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
-    button.danger { background: #cf222e; color: #fff; border-color: #cf222e; }
-    button.success { background: #1a7f37; color: #fff; border-color: #1a7f37; }
-    button.ghost { background: transparent; }
-    main { max-width: 1360px; margin: 18px auto; padding: 0 16px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
+    button.primary:hover { background: var(--primary-hover); }
+    button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+    button.danger:hover { background: #b91c1c; }
+    button.success { background: #16a34a; color: #fff; border-color: #16a34a; }
+    button.success:hover { background: #15803d; }
+    button.icon-only { padding: 4px 7px; height: 26px; font-size: 12px; }
+    button.icon-only svg, button svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* Full-width Maximized Workspace */
+    main { width: 100%; max-width: 100%; margin: 0; padding: 12px 16px; }
+
     .grid-kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
     }
     .kpi {
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px 14px;
       background: var(--kpi-bg);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease;
     }
-    .kpi .label { font-size: 12px; color: var(--muted); }
-    .kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: middle; }
-    th { background: var(--table-head); font-weight: 600; }
-    tr.overdue { background: var(--danger-bg); }
-    tr.pending { background: var(--warn-bg); }
-    tr.hidden-row { opacity: 0.7; background: var(--hidden-bg); }
+    .kpi:hover { transform: translateY(-1px); border-color: var(--primary); }
+    .kpi .label { font-size: 11.5px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em; }
+    .kpi .val { font-size: 20px; font-weight: 700; margin-top: 2px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      max-height: calc(100vh - 205px);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: middle; white-space: nowrap; }
+    th:last-child, td:last-child { border-right: none; }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--table-head);
+      font-weight: 600;
+      user-select: none;
+      cursor: pointer;
+    }
+    th:hover { background: var(--table-hover); }
+    th .th-inner { display: inline-flex; align-items: center; gap: 4px; }
+    th .sort-ind { font-size: 10px; color: var(--primary); }
+    th.no-sort { cursor: default; }
+
+    tbody tr:hover { filter: brightness(0.98); }
+    tr.overdue { background: var(--danger-row); }
+    tr.pending { background: var(--warn-row); }
+    tr.hidden-row { opacity: 0.65; background: var(--hidden-bg); }
+    td.wrap-cell { white-space: normal; min-width: 180px; max-width: 300px; }
+
     .badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       padding: 2px 8px;
-      border-radius: 12px;
+      border-radius: 999px;
       font-size: 11px;
       font-weight: 600;
     }
     .badge.danger { background: var(--danger-bg); color: var(--danger-text); }
     .badge.warn { background: var(--warn-bg); color: var(--warn-text); }
     .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
-    .row-actions { display: flex; flex-wrap: wrap; gap: 4px; }
-    .row-actions button { padding: 4px 8px; font-size: 12px; }
-    .gate-box { max-width: 480px; margin: 60px auto; text-align: center; }
+    .badge.neutral { background: var(--hidden-bg); color: var(--muted); }
+
+    .row-actions { display: inline-flex; align-items: center; gap: 4px; }
+    .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 28px; }
+
     .banner-msg {
-      padding: 10px 14px;
+      padding: 8px 12px;
       border-radius: 6px;
-      margin-bottom: 12px;
-      font-size: 13px;
+      margin-bottom: 10px;
+      font-size: 12.5px;
       display: none;
+      align-items: center;
+      justify-content: space-between;
     }
-    .banner-msg.show { display: block; }
+    .banner-msg.show { display: flex; }
     .banner-msg.ok { background: var(--ok-bg); color: var(--ok-text); }
     .banner-msg.err { background: var(--danger-bg); color: var(--danger-text); }
+
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      display: none; align-items: center; justify-content: center; z-index: 50;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center; z-index: 60; padding: 16px;
     }
     .modal-backdrop.show { display: flex; }
     .modal {
-      background: var(--card); border-radius: 8px; padding: 18px;
-      width: 100%; max-width: 440px; border: 1px solid var(--border);
+      background: var(--card); border-radius: 10px; padding: 20px;
+      width: 100%; max-width: 460px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
-    .field { margin-bottom: 10px; }
-    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
-    .field input, .field select { width: 100%; }
+    .field { margin-bottom: 11px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
+    .field input, .field select { width: 100%; height: 34px; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="brand">Filter Service Dashboard</div>
+  <div class="brand-wrap">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      <span>Filter Service Operations</span>
+    </div>
+    <span id="userBadge" class="role-pill" style="display:none;"></span>
+  </div>
+
   <div class="toolbar" id="appToolbar" style="display:none;">
-    <span id="userBadge" style="font-size:12px;color:var(--muted);"></span>
-    <select id="sheetSelect" onchange="loadData()">
-      <option value="RED">RED: Water Filter Service</option>
-      <option value="GREEN">GREEN: Itsaso Filter</option>
-    </select>
+    <select id="sheetSelect" onchange="loadData()"></select>
+
     <select id="viewAsSelect" style="display:none;" onchange="onViewAsChange()">
-      <option value="">View As: Actual Role</option>
-      <option value="IT">View As: IT</option>
+      <option value="">View As: IT (Actual)</option>
       <option value="BOSS">View As: Boss</option>
-      <option value="ADMIN_H">View As: Admin H</option>
-      <option value="ADMIN_A">View As: Admin A</option>
-      <option value="ADMIN_L">View As: Admin L</option>
+      <option value="ADMIN_H">View As: Hafila (Admin H)</option>
+      <option value="ADMIN_A">View As: Atira (Admin A)</option>
+      <option value="ADMIN_L">View As: Ms. Lai (Admin L)</option>
     </select>
-    <button id="themeToggleBtn" class="ghost" onclick="cycleTheme()">Theme: Auto</button>
-    <button class="primary" onclick="openCreateModal()">+ New Record</button>
-    <button onclick="loadData()">Refresh</button>
-    <button class="ghost" onclick="logout()">Logout</button>
+
+    <button id="auditBtn" style="display:none;" onclick="openAuditModal()" title="View Audit Log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Audit</span>
+    </button>
+
+    <button id="themeToggleBtn" onclick="cycleTheme()" title="Switch Theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+      <span id="themeText">Auto</span>
+    </button>
+
+    <button class="primary" onclick="openCreateModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>New Record</span>
+    </button>
+
+    <button onclick="loadData()" title="Refresh Data">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <span>Refresh</span>
+    </button>
+
+    <button onclick="logout()" title="Sign Out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>Logout</span>
+    </button>
   </div>
 </header>
 
@@ -187,61 +309,81 @@
 
   <div id="authGateView" class="card gate-box">
     <h2 id="authGateTitle" style="margin-top:0;">Verifying Access...</h2>
-    <p id="authGateDesc" style="font-size:13px;color:var(--muted);">
-      Checking Cloudflare Zero Trust session and role permissions...
-    </p>
-    <div id="authGateActions" style="display:none;margin-top:14px;">
+    <p id="authGateDesc" style="color:var(--muted);">Checking Cloudflare Zero Trust session and permissions...</p>
+    <div id="authGateActions" style="display:none;margin-top:16px;">
       <button class="primary" onclick="window.location.reload()">Retry Verification</button>
     </div>
   </div>
 
   <div id="dashboardView" style="display:none;">
     <div class="grid-kpis">
-      <div class="kpi"><div class="label">Visible Records</div><div class="val" id="kpiTotal">0</div></div>
-      <div class="kpi"><div class="label">Replacement Required</div><div class="val" id="kpiOverdue" style="color:var(--danger-text);">0</div></div>
-      <div class="kpi"><div class="label">Pending Notification</div><div class="val" id="kpiPending" style="color:var(--warn-text);">0</div></div>
-      <div class="kpi"><div class="label">Pending Approval (H)</div><div class="val" id="kpiApproval">0</div></div>
+      <div class="kpi" onclick="quickFilterStatus('ALL')"><div class="label">Total Active</div><div class="val" id="kpiTotal">0</div></div>
+      <div class="kpi" onclick="quickFilterStatus('REPLACEMENT REQUIRED')"><div class="label">Replacement Required</div><div class="val" id="kpiOverdue" style="color:var(--danger-text);">0</div></div>
+      <div class="kpi" onclick="quickFilterStatus('Pending Notification')"><div class="label">Pending Notification</div><div class="val" id="kpiPending" style="color:var(--warn-text);">0</div></div>
+      <div class="kpi" onclick="quickFilterStatus('Normal')"><div class="label">Normal</div><div class="val" id="kpiNormal" style="color:var(--ok-text);">0</div></div>
+      <div class="kpi"><div class="label">Pending Approval</div><div class="val" id="kpiApproval">0</div></div>
       <div class="kpi"><div class="label">Max Overdue (Days)</div><div class="val" id="kpiMaxOverdue">0</div></div>
     </div>
 
-    <div class="card" id="approvalCard" style="display:none;">
-      <h3 style="margin-top:0;">Pending Deletion Approvals (Admin H Review)</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th><th>Customer</th><th>Status</th><th>Overdue</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="approvalTbody"></tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;">
-        <input type="text" id="searchInput" placeholder="Search customer name or filter/phone..." oninput="renderTable()" style="min-width:240px;" />
-        <select id="statusFilter" onchange="renderTable()">
-          <option value="ALL">All Statuses</option>
-          <option value="REPLACEMENT REQUIRED">Replacement Required</option>
-          <option value="Pending Notification">Pending Notification</option>
-          <option value="Normal">Normal</option>
-          <option value="Archived">Archived (Hidden)</option>
-        </select>
+    <!-- Pending Approvals Panel for Hafila (Admin H) / Boss / IT -->
+    <div class="card" id="approvalCard" style="display:none; border-color: #f59e0b;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:14px;">Pending Deletion Approvals</h3>
+        <span class="badge warn" id="approvalCountBadge">0 pending</span>
       </div>
-
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Customer Name</th>
-              <th>Filter / Phone</th>
-              <th id="colMachineUsageHead">Machine Usage</th>
-              <th>Last Changed</th>
-              <th>Cycle (d)</th>
-              <th>Next Date</th>
-              <th>Status</th>
-              <th>Approval</th>
-              <th>Actions</th>
+              <th class="no-sort">ID</th>
+              <th class="no-sort">Customer</th>
+              <th class="no-sort">Status</th>
+              <th class="no-sort">Overdue</th>
+              <th class="no-sort">Decision</th>
+            </tr>
+          </thead>
+          <tbody id="approvalTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="padding:10px 12px;">
+      <div class="controls-bar">
+        <div class="controls-left">
+          <input type="text" id="searchInput" placeholder="Filter by customer, ID, or filter/phone..." oninput="renderTable()" style="width:270px;" />
+          <select id="statusFilter" onchange="renderTable()">
+            <option value="ALL">Status: All</option>
+            <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
+            <option value="Pending Notification">Pending Notification (Yellow)</option>
+            <option value="Normal">Normal (White)</option>
+            <option value="Archived">Archived / Deleted</option>
+          </select>
+          <select id="usageFilter" onchange="renderTable()" style="display:none;">
+            <option value="ALL">Usage: All</option>
+            <option value="TRUE">Usage: TRUE only</option>
+            <option value="FALSE">Usage: FALSE only</option>
+          </select>
+          <button onclick="resetSortAndFilters()" title="Reset Sort & Filters">Reset</button>
+        </div>
+        <div class="controls-right">
+          <span id="rowCountLabel" style="color:var(--muted);font-size:12px;">0 rows</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="toggleSort('id')"><span class="th-inner">ID <span class="sort-ind" id="sort_id"></span></span></th>
+              <th onclick="toggleSort('name')"><span class="th-inner">Customer Name <span class="sort-ind" id="sort_name"></span></span></th>
+              <th onclick="toggleSort('filterOrPhone')"><span class="th-inner"><span id="colExtraHead">Filter / Phone</span> <span class="sort-ind" id="sort_filterOrPhone"></span></span></th>
+              <th id="colMachineUsageHead" onclick="toggleSort('machineUsage')"><span class="th-inner">Usage <span class="sort-ind" id="sort_machineUsage"></span></span></th>
+              <th onclick="toggleSort('lastChangedDate')"><span class="th-inner">Last Changed <span class="sort-ind" id="sort_lastChangedDate"></span></span></th>
+              <th onclick="toggleSort('cycleDays')"><span class="th-inner">Cycle <span class="sort-ind" id="sort_cycleDays"></span></span></th>
+              <th onclick="toggleSort('nextChangeDate')"><span class="th-inner">Next Date <span class="sort-ind" id="sort_nextChangeDate"></span></span></th>
+              <th onclick="toggleSort('statusRank')"><span class="th-inner">Status <span class="sort-ind" id="sort_statusRank"></span></span></th>
+              <th onclick="toggleSort('approvalStatus')"><span class="th-inner">Approval <span class="sort-ind" id="sort_approvalStatus"></span></span></th>
+              <th class="no-sort">Actions</th>
             </tr>
           </thead>
           <tbody id="recordsTbody"></tbody>
@@ -251,6 +393,7 @@
   </div>
 </main>
 
+<!-- Create / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
   <div class="modal">
     <h3 id="modalTitle" style="margin-top:0;">New Record</h3>
@@ -278,9 +421,27 @@
       <label>Change Cycle (Days) *</label>
       <input type="number" id="fCycle" value="180" min="1" required />
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
       <button onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="submitModal()">Save</button>
+      <button class="primary" onclick="submitModal()">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Audit Log Modal (IT / Boss) -->
+<div id="auditModal" class="modal-backdrop">
+  <div class="modal" style="max-width:780px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h3 style="margin:0;">Recent Audit Logs</h3>
+      <button onclick="document.getElementById('auditModal').classList.remove('show')">Close</button>
+    </div>
+    <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:6px;">
+      <table>
+        <thead>
+          <tr><th>Time</th><th>Actor</th><th>ID</th><th>Customer</th><th>Action</th><th>Reason</th></tr>
+        </thead>
+        <tbody id="auditTbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -292,26 +453,37 @@
   const VIEW_AS_KEY = "wf_view_as";
   const THEME_KEY = "wf_theme_mode";
 
+  const ICONS = {
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>`,
+    edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    flag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
+    restore: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`
+  };
+
   let currentState = {
     email: "",
     actualRole: "GUEST",
     effectiveRole: "GUEST",
+    roleDisplayName: "",
+    roleLabels: {},
     canSwitchView: false,
+    allowedSheets: ["RED"],
     activeSheet: "RED",
-    records: []
+    records: [],
+    auditLogs: [],
+    sortCol: "statusRank",
+    sortDir: "asc"
   };
 
   function applyTheme(mode) {
     const clean = ["auto", "dark", "light"].includes(mode) ? mode : "auto";
     localStorage.setItem(THEME_KEY, clean);
-    if (clean === "auto") {
-      document.documentElement.removeAttribute("data-theme");
-    } else {
-      document.documentElement.setAttribute("data-theme", clean);
-    }
-    const labelMap = { auto: "Theme: Auto", dark: "Theme: Dark", light: "Theme: Light" };
-    const btn = document.getElementById("themeToggleBtn");
-    if (btn) btn.textContent = labelMap[clean];
+    if (clean === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", clean);
+    const labelMap = { auto: "Auto", dark: "Dark", light: "Light" };
+    const el = document.getElementById("themeText");
+    if (el) el.textContent = labelMap[clean];
   }
 
   function cycleTheme() {
@@ -364,10 +536,10 @@
 
   function showBanner(msg, type = "ok") {
     const el = document.getElementById("banner");
-    el.textContent = msg;
+    el.innerHTML = `<span>${esc(msg)}</span>`;
     el.className = `banner-msg show ${type}`;
     if (type === "ok") {
-      setTimeout(() => { el.className = "banner-msg"; }, 5000);
+      setTimeout(() => { el.className = "banner-msg"; }, 4500);
     }
   }
 
@@ -399,9 +571,7 @@
     }
     currentState.email = email;
     const savedViewAs = localStorage.getItem(VIEW_AS_KEY) || "";
-    if (savedViewAs) {
-      document.getElementById("viewAsSelect").value = savedViewAs;
-    }
+    if (savedViewAs) document.getElementById("viewAsSelect").value = savedViewAs;
     showDashboard();
   }
 
@@ -417,7 +587,7 @@
       const script = document.createElement("script");
       const timer = setTimeout(() => {
         cleanup();
-        reject(new Error("JSONP request timed out (45s)"));
+        reject(new Error("Request timed out (45s). Please click Refresh."));
       }, 45000);
 
       function cleanup() {
@@ -435,7 +605,7 @@
       script.src = `${url}${sep}callback=${encodeURIComponent(cbName)}`;
       script.onerror = () => {
         cleanup();
-        reject(new Error("Failed to load script from GAS (check deployment access = Anyone)"));
+        reject(new Error("Failed to connect to GAS backend."));
       };
       document.body.appendChild(script);
     });
@@ -444,21 +614,18 @@
   async function loadData() {
     const sheetSel = document.getElementById("sheetSelect");
     const viewAsSel = document.getElementById("viewAsSelect");
-    const sheet = sheetSel.value || "RED";
+    const requestedSheet = sheetSel.value || "";
     const viewAs = viewAsSel.value || "";
 
-    showBanner("Loading records from Google Sheets...", "ok");
+    showBanner("Syncing records...", "ok");
 
-    const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(sheet)}&viewAs=${encodeURIComponent(viewAs)}`;
+    const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(requestedSheet)}&viewAs=${encodeURIComponent(viewAs)}`;
     try {
       const data = await jsonpGet(url);
       if (!data || !data.ok) {
         if (data && data.role === "GUEST") {
           clearSession();
-          showAuthBlocked(
-            "Access Denied",
-            `Account "${currentState.email}" is not assigned a role in IT_Config.`
-          );
+          showAuthBlocked("Access Denied", `Account "${currentState.email}" is not authorized in IT_Config.`);
           return;
         }
         showBanner((data && data.error) || "Failed to load data.", "err");
@@ -467,27 +634,60 @@
 
       currentState.actualRole = data.actualRole;
       currentState.effectiveRole = data.effectiveRole;
+      currentState.roleDisplayName = data.roleDisplayName || data.effectiveRole;
+      currentState.roleLabels = data.roleLabels || {};
       currentState.canSwitchView = Boolean(data.canSwitchView);
+      currentState.allowedSheets = data.allowedSheets || ["RED"];
       currentState.activeSheet = data.activeSheet;
-      currentState.records = data.records || [];
+      currentState.auditLogs = data.auditLogs || [];
 
-      const roleTag = (data.actualRole === "IT" && data.effectiveRole !== "IT")
-        ? `${data.actualRole} -> ${data.effectiveRole}`
-        : data.effectiveRole;
-      document.getElementById("userBadge").textContent = `${data.actorEmail} (${roleTag})`;
-      viewAsSel.style.display = currentState.canSwitchView ? "inline-block" : "none";
+      // Map statusRank for Excel-style status sorting (Red=1, Yellow=2, White/Normal=3, Archived=4)
+      currentState.records = (data.records || []).map(r => {
+        let rank = 3;
+        if (r.isHidden || r.status === "Archived") rank = 4;
+        else if (r.status === "REPLACEMENT REQUIRED") rank = 1;
+        else if (r.status === "Pending Notification") rank = 2;
+        return Object.assign({}, r, { statusRank: rank });
+      });
 
-      if (data.effectiveRole === "ADMIN_L") {
-        sheetSel.value = "GREEN";
-        sheetSel.disabled = true;
+      // Update Header Role Pill & Dynamic ViewAs Names from IT_Config
+      const badge = document.getElementById("userBadge");
+      badge.style.display = "inline-flex";
+      badge.textContent = (data.actualRole === "IT" && data.effectiveRole !== "IT")
+        ? `IT → ${currentState.roleDisplayName}`
+        : `${currentState.roleDisplayName} (${data.actorEmail})`;
+
+      if (currentState.canSwitchView) {
+        viewAsSel.style.display = "inline-block";
+        const labels = currentState.roleLabels;
+        viewAsSel.options[0].text = `View As: ${labels.IT || "IT"} (Actual)`;
+        viewAsSel.options[1].text = `View As: ${labels.BOSS || "Boss"}`;
+        viewAsSel.options[2].text = `View As: ${labels.ADMIN_H || "Hafila"} (Admin H)`;
+        viewAsSel.options[3].text = `View As: ${labels.ADMIN_A || "Atira"} (Admin A)`;
+        viewAsSel.options[4].text = `View As: ${labels.ADMIN_L || "Ms. Lai"} (Admin L)`;
       } else {
-        sheetSel.disabled = false;
-        sheetSel.value = data.activeSheet;
+        viewAsSel.style.display = "none";
       }
+
+      // Dynamically render ONLY allowed sheets in dropdown (Atira/Hafila see only RED, Ms. Lai sees only GREEN)
+      const sheetNameMap = {
+        "RED": "RED: Water Filter Service",
+        "GREEN": "GREEN: Itsaso Filter"
+      };
+      sheetSel.innerHTML = currentState.allowedSheets
+        .map(code => `<option value="${code}">${sheetNameMap[code] || code}</option>`)
+        .join("");
+      sheetSel.value = data.activeSheet;
+      sheetSel.disabled = (currentState.allowedSheets.length <= 1);
+
+      // Audit button for IT / Boss
+      document.getElementById("auditBtn").style.display = (["IT", "BOSS"].includes(data.effectiveRole)) ? "inline-flex" : "none";
 
       const isRed = (data.activeSheet === "RED");
       document.getElementById("colMachineUsageHead").style.display = isRed ? "" : "none";
+      document.getElementById("usageFilter").style.display = isRed ? "inline-block" : "none";
       document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
+      document.getElementById("colExtraHead").textContent = isRed ? "Filter / Service" : "Phone Number";
       document.getElementById("fExtraLabel").textContent = isRed ? "Filter / Service Name" : "Phone Number";
 
       updateKpis(data.summary || {}, currentState.records);
@@ -495,17 +695,58 @@
       renderTable();
       document.getElementById("banner").className = "banner-msg";
     } catch (err) {
-      showBanner("GAS request error: " + err.message, "err");
+      showBanner("Error: " + err.message, "err");
     }
   }
 
   function updateKpis(summary, records) {
-    const maxOverdue = records.reduce((m, r) => Math.max(m, Number(r.overdueDays || 0)), 0);
-    document.getElementById("kpiTotal").textContent = summary.total ?? records.length;
+    const activeRecords = records.filter(r => !r.isHidden);
+    const normalCount = activeRecords.filter(r => r.status === "Normal").length;
+    const maxOverdue = activeRecords.reduce((m, r) => Math.max(m, Number(r.overdueDays || 0)), 0);
+
+    document.getElementById("kpiTotal").textContent = activeRecords.length;
     document.getElementById("kpiOverdue").textContent = summary.replacementRequired ?? 0;
     document.getElementById("kpiPending").textContent = summary.pendingNotification ?? 0;
+    document.getElementById("kpiNormal").textContent = normalCount;
     document.getElementById("kpiApproval").textContent = summary.pendingApproval ?? 0;
     document.getElementById("kpiMaxOverdue").textContent = maxOverdue;
+  }
+
+  function quickFilterStatus(st) {
+    document.getElementById("statusFilter").value = st;
+    renderTable();
+  }
+
+  function resetSortAndFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("statusFilter").value = "ALL";
+    document.getElementById("usageFilter").value = "ALL";
+    currentState.sortCol = "statusRank";
+    currentState.sortDir = "asc";
+    renderTable();
+  }
+
+  function toggleSort(col) {
+    if (currentState.sortCol === col) {
+      currentState.sortDir = (currentState.sortDir === "asc") ? "desc" : "asc";
+    } else {
+      currentState.sortCol = col;
+      currentState.sortDir = "asc";
+    }
+    renderTable();
+  }
+
+  function updateSortIndicators() {
+    const cols = ["id", "name", "filterOrPhone", "machineUsage", "lastChangedDate", "cycleDays", "nextChangeDate", "statusRank", "approvalStatus"];
+    cols.forEach(c => {
+      const el = document.getElementById("sort_" + c);
+      if (!el) return;
+      if (currentState.sortCol === c) {
+        el.textContent = currentState.sortDir === "asc" ? "▲" : "▼";
+      } else {
+        el.textContent = "";
+      }
+    });
   }
 
   function renderApprovals() {
@@ -519,6 +760,7 @@
       return;
     }
     card.style.display = "block";
+    document.getElementById("approvalCountBadge").textContent = `${pendingItems.length} pending`;
     tbody.innerHTML = pendingItems.map(r => `
       <tr>
         <td>${esc(r.id)}</td>
@@ -526,7 +768,7 @@
         <td>${esc(r.status)}</td>
         <td>${r.overdueDays > 0 ? r.overdueDays + "d" : "-"}</td>
         <td class="row-actions">
-          <button class="success" onclick="postAction('approveDelete', '${esc(r.id)}')">Approve & Hide</button>
+          <button class="success" onclick="postAction('approveDelete', '${esc(r.id)}')">${ICONS.check} Approve Delete</button>
           <button class="danger" onclick="postAction('rejectDelete', '${esc(r.id)}')">Reject</button>
         </td>
       </tr>
@@ -534,17 +776,49 @@
   }
 
   function renderTable() {
+    updateSortIndicators();
     const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
     const stFilter = document.getElementById("statusFilter").value;
+    const usFilter = document.getElementById("usageFilter").value;
     const isRed = (currentState.activeSheet === "RED");
     const role = currentState.effectiveRole;
     const canApproveOrRestore = ["IT", "BOSS", "ADMIN_H"].includes(role);
 
-    const filtered = currentState.records.filter(r => {
+    let filtered = currentState.records.filter(r => {
       if (stFilter !== "ALL" && r.status !== stFilter) return false;
+      if (isRed && usFilter !== "ALL") {
+        const want = (usFilter === "TRUE");
+        if (Boolean(r.machineUsage) !== want) return false;
+      }
       if (!q) return true;
-      return String(r.name).toLowerCase().includes(q) || String(r.filterOrPhone).toLowerCase().includes(q);
+      return String(r.id).toLowerCase().includes(q)
+        || String(r.name).toLowerCase().includes(q)
+        || String(r.filterOrPhone).toLowerCase().includes(q);
     });
+
+    // Multi-column Excel-style sorting
+    const col = currentState.sortCol;
+    const dir = currentState.sortDir === "asc" ? 1 : -1;
+    filtered.sort((a, b) => {
+      let va = a[col];
+      let vb = b[col];
+      if (col === "id" || col === "cycleDays" || col === "statusRank") {
+        va = Number(va || 0);
+        vb = Number(vb || 0);
+        if (va !== vb) return (va - vb) * dir;
+        // Tie-breaker: overdue days descending, then nextChangeDate ascending
+        if (b.overdueDays !== a.overdueDays) return b.overdueDays - a.overdueDays;
+        return String(a.nextChangeDate || "9999").localeCompare(String(b.nextChangeDate || "9999"));
+      }
+      if (col === "machineUsage") {
+        va = va ? 1 : 0;
+        vb = vb ? 1 : 0;
+        return (va - vb) * dir;
+      }
+      return String(va || "").localeCompare(String(vb || ""), undefined, { numeric: true, sensitivity: "base" }) * dir;
+    });
+
+    document.getElementById("rowCountLabel").textContent = `Showing ${filtered.length} of ${currentState.records.length} records`;
 
     const tbody = document.getElementById("recordsTbody");
     tbody.innerHTML = filtered.map(r => {
@@ -552,36 +826,36 @@
         ? "hidden-row"
         : (r.status === "REPLACEMENT REQUIRED" ? "overdue" : (r.status === "Pending Notification" ? "pending" : ""));
 
-      const badgeClass = r.status === "REPLACEMENT REQUIRED"
-        ? "danger"
-        : (r.status === "Pending Notification" ? "warn" : "ok");
+      const badgeClass = r.isHidden
+        ? "neutral"
+        : (r.status === "REPLACEMENT REQUIRED" ? "danger" : (r.status === "Pending Notification" ? "warn" : "ok"));
 
       const statusLabel = r.overdueDays > 0 ? `${r.status} (+${r.overdueDays}d)` : r.status;
 
-      let actions = `<button class="success" onclick="postAction('confirmDone', '${esc(r.id)}')">Confirm Done</button>`;
-      actions += `<button onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Edit</button>`;
+      let actions = `<button class="success icon-only" onclick="postAction('confirmDone', '${esc(r.id)}')" title="Confirm Done (Roll to Next Cycle)">${ICONS.check}</button>`;
+      actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
 
       if (!r.isHidden) {
-        actions += `<button onclick="promptReasonAction('directHide', '${esc(r.id)}', 'Hide record reason:')">Direct Hide</button>`;
+        actions += `<button class="danger icon-only" onclick="promptReasonAction('directHide', '${esc(r.id)}', 'Delete reason:')" title="Delete Record">${ICONS.trash}</button>`;
         if (role === "ADMIN_A" || role === "IT") {
-          actions += `<button class="danger" onclick="promptReasonAction('requestDelete', '${esc(r.id)}', 'Request H approval reason:')">Request Delete</button>`;
+          actions += `<button class="icon-only" onclick="promptReasonAction('requestDelete', '${esc(r.id)}', 'Request Hafila approval reason:')" title="Request Deletion Approval">${ICONS.flag}</button>`;
         }
       } else if (canApproveOrRestore) {
-        actions += `<button class="primary" onclick="postAction('restoreRow', '${esc(r.id)}')">Restore</button>`;
+        actions += `<button class="primary icon-only" onclick="postAction('restoreRow', '${esc(r.id)}')" title="Restore Record">${ICONS.restore}</button>`;
       }
 
       return `
         <tr class="${trClass}">
           <td>${esc(r.id)}</td>
-          <td><b>${esc(r.name)}</b></td>
-          <td>${esc(r.filterOrPhone)}</td>
-          ${isRed ? `<td>${r.machineUsage ? "TRUE" : "FALSE"}</td>` : ""}
+          <td class="wrap-cell"><b>${esc(r.name)}</b></td>
+          <td class="wrap-cell">${esc(r.filterOrPhone)}</td>
+          ${isRed ? `<td><span class="badge ${r.machineUsage ? "ok" : "neutral"}">${r.machineUsage ? "TRUE" : "FALSE"}</span></td>` : ""}
           <td>${esc(r.lastChangedDate)}</td>
           <td>${esc(r.cycleDays)}</td>
           <td>${esc(r.nextChangeDate)}</td>
           <td><span class="badge ${badgeClass}">${esc(statusLabel)}</span></td>
           <td>${esc(r.approvalStatus || "-")}</td>
-          <td class="row-actions">${actions}</td>
+          <td><div class="row-actions">${actions}</div></td>
         </tr>
       `;
     }).join("");
@@ -609,8 +883,8 @@
           payload
         })
       });
-      showBanner("Submitted. Refreshing table...", "ok");
-      setTimeout(() => loadData(), 800);
+      showBanner("Saved. Updating table...", "ok");
+      setTimeout(() => loadData(), 750);
     } catch (err) {
       showBanner("Request error: " + err.message, "err");
     }
@@ -666,6 +940,21 @@
     } else {
       postAction("createRecord", null, "Created via modal", payload);
     }
+  }
+
+  function openAuditModal() {
+    const tbody = document.getElementById("auditTbody");
+    tbody.innerHTML = (currentState.auditLogs || []).map(l => `
+      <tr>
+        <td>${esc(l.time)}</td>
+        <td>${esc(l.role)} (${esc(l.actor)})</td>
+        <td>${esc(l.custId)}</td>
+        <td>${esc(l.custName)}</td>
+        <td><b>${esc(l.action)}</b></td>
+        <td>${esc(l.reason)}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--muted);">No logs available</td></tr>`;
+    document.getElementById("auditModal").classList.add("show");
   }
 
   function esc(s) {
