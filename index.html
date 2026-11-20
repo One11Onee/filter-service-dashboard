@@ -86,7 +86,7 @@
     .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
     .row-actions { display: flex; flex-wrap: wrap; gap: 4px; }
     .row-actions button { padding: 4px 8px; font-size: 12px; }
-    .login-box { max-width: 420px; margin: 60px auto; text-align: center; }
+    .status-box { max-width: 480px; margin: 60px auto; text-align: center; }
     .banner-msg {
       padding: 10px 14px;
       border-radius: 6px;
@@ -138,16 +138,16 @@
 <main>
   <div id="banner" class="banner-msg"></div>
 
-  <!-- Session / Email Binding View (works alongside Cloudflare Zero Trust) -->
-  <div id="loginView" class="card login-box">
-    <h2 style="margin-top:0;">Sign In to Dashboard</h2>
-    <p style="font-size:13px;color:var(--muted);">
-      Enter your authorized Google account email (Workspace or Gmail) to load your role dashboard.
+  <!-- Zero Trust Gate / Loading View (no manual email entry) -->
+  <div id="authGateView" class="card status-box">
+    <h3 id="authGateTitle" style="margin-top:0;">Verifying Cloudflare Zero Trust Session...</h3>
+    <p id="authGateDesc" style="font-size:13px;color:var(--muted);">
+      Please wait while we verify your authenticated session.
     </p>
-    <div class="field">
-      <input type="email" id="loginEmailInput" placeholder="name@company.com or user@gmail.com" />
+    <div id="authGateActions" style="display:none;margin-top:14px;">
+      <button class="primary" onclick="location.reload()">Retry Verification</button>
+      <button class="ghost" onclick="logout()">Logout</button>
     </div>
-    <button class="primary" style="width:100%;" onclick="saveSession()">Continue</button>
   </div>
 
   <!-- Main Dashboard View -->
@@ -246,8 +246,8 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbw9pnLICcWFna2ll5Rt3anmWwSliu8My-AvEcQEFoZgwATgNHdyoefwJBXxI0gDxcM-9w/exec";
-  const COOKIE_KEY = "wf_session_email";
-  const STORAGE_KEY = "wf_session_email";
+  const COOKIE_KEY = "wf_zt_email";
+  const STORAGE_KEY = "wf_zt_email";
 
   let currentState = {
     email: "",
@@ -278,24 +278,25 @@
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  function getSavedEmail() {
-    return (getCookie(COOKIE_KEY) || localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
-  }
-
-  function saveSession() {
-    const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
-    if (!email) {
-      showBanner("Please enter a valid email address.", "err");
-      return;
-    }
-    setCookie(COOKIE_KEY, email, 7);
-    localStorage.setItem(STORAGE_KEY, email);
-    initApp();
-  }
-
   function logout() {
     clearSession();
     window.location.href = "/cdn-cgi/access/logout";
+  }
+
+  function showAuthBlocked(title, desc) {
+    document.getElementById("authGateTitle").textContent = title;
+    document.getElementById("authGateDesc").textContent = desc;
+    document.getElementById("authGateActions").style.display = "block";
+    document.getElementById("authGateView").style.display = "block";
+    document.getElementById("dashboardView").style.display = "none";
+    document.getElementById("appToolbar").style.display = "none";
+  }
+
+  function showDashboard() {
+    document.getElementById("authGateView").style.display = "none";
+    document.getElementById("dashboardView").style.display = "block";
+    document.getElementById("appToolbar").style.display = "flex";
+    loadData();
   }
 
   function showBanner(msg, type = "ok") {
@@ -305,19 +306,39 @@
     setTimeout(() => { el.className = "banner-msg"; }, 4500);
   }
 
-  function initApp() {
-    const saved = getSavedEmail();
-    if (!saved) {
-      document.getElementById("loginView").style.display = "block";
-      document.getElementById("dashboardView").style.display = "none";
-      document.getElementById("appToolbar").style.display = "none";
+  async function resolveZeroTrustEmail() {
+    // 1. Query Cloudflare Zero Trust identity endpoint directly
+    try {
+      const resp = await fetch("/cdn-cgi/access/get-identity", { credentials: "include" });
+      if (resp.ok) {
+        const data = await resp.json();
+        const email = String(data.email || "").trim().toLowerCase();
+        if (email) {
+          setCookie(COOKIE_KEY, email, 1);
+          localStorage.setItem(STORAGE_KEY, email);
+          return email;
+        }
+      }
+    } catch (_) {
+      // Fallback to cached session if endpoint is unavailable temporarily
+    }
+
+    // 2. Fallback to Cookie / localStorage session
+    const cached = (getCookie(COOKIE_KEY) || localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
+    return cached;
+  }
+
+  async function initApp() {
+    const email = await resolveZeroTrustEmail();
+    if (!email) {
+      showAuthBlocked(
+        "Cloudflare Zero Trust Authentication Required",
+        "No authenticated Cloudflare Zero Trust session was detected. Please sign in through Cloudflare Access first."
+      );
       return;
     }
-    currentState.email = saved;
-    document.getElementById("loginView").style.display = "none";
-    document.getElementById("dashboardView").style.display = "block";
-    document.getElementById("appToolbar").style.display = "flex";
-    loadData();
+    currentState.email = email;
+    showDashboard();
   }
 
   async function loadData() {
@@ -331,6 +352,14 @@
       const res = await fetch(url);
       const data = await res.json();
       if (!data.ok) {
+        if (data.role === "GUEST") {
+          clearSession();
+          showAuthBlocked(
+            "Access Denied",
+            `Account "${currentState.email}" is not assigned a role in IT_Config.`
+          );
+          return;
+        }
         showBanner(data.error || "Failed to load data.", "err");
         return;
       }
