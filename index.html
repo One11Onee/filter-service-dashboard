@@ -385,6 +385,72 @@
     .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .gate-box { max-width: 480px; margin: 80px auto; text-align: center; padding: 34px; }
 
+    /* First-Visit Fullscreen Welcome Overlay (Skipped when cached) */
+    .welcome-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 1;
+      transform: scale(1);
+      transition: opacity 0.45s var(--ease-ios), transform 0.45s var(--spring);
+    }
+    .welcome-overlay.show {
+      display: flex;
+    }
+    .welcome-overlay.fade-out {
+      opacity: 0;
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+    .welcome-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 42px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
+      animation: fadeUp 0.4s var(--spring);
+    }
+    .welcome-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      object-fit: contain;
+      margin-bottom: 14px;
+    }
+    .welcome-title {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .welcome-sub {
+      margin: 0 0 20px 0;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+    .ios-spinner {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto;
+      border: 3px solid color-mix(in srgb, var(--primary) 22%, transparent);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spinRing 0.8s linear infinite;
+    }
+    @keyframes spinRing {
+      to { transform: rotate(360deg); }
+    }
+
     /* iOS Spring Modal Animation */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(2, 6, 23, 0.55);
@@ -430,6 +496,16 @@
   </style>
 </head>
 <body>
+
+<!-- Fullscreen Welcome Screen (Only shown on cold start without local cache) -->
+<div id="welcomeOverlay" class="welcome-overlay">
+  <div class="welcome-card">
+    <img src="./logo.png" alt="Logo" class="welcome-logo" />
+    <h2 id="welcomeTitle" class="welcome-title">Welcome</h2>
+    <p id="welcomeSub" class="welcome-sub">Syncing your workspace records...</p>
+    <div class="ios-spinner"></div>
+  </div>
+</div>
 
 <header>
   <div class="brand-wrap">
@@ -856,8 +932,44 @@
     const savedViewAs = localStorage.getItem(VIEW_AS_KEY) || "";
     if (savedViewAs) document.getElementById("viewAsSelect").value = savedViewAs;
 
+    const initialSheet = document.getElementById("sheetSelect").value || "";
+    const initialViewAs = document.getElementById("viewAsSelect").value || "";
+    const hasAnyCache = Boolean(
+      localStorage.getItem(getSnapshotCacheKey(initialSheet, initialViewAs)) ||
+      localStorage.getItem(getSnapshotCacheKey("RED", initialViewAs)) ||
+      localStorage.getItem(getSnapshotCacheKey("GREEN", initialViewAs))
+    );
+
+    if (!hasAnyCache) {
+      showWelcomeScreen(email);
+    }
+
     showDashboardImmediate();
     loadData(false);
+  }
+
+  function showWelcomeScreen(identifier) {
+    const ov = document.getElementById("welcomeOverlay");
+    const title = document.getElementById("welcomeTitle");
+    if (!ov || !title) return;
+    const shortName = String(identifier || "").split("@")[0] || "Back";
+    title.textContent = `Welcome, ${shortName}`;
+    ov.className = "welcome-overlay show";
+  }
+
+  function hideWelcomeScreen(displayName) {
+    const ov = document.getElementById("welcomeOverlay");
+    const title = document.getElementById("welcomeTitle");
+    const sub = document.getElementById("welcomeSub");
+    if (!ov || !ov.classList.contains("show")) return;
+    if (displayName && title) title.textContent = `Welcome, ${displayName}`;
+    if (sub) sub.textContent = "Workspace ready";
+    setTimeout(() => {
+      ov.classList.add("fade-out");
+      setTimeout(() => {
+        ov.className = "welcome-overlay";
+      }, 460);
+    }, 260);
   }
 
   document.addEventListener("keydown", (ev) => {
@@ -1057,11 +1169,14 @@
 
       if (Object.keys(currentState.pendingOps).length === 0) {
         applyDashboardPayload(data, false);
+        hideWelcomeScreen(data.roleDisplayName || "");
         showIsland(`${data.activeSheet} Synced`, "ok", false);
       } else {
+        hideWelcomeScreen(data.roleDisplayName || "");
         showIsland("Unsaved changes staged", "syncing", true);
       }
     } catch (err) {
+      hideWelcomeScreen("");
       showIsland("Sync warning: " + err.message, "err", false);
     }
   }
