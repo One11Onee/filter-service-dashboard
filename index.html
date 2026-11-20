@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filter Service & Dispatch Dashboard</title>
+  <style>
+    :root {
+      --bg: #f6f8fa;
+      --card: #ffffff;
+      --text: #1f2328;
+      --muted: #656d76;
+      --border: #d0d7de;
+      --primary: #0969da;
+      --danger-bg: #ffebe9;
+      --danger-text: #82071e;
+      --warn-bg: #fff8c5;
+      --warn-text: #633c01;
+      --ok-bg: #dafbe1;
+      --ok-text: #116329;
+    }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand { font-weight: 700; font-size: 16px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    select, input, button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      background: #fff;
+      color: var(--text);
+    }
+    button { cursor: pointer; font-weight: 500; }
+    button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    button.danger { background: #cf222e; color: #fff; border-color: #cf222e; }
+    button.success { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+    button.ghost { background: transparent; }
+    main { max-width: 1360px; margin: 18px auto; padding: 0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .grid-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfd;
+    }
+    .kpi .label { font-size: 12px; color: var(--muted); }
+    .kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: middle; }
+    th { background: #f6f8fa; font-weight: 600; }
+    tr.overdue { background: var(--danger-bg); }
+    tr.pending { background: var(--warn-bg); }
+    tr.hidden-row { opacity: 0.65; background: #f0f2f5; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.danger { background: var(--danger-bg); color: var(--danger-text); }
+    .badge.warn { background: var(--warn-bg); color: var(--warn-text); }
+    .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+    .row-actions button { padding: 4px 8px; font-size: 12px; }
+    .login-box { max-width: 420px; margin: 60px auto; text-align: center; }
+    .banner-msg {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      display: none;
+    }
+    .banner-msg.show { display: block; }
+    .banner-msg.ok { background: var(--ok-bg); color: var(--ok-text); }
+    .banner-msg.err { background: var(--danger-bg); color: var(--danger-text); }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: none; align-items: center; justify-content: center; z-index: 50;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 8px; padding: 18px;
+      width: 100%; max-width: 440px; border: 1px solid var(--border);
+    }
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .field input, .field select { width: 100%; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Filter Service Dashboard</div>
+  <div class="toolbar" id="appToolbar" style="display:none;">
+    <span id="userBadge" style="font-size:12px;color:var(--muted);"></span>
+    <select id="sheetSelect" onchange="loadData()">
+      <option value="RED">RED: Water Filter Service</option>
+      <option value="GREEN">GREEN: Itsaso Filter</option>
+    </select>
+    <select id="viewAsSelect" style="display:none;" onchange="loadData()">
+      <option value="">View As: Actual Role</option>
+      <option value="IT">View As: IT</option>
+      <option value="BOSS">View As: Boss</option>
+      <option value="ADMIN_H">View As: Admin H</option>
+      <option value="ADMIN_A">View As: Admin A</option>
+      <option value="ADMIN_L">View As: Admin L</option>
+    </select>
+    <button class="primary" onclick="openCreateModal()">+ New Record</button>
+    <button onclick="loadData()">Refresh</button>
+    <button class="ghost" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<main>
+  <div id="banner" class="banner-msg"></div>
+
+  <!-- Session / Email Binding View (works alongside Cloudflare Zero Trust) -->
+  <div id="loginView" class="card login-box">
+    <h2 style="margin-top:0;">Sign In to Dashboard</h2>
+    <p style="font-size:13px;color:var(--muted);">
+      Enter your authorized Google account email (Workspace or Gmail) to load your role dashboard.
+    </p>
+    <div class="field">
+      <input type="email" id="loginEmailInput" placeholder="name@company.com or user@gmail.com" />
+    </div>
+    <button class="primary" style="width:100%;" onclick="saveSession()">Continue</button>
+  </div>
+
+  <!-- Main Dashboard View -->
+  <div id="dashboardView" style="display:none;">
+    <div class="grid-kpis">
+      <div class="kpi"><div class="label">Visible Records</div><div class="val" id="kpiTotal">0</div></div>
+      <div class="kpi"><div class="label">Replacement Required</div><div class="val" id="kpiOverdue" style="color:var(--danger-text);">0</div></div>
+      <div class="kpi"><div class="label">Pending Notification</div><div class="val" id="kpiPending" style="color:var(--warn-text);">0</div></div>
+      <div class="kpi"><div class="label">Pending Approval (H)</div><div class="val" id="kpiApproval">0</div></div>
+      <div class="kpi"><div class="label">Max Overdue (Days)</div><div class="val" id="kpiMaxOverdue">0</div></div>
+    </div>
+
+    <!-- Pending Approvals Panel for Admin H / Boss / IT -->
+    <div class="card" id="approvalCard" style="display:none;">
+      <h3 style="margin-top:0;">Pending Deletion Approvals (Admin H Review)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Customer</th><th>Status</th><th>Overdue</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="approvalTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;">
+        <input type="text" id="searchInput" placeholder="Search customer name or filter/phone..." oninput="renderTable()" style="min-width:240px;" />
+        <select id="statusFilter" onchange="renderTable()">
+          <option value="ALL">All Statuses</option>
+          <option value="REPLACEMENT REQUIRED">Replacement Required</option>
+          <option value="Pending Notification">Pending Notification</option>
+          <option value="Normal">Normal</option>
+          <option value="Archived">Archived (Hidden)</option>
+        </select>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer Name</th>
+              <th>Filter / Phone</th>
+              <th id="colMachineUsageHead">Machine Usage</th>
+              <th>Last Changed</th>
+              <th>Cycle (d)</th>
+              <th>Next Date</th>
+              <th>Status</th>
+              <th>Approval</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Create / Edit Modal -->
+<div id="editModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="modalTitle" style="margin-top:0;">New Record</h3>
+    <input type="hidden" id="editRecordId" />
+    <div class="field">
+      <label>Customer Name *</label>
+      <input type="text" id="fName" required />
+    </div>
+    <div class="field">
+      <label id="fExtraLabel">Filter / Service Name</label>
+      <input type="text" id="fExtra" />
+    </div>
+    <div class="field" id="fUsageGroup">
+      <label>Machine Usage</label>
+      <select id="fUsage">
+        <option value="TRUE">TRUE (In Use)</option>
+        <option value="FALSE">FALSE (Not in Use)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Last Changed Date *</label>
+      <input type="date" id="fLastDate" required />
+    </div>
+    <div class="field">
+      <label>Change Cycle (Days) *</label>
+      <input type="number" id="fCycle" value="180" min="1" required />
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+      <button onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="submitModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbw9pnLICcWFna2ll5Rt3anmWwSliu8My-AvEcQEFoZgwATgNHdyoefwJBXxI0gDxcM-9w/exec";
+  const COOKIE_KEY = "wf_session_email";
+  const STORAGE_KEY = "wf_session_email";
+
+  let currentState = {
+    email: "",
+    actualRole: "GUEST",
+    effectiveRole: "GUEST",
+    canSwitchView: false,
+    activeSheet: "RED",
+    records: []
+  };
+
+  function setCookie(name, value, days) {
+    const exp = new Date(Date.now() + days * 86400000).toUTCString();
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
+  }
+
+  function getCookie(name) {
+    const target = encodeURIComponent(name) + "=";
+    const parts = document.cookie.split(";");
+    for (let p of parts) {
+      p = p.trim();
+      if (p.indexOf(target) === 0) return decodeURIComponent(p.substring(target.length));
+    }
+    return "";
+  }
+
+  function clearSession() {
+    setCookie(COOKIE_KEY, "", -1);
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function getSavedEmail() {
+    return (getCookie(COOKIE_KEY) || localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
+  }
+
+  function saveSession() {
+    const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
+    if (!email) {
+      showBanner("Please enter a valid email address.", "err");
+      return;
+    }
+    setCookie(COOKIE_KEY, email, 7);
+    localStorage.setItem(STORAGE_KEY, email);
+    initApp();
+  }
+
+  function logout() {
+    clearSession();
+    window.location.href = "/cdn-cgi/access/logout";
+  }
+
+  function showBanner(msg, type = "ok") {
+    const el = document.getElementById("banner");
+    el.textContent = msg;
+    el.className = `banner-msg show ${type}`;
+    setTimeout(() => { el.className = "banner-msg"; }, 4500);
+  }
+
+  function initApp() {
+    const saved = getSavedEmail();
+    if (!saved) {
+      document.getElementById("loginView").style.display = "block";
+      document.getElementById("dashboardView").style.display = "none";
+      document.getElementById("appToolbar").style.display = "none";
+      return;
+    }
+    currentState.email = saved;
+    document.getElementById("loginView").style.display = "none";
+    document.getElementById("dashboardView").style.display = "block";
+    document.getElementById("appToolbar").style.display = "flex";
+    loadData();
+  }
+
+  async function loadData() {
+    const sheetSel = document.getElementById("sheetSelect");
+    const viewAsSel = document.getElementById("viewAsSelect");
+    const sheet = sheetSel.value || "RED";
+    const viewAs = viewAsSel.value || "";
+
+    const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(sheet)}&viewAs=${encodeURIComponent(viewAs)}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.ok) {
+        showBanner(data.error || "Failed to load data.", "err");
+        return;
+      }
+
+      currentState.actualRole = data.actualRole;
+      currentState.effectiveRole = data.effectiveRole;
+      currentState.canSwitchView = data.canSwitchView;
+      currentState.activeSheet = data.activeSheet;
+      currentState.records = data.records || [];
+
+      document.getElementById("userBadge").textContent = `${data.actorEmail} (${data.effectiveRole})`;
+      viewAsSel.style.display = data.canSwitchView ? "inline-block" : "none";
+
+      if (data.effectiveRole === "ADMIN_L") {
+        sheetSel.value = "GREEN";
+        sheetSel.disabled = true;
+      } else {
+        sheetSel.disabled = false;
+        sheetSel.value = data.activeSheet;
+      }
+
+      const isRed = (data.activeSheet === "RED");
+      document.getElementById("colMachineUsageHead").style.display = isRed ? "" : "none";
+      document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
+      document.getElementById("fExtraLabel").textContent = isRed ? "Filter / Service Name" : "Phone Number";
+
+      updateKpis(data.summary || {}, currentState.records);
+      renderApprovals();
+      renderTable();
+    } catch (err) {
+      showBanner("Network error: " + err.message, "err");
+    }
+  }
+
+  function updateKpis(summary, records) {
+    const maxOverdue = records.reduce((m, r) => Math.max(m, Number(r.overdueDays || 0)), 0);
+    document.getElementById("kpiTotal").textContent = summary.total ?? records.length;
+    document.getElementById("kpiOverdue").textContent = summary.replacementRequired ?? 0;
+    document.getElementById("kpiPending").textContent = summary.pendingNotification ?? 0;
+    document.getElementById("kpiApproval").textContent = summary.pendingApproval ?? 0;
+    document.getElementById("kpiMaxOverdue").textContent = maxOverdue;
+  }
+
+  function renderApprovals() {
+    const canApprove = ["IT", "BOSS", "ADMIN_H"].includes(currentState.effectiveRole);
+    const pendingItems = currentState.records.filter(r => r.approvalStatus === "PENDING_DELETE");
+    const card = document.getElementById("approvalCard");
+    const tbody = document.getElementById("approvalTbody");
+
+    if (!canApprove || pendingItems.length === 0) {
+      card.style.display = "none";
+      return;
+    }
+    card.style.display = "block";
+    tbody.innerHTML = pendingItems.map(r => `
+      <tr>
+        <td>${esc(r.id)}</td>
+        <td><b>${esc(r.name)}</b></td>
+        <td>${esc(r.status)}</td>
+        <td>${r.overdueDays > 0 ? r.overdueDays + "d" : "-"}</td>
+        <td class="row-actions">
+          <button class="success" onclick="postAction('approveDelete', '${esc(r.id)}')">Approve & Hide</button>
+          <button class="danger" onclick="postAction('rejectDelete', '${esc(r.id)}')">Reject</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function renderTable() {
+    const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+    const stFilter = document.getElementById("statusFilter").value;
+    const isRed = (currentState.activeSheet === "RED");
+    const role = currentState.effectiveRole;
+    const canApproveOrRestore = ["IT", "BOSS", "ADMIN_H"].includes(role);
+
+    const filtered = currentState.records.filter(r => {
+      if (stFilter !== "ALL" && r.status !== stFilter) return false;
+      if (!q) return true;
+      return String(r.name).toLowerCase().includes(q) || String(r.filterOrPhone).toLowerCase().includes(q);
+    });
+
+    const tbody = document.getElementById("recordsTbody");
+    tbody.innerHTML = filtered.map(r => {
+      const trClass = r.isHidden
+        ? "hidden-row"
+        : (r.status === "REPLACEMENT REQUIRED" ? "overdue" : (r.status === "Pending Notification" ? "pending" : ""));
+
+      const badgeClass = r.status === "REPLACEMENT REQUIRED"
+        ? "danger"
+        : (r.status === "Pending Notification" ? "warn" : "ok");
+
+      const statusLabel = r.overdueDays > 0 ? `${r.status} (+${r.overdueDays}d)` : r.status;
+
+      let actions = `<button class="success" onclick="postAction('confirmDone', '${esc(r.id)}')">Confirm Done</button>`;
+      actions += `<button onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Edit</button>`;
+
+      if (!r.isHidden) {
+        actions += `<button onclick="promptReasonAction('directHide', '${esc(r.id)}', 'Hide record reason:')">Direct Hide</button>`;
+        if (role === "ADMIN_A" || role === "IT") {
+          actions += `<button class="danger" onclick="promptReasonAction('requestDelete', '${esc(r.id)}', 'Request H approval reason:')">Request Delete</button>`;
+        }
+      } else if (canApproveOrRestore) {
+        actions += `<button class="primary" onclick="postAction('restoreRow', '${esc(r.id)}')">Restore</button>`;
+      }
+
+      return `
+        <tr class="${trClass}">
+          <td>${esc(r.id)}</td>
+          <td><b>${esc(r.name)}</b></td>
+          <td>${esc(r.filterOrPhone)}</td>
+          ${isRed ? `<td>${r.machineUsage ? "TRUE" : "FALSE"}</td>` : ""}
+          <td>${esc(r.lastChangedDate)}</td>
+          <td>${esc(r.cycleDays)}</td>
+          <td>${esc(r.nextChangeDate)}</td>
+          <td><span class="badge ${badgeClass}">${esc(statusLabel)}</span></td>
+          <td>${esc(r.approvalStatus || "-")}</td>
+          <td class="row-actions">${actions}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function promptReasonAction(action, id, promptText) {
+    const reason = prompt(promptText, "");
+    if (reason === null) return;
+    postAction(action, id, reason);
+  }
+
+  async function postAction(action, id, reason = "", payload = null) {
+    try {
+      const res = await fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action,
+          email: currentState.email,
+          viewAs: document.getElementById("viewAsSelect").value || "",
+          sheet: currentState.activeSheet,
+          id,
+          reason,
+          payload
+        })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showBanner(data.error || "Action failed.", "err");
+        return;
+      }
+      showBanner(data.message || "Action completed.", "ok");
+      loadData();
+    } catch (err) {
+      showBanner("Request error: " + err.message, "err");
+    }
+  }
+
+  function openCreateModal() {
+    document.getElementById("modalTitle").textContent = "New Customer Record";
+    document.getElementById("editRecordId").value = "";
+    document.getElementById("fName").value = "";
+    document.getElementById("fExtra").value = "";
+    document.getElementById("fUsage").value = "TRUE";
+    document.getElementById("fLastDate").value = new Date().toISOString().slice(0, 10);
+    document.getElementById("fCycle").value = "180";
+    document.getElementById("editModal").classList.add("show");
+  }
+
+  function openEditModal(rec) {
+    document.getElementById("modalTitle").textContent = `Edit Record #${rec.id}`;
+    document.getElementById("editRecordId").value = rec.id;
+    document.getElementById("fName").value = rec.name || "";
+    document.getElementById("fExtra").value = rec.filterOrPhone || "";
+    document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
+    document.getElementById("fLastDate").value = rec.lastChangedDate || "";
+    document.getElementById("fCycle").value = rec.cycleDays || 180;
+    document.getElementById("editModal").classList.add("show");
+  }
+
+  function closeModal() {
+    document.getElementById("editModal").classList.remove("show");
+  }
+
+  function submitModal() {
+    const id = document.getElementById("editRecordId").value;
+    const isRed = (currentState.activeSheet === "RED");
+    const payload = {
+      "Name": document.getElementById("fName").value.trim(),
+      "Last Changed Date": document.getElementById("fLastDate").value,
+      "Change Cycle (Days)": Number(document.getElementById("fCycle").value || 180)
+    };
+    if (isRed) {
+      payload["Filter / Service Name"] = document.getElementById("fExtra").value.trim();
+      payload["Machine usage"] = document.getElementById("fUsage").value === "TRUE";
+    } else {
+      payload["Phone Number"] = document.getElementById("fExtra").value.trim();
+    }
+    if (!payload["Name"]) {
+      showBanner("Customer Name is required.", "err");
+      return;
+    }
+    closeModal();
+    if (id) {
+      postAction("updateRecord", id, "Updated via modal", payload);
+    } else {
+      postAction("createRecord", null, "Created via modal", payload);
+    }
+  }
+
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  initApp();
+</script>
+</body>
+</html>
