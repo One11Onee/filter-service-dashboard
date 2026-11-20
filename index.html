@@ -28,7 +28,9 @@
       --info-bg: #e0f2fe;
       --info-text: #075985;
       --hidden-bg: #f1f5f9;
-      --dirty-bg: rgba(37, 99, 235, 0.08);
+      --dirty-bg: rgba(37, 99, 235, 0.06);
+      --cell-dirty-bg: rgba(37, 99, 235, 0.16);
+      --cell-dirty-border: #2563eb;
       --shadow: 0 4px 12px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
     }
 
@@ -55,7 +57,9 @@
       --info-bg: rgba(14, 165, 233, 0.22);
       --info-text: #7dd3fc;
       --hidden-bg: #1e293b;
-      --dirty-bg: rgba(59, 130, 246, 0.16);
+      --dirty-bg: rgba(59, 130, 246, 0.10);
+      --cell-dirty-bg: rgba(59, 130, 246, 0.26);
+      --cell-dirty-border: #60a5fa;
       --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     }
 
@@ -83,7 +87,9 @@
         --info-bg: rgba(14, 165, 233, 0.22);
         --info-text: #7dd3fc;
         --hidden-bg: #1e293b;
-        --dirty-bg: rgba(59, 130, 246, 0.16);
+        --dirty-bg: rgba(59, 130, 246, 0.10);
+        --cell-dirty-bg: rgba(59, 130, 246, 0.26);
+        --cell-dirty-border: #60a5fa;
         --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
       }
     }
@@ -95,41 +101,42 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      background: color-mix(in srgb, var(--card) 92%, transparent);
+      background: color-mix(in srgb, var(--card) 94%, transparent);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
-      padding: 10px 18px;
+      padding: 7px 14px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
       box-shadow: var(--shadow);
     }
-    .brand-wrap { display: flex; align-items: center; gap: 10px; }
-    .brand { font-weight: 700; font-size: 15.5px; display: flex; align-items: center; gap: 7px; letter-spacing: -0.01em; }
+    .brand-wrap { display: flex; align-items: center; gap: 8px; }
+    .brand { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 6px; letter-spacing: -0.01em; }
+    .brand svg { width: 17px; height: 17px; color: var(--primary); }
     .role-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 3px 11px;
+      padding: 2px 10px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       background: rgba(37, 99, 235, 0.14);
       color: var(--primary);
     }
-    .sync-tag { font-size: 11.5px; color: var(--muted); }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .sync-tag { font-size: 11px; color: var(--muted); }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 
     select, input, button {
-      padding: 5px 10px;
-      border-radius: 7px;
+      padding: 4px 9px;
+      border-radius: 6px;
       border: 1px solid var(--border);
       font-size: 12.5px;
       background: var(--card);
       color: var(--text);
-      height: 31px;
+      height: 29px;
     }
     button {
       cursor: pointer;
@@ -138,7 +145,7 @@
       align-items: center;
       justify-content: center;
       gap: 5px;
-      transition: all 0.15s ease;
+      transition: all 0.14s ease;
     }
     button:hover { background: var(--table-hover); transform: translateY(-0.5px); }
     button.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
@@ -151,37 +158,37 @@
     button.info:hover { background: #0369a1; }
     button.warning { background: #d97706; color: #fff; border-color: #d97706; }
     button.warning:hover { background: #b45309; }
-    button.icon-only { padding: 4px 7px; height: 27px; font-size: 12px; }
-    button.icon-only svg, button svg { width: 14px; height: 14px; flex-shrink: 0; }
+    button.icon-only { padding: 3px 6px; height: 25px; font-size: 12px; }
+    button.icon-only svg, button svg { width: 13.5px; height: 13.5px; flex-shrink: 0; }
 
-    main { width: 100%; max-width: 100%; margin: 0 auto; padding: 14px 18px; }
+    main { width: 100%; max-width: 100%; margin: 0 auto; padding: 10px 14px; }
 
     .grid-kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
     }
     .kpi {
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
+      border-radius: 8px;
+      padding: 8px 12px;
       background: var(--kpi-bg);
       box-shadow: var(--shadow);
       cursor: pointer;
       text-align: center;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.14s ease, border-color 0.14s ease;
     }
-    .kpi:hover { transform: translateY(-2px); border-color: var(--primary); }
-    .kpi .label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-    .kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .kpi:hover { transform: translateY(-1px); border-color: var(--primary); }
+    .kpi .label { font-size: 10.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi .val { font-size: 19px; font-weight: 700; margin-top: 2px; }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
+      border-radius: 9px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
       box-shadow: var(--shadow);
     }
 
@@ -191,26 +198,28 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 
     .table-wrap {
       width: 100%;
       overflow: auto;
-      max-height: calc(100vh - 225px);
+      max-height: calc(100vh - 182px);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 7px;
     }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     th, td {
       border-bottom: 1px solid var(--border);
       border-right: 1px solid var(--border);
-      padding: 7px 10px;
+      padding: 5px 8px;
       text-align: center;
       vertical-align: middle;
       white-space: nowrap;
     }
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3) { text-align: left; }
     th:last-child, td:last-child { border-right: none; }
     th {
       position: sticky;
@@ -232,12 +241,27 @@
     tr.hidden-row { opacity: 0.65; background: var(--hidden-bg); }
     tr.dirty-row { background: var(--dirty-bg) !important; box-shadow: inset 3px 0 0 var(--primary); }
 
+    /* Cell-level diff highlight before Save */
+    td.cell-changed {
+      background: var(--cell-dirty-bg) !important;
+      outline: 1.5px solid var(--cell-dirty-border);
+      outline-offset: -1.5px;
+      font-weight: 600;
+    }
+    .diff-old {
+      display: block;
+      font-size: 10.5px;
+      color: var(--muted);
+      text-decoration: line-through;
+      font-weight: 400;
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      padding: 2px 9px;
+      padding: 2px 8px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 600;
@@ -253,9 +277,9 @@
     .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 30px; }
 
     .banner-msg {
-      padding: 9px 14px;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 7px;
+      margin-bottom: 10px;
       font-size: 12.5px;
       display: none;
       align-items: center;
@@ -274,24 +298,20 @@
     }
     .modal-backdrop.show { display: flex; }
     .modal {
-      background: var(--card); border-radius: 12px; padding: 22px;
-      width: 100%; max-width: 470px; border: 1px solid var(--border);
+      background: var(--card); border-radius: 12px; padding: 20px;
+      width: 100%; max-width: 460px; border: 1px solid var(--border);
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
     }
-    .modal-header h3 { margin: 0; font-size: 15.5px; }
-    .field { margin-bottom: 12px; }
-    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
-    .field input, .field select { width: 100%; height: 35px; }
-    .other-input { margin-top: 7px; }
-
-    .log-page-header {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-      gap: 10px; margin-bottom: 14px;
-    }
+    .modal-header h3 { margin: 0; font-size: 15px; }
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
+    .field input, .field select { width: 100%; height: 34px; }
+    .other-input { margin-top: 6px; }
+    .kbd-hint { font-size: 11px; color: var(--muted); opacity: 0.85; }
   </style>
 </head>
 <body>
@@ -322,9 +342,8 @@
       <span id="batchSaveLabel">Save (0)</span>
     </button>
 
-    <button id="batchDiscardBtn" style="display:none;" onclick="discardBatchChanges()" title="Discard Unsaved Changes">Discard</button>
+    <button id="batchDiscardBtn" style="display:none;" onclick="discardBatchChanges()" title="Discard All Staged Changes">Discard</button>
 
-    <!-- Dedicated Audit Log Page Button -->
     <button id="auditNavBtn" style="display:none;" onclick="openAuditPage()" title="Open Audit Log Page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <span>Audit Log</span>
@@ -335,7 +354,7 @@
       <span id="themeText">Auto</span>
     </button>
 
-    <button class="primary" onclick="openCreateModal()">
+    <button class="primary" onclick="openCreateModal()" title="Shortcut: Press Enter">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span id="addNewBtnText">Add New</span>
     </button>
@@ -355,7 +374,7 @@
 <main>
   <div id="banner" class="banner-msg"></div>
 
-  <div id="authGateView" class="card gate-box">
+  <div id="authGateView" class="card gate-box" style="display:none;">
     <h2 id="authGateTitle" style="margin-top:0;">Verifying Access...</h2>
     <p id="authGateDesc" style="color:var(--muted);">Checking Cloudflare Zero Trust session and permissions...</p>
     <div id="authGateActions" style="display:none;margin-top:16px;">
@@ -375,8 +394,8 @@
     </div>
 
     <div class="card" id="approvalCard" style="display:none; border-color: #f59e0b;">
-      <div class="modal-header" style="margin-bottom:10px;padding-bottom:8px;">
-        <h3 style="margin:0;font-size:14px;">Pending Deletion Approvals</h3>
+      <div class="modal-header" style="margin-bottom:8px;padding-bottom:6px;">
+        <h3 style="margin:0;font-size:13.5px;">Pending Deletion Approvals (Stage & Click Save)</h3>
         <span class="badge warn" id="approvalCountBadge">0 pending</span>
       </div>
       <div style="overflow-x:auto;">
@@ -395,10 +414,10 @@
       </div>
     </div>
 
-    <div class="card" style="padding:12px;">
+    <div class="card" style="padding:10px 12px;">
       <div class="controls-bar">
         <div class="controls-left">
-          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" style="width:250px;" />
+          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" style="width:240px;" />
           <select id="statusFilter" onchange="renderTable()">
             <option value="ALL">Status: All</option>
             <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
@@ -419,6 +438,7 @@
           <button onclick="resetSortAndFilters()" title="Reset Sort & Filters">Reset</button>
         </div>
         <div class="controls-right">
+          <span class="kbd-hint">Press <b>Enter</b> to Add New</span>
           <span id="rowCountLabel" style="color:var(--muted);font-size:12px;">0 rows</span>
         </div>
       </div>
@@ -435,12 +455,12 @@
   <!-- DEDICATED AUDIT LOG PAGE -->
   <div id="auditPageView" style="display:none;">
     <div class="card">
-      <div class="log-page-header">
-        <div style="display:flex;align-items:center;gap:10px;">
+      <div class="controls-bar">
+        <div class="controls-left">
           <button onclick="closeAuditPage()">← Back to Dashboard</button>
-          <h2 style="margin:0;font-size:16px;" id="auditPageTitle">Audit Log</h2>
+          <h2 style="margin:0;font-size:15.5px;" id="auditPageTitle">Audit Log</h2>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <div class="controls-right">
           <input type="text" id="auditSearchInput" placeholder="Search actor, customer, ID, reason..." oninput="renderAuditPage()" style="width:240px;" />
           <select id="auditActionFilter" onchange="renderAuditPage()">
             <option value="ALL">All Actions</option>
@@ -453,11 +473,12 @@
             <option value="DELETE_HIDE">DELETE_HIDE</option>
             <option value="RESTORE">RESTORE</option>
           </select>
+          <button onclick="fetchAuditLogsNow()">Refresh Logs</button>
           <span id="auditCountLabel" style="color:var(--muted);font-size:12px;">0 logs</span>
         </div>
       </div>
 
-      <div class="table-wrap" style="max-height: calc(100vh - 180px);">
+      <div class="table-wrap" style="max-height: calc(100vh - 165px);">
         <table>
           <thead>
             <tr>
@@ -526,9 +547,9 @@
       <input type="number" id="fCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
     </div>
 
-    <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
-      <button onclick="closeModal()">Cancel</button>
-      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Stage</button>
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:16px;">
+      <button onclick="closeModal()">Cancel (Esc)</button>
+      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Stage (Enter)</button>
     </div>
   </div>
 </div>
@@ -539,7 +560,7 @@
   const STORAGE_KEY = "wf_zt_email";
   const VIEW_AS_KEY = "wf_view_as";
   const THEME_KEY = "wf_theme_mode";
-  const CLIENT_CACHE_PREFIX = "wf_snap_v5_";
+  const CLIENT_CACHE_PREFIX = "wf_snap_v6_";
 
   const ICONS = {
     bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
@@ -624,12 +645,11 @@
     document.getElementById("appToolbar").style.display = "none";
   }
 
-  function showDashboard() {
+  function showDashboardImmediate() {
     document.getElementById("authGateView").style.display = "none";
     document.getElementById("auditPageView").style.display = "none";
     document.getElementById("dashboardView").style.display = "block";
     document.getElementById("appToolbar").style.display = "flex";
-    loadData(false);
   }
 
   function openAuditPage() {
@@ -637,6 +657,7 @@
     document.getElementById("auditPageView").style.display = "block";
     document.getElementById("auditPageTitle").textContent = `Audit Log — ${currentState.activeSheet}`;
     renderAuditPage();
+    fetchAuditLogsNow();
   }
 
   function closeAuditPage() {
@@ -649,11 +670,28 @@
     el.innerHTML = `<span>${esc(msg)}</span>`;
     el.className = `banner-msg show ${type}`;
     if (type === "ok") {
-      setTimeout(() => { el.className = "banner-msg"; }, 4000);
+      setTimeout(() => { el.className = "banner-msg"; }, 3500);
     }
   }
 
   async function resolveZeroTrustEmail() {
+    // 1. Instant local cookie/storage check first for zero-delay boot
+    const localCached = (getCookie(COOKIE_KEY) || localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
+    if (localCached) {
+      // Refresh Zero Trust identity quietly in background
+      fetch("/cdn-cgi/access/get-identity", { credentials: "include" })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const fresh = d && String(d.email || "").trim().toLowerCase();
+          if (fresh && fresh !== localCached) {
+            setCookie(COOKIE_KEY, fresh, 1);
+            localStorage.setItem(STORAGE_KEY, fresh);
+          }
+        }).catch(() => {});
+      return localCached;
+    }
+
+    // 2. First visit fallback to Zero Trust endpoint
     try {
       const resp = await fetch("/cdn-cgi/access/get-identity", { credentials: "include" });
       if (resp.ok) {
@@ -666,7 +704,7 @@
         }
       }
     } catch (_) {}
-    return (getCookie(COOKIE_KEY) || localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
+    return "";
   }
 
   async function initApp() {
@@ -682,8 +720,33 @@
     currentState.email = email;
     const savedViewAs = localStorage.getItem(VIEW_AS_KEY) || "";
     if (savedViewAs) document.getElementById("viewAsSelect").value = savedViewAs;
-    showDashboard();
+
+    showDashboardImmediate();
+    loadData(false);
   }
+
+  // Keyboard shortcuts: Enter opens Add New on main page or submits modal; Esc closes modal
+  document.addEventListener("keydown", (ev) => {
+    const modalOpen = document.getElementById("editModal").classList.contains("show");
+    if (ev.key === "Escape" && modalOpen) {
+      ev.preventDefault();
+      closeModal();
+      return;
+    }
+    if (ev.key === "Enter") {
+      if (modalOpen) {
+        ev.preventDefault();
+        submitModal();
+        return;
+      }
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      const isDashVisible = document.getElementById("dashboardView").style.display === "block";
+      if (isDashVisible && !["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(tag)) {
+        ev.preventDefault();
+        openCreateModal();
+      }
+    }
+  });
 
   function onViewAsChange() {
     const val = document.getElementById("viewAsSelect").value || "";
@@ -757,7 +820,9 @@
     currentState.sheetHeaders = (data.sheetHeaders && data.sheetHeaders.length > 0)
       ? data.sheetHeaders
       : ["ID", "Name", "Filter / Service Name", "Machine Usage", "Last Changed Date", "Change Cycle (Days)", "Next Change Date", "Notification Date", "Status", "Notification Status", "Importance"];
-    currentState.auditLogs = data.auditLogs || [];
+    if (data.auditLogs && data.auditLogs.length > 0) {
+      currentState.auditLogs = data.auditLogs;
+    }
     if (data.dropdownOptions) currentState.dropdownOptions = data.dropdownOptions;
 
     currentState.records = (data.records || []).map(r => {
@@ -777,7 +842,9 @@
       : `${currentState.roleDisplayName}`;
 
     const syncTag = document.getElementById("syncTag");
-    syncTag.textContent = isFromCache ? "Instant Cache" : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+    syncTag.textContent = isFromCache
+      ? "Cached • Syncing..."
+      : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
 
     const viewAsSel = document.getElementById("viewAsSelect");
     if (currentState.canSwitchView) {
@@ -812,9 +879,6 @@
     updateKpis(data.summary || {}, currentState.records);
     renderApprovals();
     renderTable();
-    if (document.getElementById("auditPageView").style.display === "block") {
-      renderAuditPage();
-    }
   }
 
   async function loadData(forceFresh = false) {
@@ -835,7 +899,7 @@
         }
       } catch (_) {}
     } else {
-      showBanner("Syncing latest records...", "ok");
+      document.getElementById("syncTag").textContent = "Syncing...";
     }
 
     const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(requestedSheet)}&viewAs=${encodeURIComponent(viewAs)}`;
@@ -861,9 +925,24 @@
       } else {
         document.getElementById("syncTag").textContent = "Unsaved edits staged";
       }
-      if (forceFresh) document.getElementById("banner").className = "banner-msg";
     } catch (err) {
       showBanner("Sync warning: " + err.message, "err");
+    }
+  }
+
+  async function fetchAuditLogsNow() {
+    const sheet = currentState.activeSheet || "RED";
+    const viewAs = document.getElementById("viewAsSelect").value || "";
+    document.getElementById("auditCountLabel").textContent = "Loading logs...";
+    const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(sheet)}&viewAs=${encodeURIComponent(viewAs)}&includeLogs=1`;
+    try {
+      const data = await jsonpGet(url);
+      if (data && data.ok) {
+        currentState.auditLogs = data.auditLogs || [];
+        renderAuditPage();
+      }
+    } catch (err) {
+      showBanner("Failed to load audit logs: " + err.message, "err");
     }
   }
 
@@ -905,17 +984,19 @@
     renderTable();
   }
 
-  /* ================= Global Staging & Save ================= */
+  /* ================= Global Staging & Save (All Roles Including IT Admin) ================= */
 
   function stageOperation(opKey, opObj) {
     currentState.pendingOps[opKey] = Object.assign({ key: opKey }, opObj);
     updateBatchBar();
+    renderApprovals();
     renderTable();
   }
 
   function unstageOperation(opKey) {
     delete currentState.pendingOps[opKey];
     updateBatchBar();
+    renderApprovals();
     renderTable();
   }
 
@@ -943,7 +1024,10 @@
     const ops = Object.values(currentState.pendingOps);
     if (ops.length === 0) return;
 
+    const sheet = currentState.activeSheet;
+    const viewAs = document.getElementById("viewAsSelect").value || "";
     showBanner(`Saving ${ops.length} change(s)...`, "ok");
+
     try {
       await fetch(GAS_URL, {
         method: "POST",
@@ -952,15 +1036,18 @@
         body: JSON.stringify({
           action: "batchSave",
           email: currentState.email,
-          viewAs: document.getElementById("viewAsSelect").value || "",
-          sheet: currentState.activeSheet,
+          viewAs: viewAs,
+          sheet: sheet,
           operations: ops
         })
       });
+
+      // Clear stale local snapshot so fresh server truth replaces it cleanly
+      localStorage.removeItem(getSnapshotCacheKey(sheet, viewAs));
       currentState.pendingOps = {};
       updateBatchBar();
       showBanner(`Saved ${ops.length} change(s). Syncing...`, "ok");
-      setTimeout(() => loadData(true), 900);
+      setTimeout(() => loadData(true), 1000);
     } catch (err) {
       showBanner("Save error: " + err.message, "err");
     }
@@ -968,7 +1055,11 @@
 
   function renderApprovals() {
     const canApprove = ["IT", "BOSS", "ADMIN_H"].includes(currentState.effectiveRole);
-    const pendingItems = currentState.records.filter(r => r.approvalStatus === "PENDING_DELETE");
+    const pendingItems = currentState.records.filter(r => {
+      const staged = currentState.pendingOps[`row_${r.id}`];
+      if (staged && (staged.type === "approveDelete" || staged.type === "rejectDelete")) return false;
+      return r.approvalStatus === "PENDING_DELETE";
+    });
     const card = document.getElementById("approvalCard");
     const tbody = document.getElementById("approvalTbody");
 
@@ -986,8 +1077,8 @@
         <td>${r.overdueDays > 0 ? r.overdueDays + "d" : "-"}</td>
         <td>
           <div class="row-actions">
-            <button class="success" onclick="postImmediateAction('approveDelete', '${esc(r.id)}')">${ICONS.check} Approve Delete</button>
-            <button class="danger" onclick="postImmediateAction('rejectDelete', '${esc(r.id)}')">Reject</button>
+            <button class="success" onclick="stageOperation('row_${esc(r.id)}', { id: '${esc(r.id)}', type: 'approveDelete' })">${ICONS.check} Approve Delete</button>
+            <button class="danger" onclick="stageOperation('row_${esc(r.id)}', { id: '${esc(r.id)}', type: 'rejectDelete' })">Reject</button>
           </div>
         </td>
       </tr>
@@ -1024,38 +1115,53 @@
 
   function renderCellContent(rec, headerName) {
     const cells = rec.cells || {};
+    const diffs = rec._cellDiffs || {};
     let val = cells[headerName];
+
+    const wrapDiff = (htmlContent, diffKey) => {
+      if (!diffs[diffKey]) return htmlContent;
+      return `${htmlContent}<span class="diff-old">${esc(diffs[diffKey].oldVal)}</span>`;
+    };
 
     if (headerName === "ID") {
       const stagedTag = rec._staged ? ` <span class="badge dirty">Unsaved</span>` : "";
       return `<b>${esc(rec.id)}</b>${stagedTag}`;
     }
     if (headerName === "Name") {
-      return `<div style="text-align:left;white-space:normal;min-width:170px;max-width:280px;"><b>${esc(rec.name)}</b></div>`;
+      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:165px;max-width:270px;"><b>${esc(rec.name)}</b></div>`, "Name");
     }
     if (headerName === "Filter / Service Name" || headerName === "Phone Number") {
-      return `<div style="text-align:left;white-space:normal;min-width:150px;max-width:260px;">${esc(rec.filterOrPhone)}</div>`;
+      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:145px;max-width:250px;">${esc(rec.filterOrPhone)}</div>`, headerName);
     }
     if (headerName === "Machine Usage" || headerName === "Machine usage") {
-      return `<span class="badge ${rec.machineUsage ? "ok" : "neutral"}">${rec.machineUsage ? "TRUE" : "FALSE"}</span>`;
+      return wrapDiff(`<span class="badge ${rec.machineUsage ? "ok" : "neutral"}">${rec.machineUsage ? "TRUE" : "FALSE"}</span>`, "Machine Usage");
     }
     if (headerName === "Status") {
       const badgeClass = rec.isHidden
         ? "neutral"
         : (rec.status === "REPLACEMENT REQUIRED" ? "danger" : (rec.status === "Pending Notification" ? "warn" : "ok"));
       const label = rec.overdueDays > 0 ? `${rec.status} (+${rec.overdueDays}d)` : rec.status;
-      return `<span class="badge ${badgeClass}">${esc(label)}</span>`;
+      return wrapDiff(`<span class="badge ${badgeClass}">${esc(label)}</span>`, "Status");
     }
     if (headerName === "Notification Status") {
-      return rec.notified
+      const badge = rec.notified
         ? `<span class="badge info">Notified</span>`
         : `<span class="badge neutral">Unnotified</span>`;
+      return wrapDiff(badge, "Notification Status");
     }
-    if (headerName === "Last Changed Date") return esc(rec.lastChangedDate || val || "");
-    if (headerName === "Change Cycle (Days)") return esc(rec.cycleDays || val || "");
+    if (headerName === "Last Changed Date") return wrapDiff(esc(rec.lastChangedDate || val || ""), "Last Changed Date");
+    if (headerName === "Change Cycle (Days)") return wrapDiff(esc(rec.cycleDays || val || ""), "Change Cycle (Days)");
     if (headerName === "Next Change Date") return esc(rec.nextChangeDate || val || "");
     if (headerName === "Notification Date") return esc(rec.notificationDate || val || "");
     return esc(val ?? "");
+  }
+
+  function isCellDirty(rec, headerName) {
+    if (!rec._staged) return false;
+    if (rec._staged.type === "create") return true;
+    const diffs = rec._cellDiffs || {};
+    if (headerName === "Machine usage") return Boolean(diffs["Machine Usage"]);
+    return Boolean(diffs[headerName]);
   }
 
   function renderTable() {
@@ -1078,6 +1184,7 @@
         return {
           _opKey: op.key,
           _staged: op,
+          _cellDiffs: {},
           id: `NEW-${idx + 1}`,
           name: op.payload["Name"] || "",
           filterOrPhone: extra,
@@ -1109,45 +1216,68 @@
     const mergedExisting = currentState.records.map(r => {
       const opKey = `row_${r.id}`;
       const op = currentState.pendingOps[opKey];
-      if (!op) return Object.assign({}, r, { _opKey: opKey });
-      const copy = Object.assign({}, r, { _opKey: opKey, _staged: op, cells: Object.assign({}, r.cells) });
+      if (!op) return Object.assign({}, r, { _opKey: opKey, _cellDiffs: {} });
+
+      const diffs = {};
+      const copy = Object.assign({}, r, { _opKey: opKey, _staged: op, _cellDiffs: diffs, cells: Object.assign({}, r.cells) });
+
       if (op.type === "markNotified") {
+        diffs["Notification Status"] = { oldVal: r.notified ? "TRUE" : "FALSE", newVal: "TRUE" };
         copy.notified = true;
         copy.cells["Notification Status"] = true;
       } else if (op.type === "update" && op.payload) {
-        if (op.payload["Name"] !== undefined) { copy.name = op.payload["Name"]; copy.cells["Name"] = op.payload["Name"]; }
-        if (op.payload["Filter / Service Name"] !== undefined) {
+        if (op.payload["Name"] !== undefined && op.payload["Name"] !== r.name) {
+          diffs["Name"] = { oldVal: r.name, newVal: op.payload["Name"] };
+          copy.name = op.payload["Name"];
+          copy.cells["Name"] = op.payload["Name"];
+        }
+        if (op.payload["Filter / Service Name"] !== undefined && op.payload["Filter / Service Name"] !== r.filterOrPhone) {
+          diffs["Filter / Service Name"] = { oldVal: r.filterOrPhone, newVal: op.payload["Filter / Service Name"] };
           copy.filterOrPhone = op.payload["Filter / Service Name"];
           copy.cells["Filter / Service Name"] = op.payload["Filter / Service Name"];
         }
-        if (op.payload["Phone Number"] !== undefined) {
+        if (op.payload["Phone Number"] !== undefined && op.payload["Phone Number"] !== r.filterOrPhone) {
+          diffs["Phone Number"] = { oldVal: r.filterOrPhone, newVal: op.payload["Phone Number"] };
           copy.filterOrPhone = op.payload["Phone Number"];
           copy.cells["Phone Number"] = op.payload["Phone Number"];
         }
-        if (op.payload["Machine usage"] !== undefined) {
+        if (op.payload["Machine usage"] !== undefined && Boolean(op.payload["Machine usage"]) !== Boolean(r.machineUsage)) {
+          diffs["Machine Usage"] = { oldVal: r.machineUsage ? "TRUE" : "FALSE", newVal: op.payload["Machine usage"] ? "TRUE" : "FALSE" };
           copy.machineUsage = op.payload["Machine usage"];
           copy.cells["Machine Usage"] = op.payload["Machine usage"];
         }
-        if (op.payload["Last Changed Date"] !== undefined) {
+        if (op.payload["Last Changed Date"] !== undefined && op.payload["Last Changed Date"] !== r.lastChangedDate) {
+          diffs["Last Changed Date"] = { oldVal: r.lastChangedDate, newVal: op.payload["Last Changed Date"] };
           copy.lastChangedDate = op.payload["Last Changed Date"];
           copy.cells["Last Changed Date"] = op.payload["Last Changed Date"];
         }
-        if (op.payload["Change Cycle (Days)"] !== undefined) {
+        if (op.payload["Change Cycle (Days)"] !== undefined && Number(op.payload["Change Cycle (Days)"]) !== Number(r.cycleDays)) {
+          diffs["Change Cycle (Days)"] = { oldVal: String(r.cycleDays), newVal: String(op.payload["Change Cycle (Days)"]) };
           copy.cycleDays = op.payload["Change Cycle (Days)"];
           copy.cells["Change Cycle (Days)"] = op.payload["Change Cycle (Days)"];
         }
       } else if (op.type === "confirmDone") {
-        copy.lastChangedDate = new Date().toISOString().slice(0, 10);
+        const todayStr = new Date().toISOString().slice(0, 10);
+        diffs["Last Changed Date"] = { oldVal: r.lastChangedDate, newVal: todayStr };
+        diffs["Status"] = { oldVal: r.status, newVal: "Normal" };
+        copy.lastChangedDate = todayStr;
         copy.status = "Normal";
         copy.statusRank = 3;
         copy.overdueDays = 0;
         copy.notified = false;
-      } else if (op.type === "directHide") {
+      } else if (op.type === "directHide" || op.type === "approveDelete") {
+        diffs["Status"] = { oldVal: r.status, newVal: "Archived" };
         copy.status = "Archived";
         copy.statusRank = 4;
         copy.isHidden = true;
       } else if (op.type === "requestDelete") {
+        diffs["Status"] = { oldVal: r.status, newVal: "Pending Delete" };
         copy.approvalStatus = "PENDING_DELETE";
+      } else if (op.type === "restoreRow") {
+        diffs["Status"] = { oldVal: "Archived", newVal: "Active" };
+        copy.status = "Normal";
+        copy.statusRank = 3;
+        copy.isHidden = false;
       }
       return copy;
     });
@@ -1214,29 +1344,26 @@
       if (r._staged) {
         actions += `<button class="icon-only" onclick="unstageOperation('${esc(r._opKey)}')" title="Undo Unsaved Change">${ICONS.restore}</button>`;
       } else {
-        // Button 1: Mark Notified (for Pending Notification / unnotified items)
         if (!r.isHidden && !r.notified) {
-          actions += `<button class="info icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'markNotified' })" title="Mark as Notified (Stage)">${ICONS.bell}</button>`;
+          actions += `<button class="info icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'markNotified' })" title="Mark as Notified">${ICONS.bell}</button>`;
         }
-        // Button 2: Confirm Done (Replacement completed -> next cycle)
-        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'confirmDone' })" title="Confirm Done / Next Cycle (Stage)">${ICONS.check}</button>`;
-        // Button 3: Edit
+        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'confirmDone' })" title="Confirm Done (Next Cycle)">${ICONS.check}</button>`;
         actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
 
         if (!r.isHidden) {
-          // Button 4: Delete (Soft-delete / Hide)
           actions += `<button class="danger icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'directHide', 'Delete reason:')" title="Delete">${ICONS.trash}</button>`;
-          // Button 5: Request Delete (Only Atira or IT Admin)
           if (canRequestDelete) {
             actions += `<button class="icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'requestDelete', 'Request deletion approval reason:')" title="Request Delete">${ICONS.flag}</button>`;
           }
         } else if (canApproveOrRestore) {
-          // Restore archived/hidden record
-          actions += `<button class="primary icon-only" onclick="postImmediateAction('restoreRow', '${esc(r.id)}')" title="Restore Record">${ICONS.restore}</button>`;
+          actions += `<button class="primary icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'restoreRow' })" title="Restore Record">${ICONS.restore}</button>`;
         }
       }
 
-      const rowCells = visibleHeaders.map(h => `<td>${renderCellContent(r, h)}</td>`);
+      const rowCells = visibleHeaders.map(h => {
+        const cls = isCellDirty(r, h) ? ` class="cell-changed"` : "";
+        return `<td${cls}>${renderCellContent(r, h)}</td>`;
+      });
       rowCells.push(`<td><div class="row-actions">${actions}</div></td>`);
       return `<tr class="${trClasses.join(" ")}">${rowCells.join("")}</tr>`;
     }).join("");
@@ -1246,30 +1373,6 @@
     const reason = prompt(promptText, "");
     if (reason === null) return;
     stageOperation(opKey, { id, type, reason });
-  }
-
-  async function postImmediateAction(action, id, reason = "", payload = null) {
-    showBanner("Processing...", "ok");
-    try {
-      await fetch(GAS_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action,
-          email: currentState.email,
-          viewAs: document.getElementById("viewAsSelect").value || "",
-          sheet: currentState.activeSheet,
-          id,
-          reason,
-          payload
-        })
-      });
-      showBanner("Done. Syncing...", "ok");
-      setTimeout(() => loadData(true), 800);
-    } catch (err) {
-      showBanner("Request error: " + err.message, "err");
-    }
   }
 
   function toggleOtherInput(selectId, inputId) {
@@ -1327,7 +1430,7 @@
     configureModalForSheet(isRed);
 
     document.getElementById("modalTitle").textContent = isRed ? "Add New — RED (Water Filter)" : "Add New — GREEN (Itsaso Filter)";
-    document.getElementById("modalSubmitBtn").textContent = "Stage (Click Save Top-Right)";
+    document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
     document.getElementById("editRecordId").value = "";
     document.getElementById("fName").value = "";
 
@@ -1345,6 +1448,7 @@
     setSelectWithOther("fCycleSelect", "fCycleOther", defaultCycle);
 
     document.getElementById("editModal").classList.add("show");
+    setTimeout(() => document.getElementById("fName").focus(), 40);
   }
 
   function openEditModal(rec) {
@@ -1353,7 +1457,7 @@
     configureModalForSheet(isRed);
 
     document.getElementById("modalTitle").textContent = `Edit Record #${rec.id} (${isRed ? "RED" : "GREEN"})`;
-    document.getElementById("modalSubmitBtn").textContent = "Stage (Click Save Top-Right)";
+    document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
     document.getElementById("editRecordId").value = rec.id;
     document.getElementById("fName").value = rec.name || "";
 
@@ -1369,6 +1473,7 @@
     setSelectWithOther("fCycleSelect", "fCycleOther", String(rec.cycleDays || 180));
 
     document.getElementById("editModal").classList.add("show");
+    setTimeout(() => document.getElementById("fName").focus(), 40);
   }
 
   function closeModal() {
