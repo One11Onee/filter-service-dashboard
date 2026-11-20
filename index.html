@@ -29,13 +29,17 @@
       --info-text: #075985;
       --hidden-bg: #f1f5f9;
       --dirty-bg: rgba(37, 99, 235, 0.06);
-      --cell-dirty-bg: rgba(37, 99, 235, 0.16);
+      --cell-dirty-bg: rgba(37, 99, 235, 0.14);
       --cell-dirty-border: #2563eb;
-      --shadow: 0 4px 12px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
+      --island-bg: #0f172a;
+      --island-text: #f8fafc;
+      --shadow: 0 6px 20px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-ios: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     :root[data-theme="dark"] {
-      --bg: #090d16;
+      --bg: #080c14;
       --card: #111827;
       --text: #f8fafc;
       --muted: #94a3b8;
@@ -58,14 +62,16 @@
       --info-text: #7dd3fc;
       --hidden-bg: #1e293b;
       --dirty-bg: rgba(59, 130, 246, 0.10);
-      --cell-dirty-bg: rgba(59, 130, 246, 0.26);
+      --cell-dirty-bg: rgba(59, 130, 246, 0.24);
       --cell-dirty-border: #60a5fa;
-      --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      --island-bg: #020617;
+      --island-text: #f8fafc;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
     }
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --bg: #090d16;
+        --bg: #080c14;
         --card: #111827;
         --text: #f8fafc;
         --muted: #94a3b8;
@@ -88,55 +94,144 @@
         --info-text: #7dd3fc;
         --hidden-bg: #1e293b;
         --dirty-bg: rgba(59, 130, 246, 0.10);
-        --cell-dirty-bg: rgba(59, 130, 246, 0.26);
+        --cell-dirty-bg: rgba(59, 130, 246, 0.24);
         --cell-dirty-border: #60a5fa;
-        --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        --island-bg: #020617;
+        --island-text: #f8fafc;
+        --shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
       }
     }
 
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--text); font-size: 13px; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
 
+    /* Sticky Glass Header with 3-column layout so Dynamic Island sits dead-center */
     header {
       position: sticky;
       top: 0;
-      z-index: 30;
-      background: color-mix(in srgb, var(--card) 94%, transparent);
-      backdrop-filter: blur(10px);
+      z-index: 40;
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      padding: 7px 14px;
-      display: flex;
-      flex-wrap: wrap;
+      padding: 12px 24px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      gap: 14px;
       box-shadow: var(--shadow);
     }
-    .brand-wrap { display: flex; align-items: center; gap: 8px; }
-    .brand { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 6px; letter-spacing: -0.01em; }
-    .brand svg { width: 17px; height: 17px; color: var(--primary); }
+    .brand-wrap { display: flex; align-items: center; gap: 12px; justify-self: start; }
+    .brand { font-weight: 700; font-size: 16.5px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.015em; }
+    .brand svg { width: 19px; height: 19px; color: var(--primary); }
     .role-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 2px 10px;
+      padding: 4px 12px;
       border-radius: 999px;
-      font-size: 11.5px;
+      font-size: 12.5px;
       font-weight: 600;
       background: rgba(37, 99, 235, 0.14);
       color: var(--primary);
+      transition: transform 0.25s var(--spring);
     }
-    .sync-tag { font-size: 11px; color: var(--muted); }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .sync-tag { font-size: 12px; color: var(--muted); }
+
+    /* iOS Dynamic Island Pill in Center of Header */
+    .dynamic-island-slot {
+      justify-self: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+    }
+    .dynamic-island {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      background: var(--island-bg);
+      color: var(--island-text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transform: scale(0.94);
+      opacity: 0.88;
+      max-width: 440px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition:
+        transform 0.42s var(--spring),
+        padding 0.38s var(--spring),
+        background-color 0.28s var(--ease-ios),
+        border-color 0.28s var(--ease-ios),
+        box-shadow 0.35s var(--ease-ios),
+        opacity 0.25s ease;
+    }
+    .dynamic-island.expanded {
+      transform: scale(1.03);
+      opacity: 1;
+      padding: 8px 20px;
+    }
+    .dynamic-island.ok {
+      border-color: rgba(34, 197, 94, 0.45);
+      box-shadow: 0 10px 30px rgba(22, 163, 74, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .dynamic-island.err {
+      border-color: rgba(239, 68, 68, 0.55);
+      box-shadow: 0 10px 30px rgba(220, 38, 38, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .dynamic-island.syncing {
+      border-color: rgba(59, 130, 246, 0.45);
+    }
+    .island-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+      transition: background-color 0.25s ease, transform 0.3s var(--spring);
+    }
+    .dynamic-island.syncing .island-dot {
+      background: #3b82f6;
+      animation: pulseDot 1.2s infinite ease-in-out;
+    }
+    .dynamic-island.err .island-dot {
+      background: #ef4444;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(0.85); opacity: 0.65; }
+      50% { transform: scale(1.3); opacity: 1; }
+    }
+
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-self: end; }
 
     select, input, button {
-      padding: 4px 9px;
-      border-radius: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
       border: 1px solid var(--border);
-      font-size: 12.5px;
+      font-size: 13.5px;
       background: var(--card);
       color: var(--text);
-      height: 29px;
+      height: 34px;
+      transition: all 0.22s var(--ease-ios);
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
     }
     button {
       cursor: pointer;
@@ -144,10 +239,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      transition: all 0.14s ease;
+      gap: 6px;
+      transition: transform 0.22s var(--spring), background-color 0.18s ease, box-shadow 0.2s ease;
     }
-    button:hover { background: var(--table-hover); transform: translateY(-0.5px); }
+    button:hover { background: var(--table-hover); transform: translateY(-1px); }
+    button:active { transform: scale(0.95); }
     button.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
     button.primary:hover { background: var(--primary-hover); }
     button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
@@ -158,38 +254,46 @@
     button.info:hover { background: #0369a1; }
     button.warning { background: #d97706; color: #fff; border-color: #d97706; }
     button.warning:hover { background: #b45309; }
-    button.icon-only { padding: 3px 6px; height: 25px; font-size: 12px; }
-    button.icon-only svg, button svg { width: 13.5px; height: 13.5px; flex-shrink: 0; }
+    button.icon-only { padding: 4px 8px; height: 29px; font-size: 13px; }
+    button.icon-only svg, button svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-    main { width: 100%; max-width: 100%; margin: 0 auto; padding: 10px 14px; }
+    /* Increased breathing room & generous margins */
+    main { width: 100%; max-width: 100%; margin: 0 auto; padding: 20px 26px; }
 
     .grid-kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
     }
     .kpi {
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 12px;
+      border-radius: 12px;
+      padding: 15px 18px;
       background: var(--kpi-bg);
       box-shadow: var(--shadow);
       cursor: pointer;
       text-align: center;
-      transition: transform 0.14s ease, border-color 0.14s ease;
+      transition: transform 0.28s var(--spring), border-color 0.2s ease, box-shadow 0.25s ease;
     }
-    .kpi:hover { transform: translateY(-1px); border-color: var(--primary); }
-    .kpi .label { font-size: 10.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-    .kpi .val { font-size: 19px; font-weight: 700; margin-top: 2px; }
+    .kpi:hover { transform: translateY(-3px); border-color: var(--primary); }
+    .kpi:active { transform: scale(0.97); }
+    .kpi .label { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi .val { font-size: 24px; font-weight: 700; margin-top: 5px; }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
       box-shadow: var(--shadow);
+      animation: fadeUp 0.35s var(--ease-ios);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .controls-bar {
@@ -197,23 +301,23 @@
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 12px;
+      margin-bottom: 14px;
     }
-    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
     .table-wrap {
       width: 100%;
       overflow: auto;
-      max-height: calc(100vh - 182px);
+      max-height: calc(100vh - 255px);
       border: 1px solid var(--border);
-      border-radius: 7px;
+      border-radius: 10px;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     th, td {
       border-bottom: 1px solid var(--border);
       border-right: 1px solid var(--border);
-      padding: 5px 8px;
+      padding: 10px 13px;
       text-align: center;
       vertical-align: middle;
       white-space: nowrap;
@@ -227,21 +331,23 @@
       z-index: 10;
       background: var(--table-head);
       font-weight: 600;
+      font-size: 13px;
       user-select: none;
       cursor: pointer;
+      transition: background-color 0.15s ease;
     }
     th:hover { background: var(--table-hover); }
-    th .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; }
-    th .sort-ind { font-size: 10px; color: var(--primary); }
+    th .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
+    th .sort-ind { font-size: 11px; color: var(--primary); }
     th.no-sort { cursor: default; }
 
+    tbody tr { transition: background-color 0.18s ease; }
     tbody tr:hover { filter: brightness(0.985); }
     tr.overdue { background: var(--danger-row); }
     tr.pending { background: var(--warn-row); }
     tr.hidden-row { opacity: 0.65; background: var(--hidden-bg); }
-    tr.dirty-row { background: var(--dirty-bg) !important; box-shadow: inset 3px 0 0 var(--primary); }
+    tr.dirty-row { background: var(--dirty-bg) !important; box-shadow: inset 3.5px 0 0 var(--primary); }
 
-    /* Cell-level diff highlight before Save */
     td.cell-changed {
       background: var(--cell-dirty-bg) !important;
       outline: 1.5px solid var(--cell-dirty-border);
@@ -250,10 +356,11 @@
     }
     .diff-old {
       display: block;
-      font-size: 10.5px;
+      font-size: 11px;
       color: var(--muted);
       text-decoration: line-through;
       font-weight: 400;
+      margin-top: 2px;
     }
 
     .badge {
@@ -261,9 +368,9 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
     }
     .badge.danger { background: var(--danger-bg); color: var(--danger-text); }
@@ -273,45 +380,51 @@
     .badge.neutral { background: var(--hidden-bg); color: var(--muted); }
     .badge.dirty { background: var(--primary); color: #fff; }
 
-    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
-    .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 30px; }
+    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .gate-box { max-width: 480px; margin: 80px auto; text-align: center; padding: 34px; }
 
-    .banner-msg {
-      padding: 7px 12px;
-      border-radius: 7px;
-      margin-bottom: 10px;
-      font-size: 12.5px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-weight: 500;
-    }
-    .banner-msg.show { display: flex; }
-    .banner-msg.ok { background: var(--ok-bg); color: var(--ok-text); }
-    .banner-msg.err { background: var(--danger-bg); color: var(--danger-text); }
-
+    /* iOS Spring Modal Animation */
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(2, 6, 23, 0.58);
-      backdrop-filter: blur(3px);
-      display: none; align-items: center; justify-content: center; z-index: 60; padding: 16px;
+      position: fixed; inset: 0; background: rgba(2, 6, 23, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.26s var(--ease-ios);
     }
-    .modal-backdrop.show { display: flex; }
+    .modal-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
     .modal {
-      background: var(--card); border-radius: 12px; padding: 20px;
-      width: 100%; max-width: 460px; border: 1px solid var(--border);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      background: var(--card); border-radius: 16px; padding: 24px 26px;
+      width: 100%; max-width: 490px; border: 1px solid var(--border);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+      transform: scale(0.92) translateY(14px);
+      transition: transform 0.36s var(--spring);
+    }
+    .modal-backdrop.show .modal {
+      transform: scale(1) translateY(0);
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
     }
-    .modal-header h3 { margin: 0; font-size: 15px; }
-    .field { margin-bottom: 10px; }
-    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
-    .field input, .field select { width: 100%; height: 34px; }
-    .other-input { margin-top: 6px; }
-    .kbd-hint { font-size: 11px; color: var(--muted); opacity: 0.85; }
+    .modal-header h3 { margin: 0; font-size: 16.5px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+    .field input, .field select { width: 100%; height: 38px; font-size: 14px; }
+    .other-input { margin-top: 8px; }
+    .kbd-hint { font-size: 12px; color: var(--muted); opacity: 0.85; }
+
+    @media (max-width: 1100px) {
+      header {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+      .brand-wrap, .toolbar { justify-self: center; }
+    }
   </style>
 </head>
 <body>
@@ -324,6 +437,14 @@
     </div>
     <span id="userBadge" class="role-pill" style="display:none;"></span>
     <span id="syncTag" class="sync-tag"></span>
+  </div>
+
+  <!-- Center Dynamic Island Status Pill -->
+  <div class="dynamic-island-slot">
+    <div id="dynamicIsland" class="dynamic-island">
+      <span class="island-dot"></span>
+      <span id="islandText">Ready</span>
+    </div>
   </div>
 
   <div class="toolbar" id="appToolbar" style="display:none;">
@@ -372,12 +493,10 @@
 </header>
 
 <main>
-  <div id="banner" class="banner-msg"></div>
-
   <div id="authGateView" class="card gate-box" style="display:none;">
     <h2 id="authGateTitle" style="margin-top:0;">Verifying Access...</h2>
     <p id="authGateDesc" style="color:var(--muted);">Checking Cloudflare Zero Trust session and permissions...</p>
-    <div id="authGateActions" style="display:none;margin-top:16px;">
+    <div id="authGateActions" style="display:none;margin-top:18px;">
       <button class="primary" onclick="window.location.reload()">Retry Verification</button>
     </div>
   </div>
@@ -394,8 +513,8 @@
     </div>
 
     <div class="card" id="approvalCard" style="display:none; border-color: #f59e0b;">
-      <div class="modal-header" style="margin-bottom:8px;padding-bottom:6px;">
-        <h3 style="margin:0;font-size:13.5px;">Pending Deletion Approvals (Stage & Click Save)</h3>
+      <div class="modal-header" style="margin-bottom:12px;padding-bottom:8px;">
+        <h3 style="margin:0;font-size:15px;">Pending Deletion Approvals (Stage & Click Save)</h3>
         <span class="badge warn" id="approvalCountBadge">0 pending</span>
       </div>
       <div style="overflow-x:auto;">
@@ -414,10 +533,10 @@
       </div>
     </div>
 
-    <div class="card" style="padding:10px 12px;">
+    <div class="card">
       <div class="controls-bar">
         <div class="controls-left">
-          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" style="width:240px;" />
+          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" style="width:270px;" />
           <select id="statusFilter" onchange="renderTable()">
             <option value="ALL">Status: All</option>
             <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
@@ -439,7 +558,7 @@
         </div>
         <div class="controls-right">
           <span class="kbd-hint">Press <b>Enter</b> to Add New</span>
-          <span id="rowCountLabel" style="color:var(--muted);font-size:12px;">0 rows</span>
+          <span id="rowCountLabel" style="color:var(--muted);font-size:13px;">0 rows</span>
         </div>
       </div>
 
@@ -458,10 +577,10 @@
       <div class="controls-bar">
         <div class="controls-left">
           <button onclick="closeAuditPage()">← Back to Dashboard</button>
-          <h2 style="margin:0;font-size:15.5px;" id="auditPageTitle">Audit Log</h2>
+          <h2 style="margin:0;font-size:16.5px;" id="auditPageTitle">Audit Log</h2>
         </div>
         <div class="controls-right">
-          <input type="text" id="auditSearchInput" placeholder="Search actor, customer, ID, reason..." oninput="renderAuditPage()" style="width:240px;" />
+          <input type="text" id="auditSearchInput" placeholder="Search actor, customer, ID, reason..." oninput="renderAuditPage()" style="width:260px;" />
           <select id="auditActionFilter" onchange="renderAuditPage()">
             <option value="ALL">All Actions</option>
             <option value="MARK_NOTIFIED">MARK_NOTIFIED</option>
@@ -474,11 +593,11 @@
             <option value="RESTORE">RESTORE</option>
           </select>
           <button onclick="fetchAuditLogsNow()">Refresh Logs</button>
-          <span id="auditCountLabel" style="color:var(--muted);font-size:12px;">0 logs</span>
+          <span id="auditCountLabel" style="color:var(--muted);font-size:13px;">0 logs</span>
         </div>
       </div>
 
-      <div class="table-wrap" style="max-height: calc(100vh - 165px);">
+      <div class="table-wrap" style="max-height: calc(100vh - 185px);">
         <table>
           <thead>
             <tr>
@@ -547,7 +666,7 @@
       <input type="number" id="fCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
     </div>
 
-    <div style="display:flex;justify-content:center;gap:10px;margin-top:16px;">
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
       <button onclick="closeModal()">Cancel (Esc)</button>
       <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Stage (Enter)</button>
     </div>
@@ -571,6 +690,8 @@
     restore: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`
   };
 
+  let islandTimer = null;
+
   let currentState = {
     email: "",
     actualRole: "GUEST",
@@ -592,6 +713,30 @@
     sortDir: "asc",
     pendingOps: {}
   };
+
+  function showIsland(msg, type = "ok", persist = false) {
+    const island = document.getElementById("dynamicIsland");
+    const txt = document.getElementById("islandText");
+    if (!island || !txt) return;
+
+    if (islandTimer) {
+      clearTimeout(islandTimer);
+      islandTimer = null;
+    }
+
+    txt.textContent = msg;
+    island.className = `dynamic-island expanded ${type}`;
+
+    if (!persist) {
+      islandTimer = setTimeout(() => {
+        island.classList.remove("expanded");
+        setTimeout(() => {
+          island.className = "dynamic-island";
+          txt.textContent = "All Systems Ready";
+        }, 320);
+      }, 3600);
+    }
+  }
 
   function applyTheme(mode) {
     const clean = ["auto", "dark", "light"].includes(mode) ? mode : "auto";
@@ -665,20 +810,9 @@
     document.getElementById("dashboardView").style.display = "block";
   }
 
-  function showBanner(msg, type = "ok") {
-    const el = document.getElementById("banner");
-    el.innerHTML = `<span>${esc(msg)}</span>`;
-    el.className = `banner-msg show ${type}`;
-    if (type === "ok") {
-      setTimeout(() => { el.className = "banner-msg"; }, 3500);
-    }
-  }
-
   async function resolveZeroTrustEmail() {
-    // 1. Instant local cookie/storage check first for zero-delay boot
     const localCached = (getCookie(COOKIE_KEY) || localStorage.getItem(STORAGE_KEY) || "").trim().toLowerCase();
     if (localCached) {
-      // Refresh Zero Trust identity quietly in background
       fetch("/cdn-cgi/access/get-identity", { credentials: "include" })
         .then(r => r.ok ? r.json() : null)
         .then(d => {
@@ -691,7 +825,6 @@
       return localCached;
     }
 
-    // 2. First visit fallback to Zero Trust endpoint
     try {
       const resp = await fetch("/cdn-cgi/access/get-identity", { credentials: "include" });
       if (resp.ok) {
@@ -725,7 +858,6 @@
     loadData(false);
   }
 
-  // Keyboard shortcuts: Enter opens Add New on main page or submits modal; Esc closes modal
   document.addEventListener("keydown", (ev) => {
     const modalOpen = document.getElementById("editModal").classList.contains("show");
     if (ev.key === "Escape" && modalOpen) {
@@ -792,7 +924,13 @@
 
   function populateConfigurableSelects() {
     const opts = currentState.dropdownOptions || {};
-    const redList = opts.redFilter || ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter"];
+    const baseRed = opts.redFilter || ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter"];
+    // Merge unique existing filter values from loaded records so editing never misfires into "Other"
+    const existingRed = currentState.activeSheet === "RED"
+      ? Array.from(new Set(currentState.records.map(r => String(r.filterOrPhone || "").trim()).filter(Boolean)))
+      : [];
+    const redList = Array.from(new Set([...baseRed, ...existingRed]));
+
     const greenList = opts.greenPlan || ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"];
     const cycleList = opts.cycles || [90, 180, 365];
 
@@ -843,8 +981,8 @@
 
     const syncTag = document.getElementById("syncTag");
     syncTag.textContent = isFromCache
-      ? "Cached • Syncing..."
-      : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+      ? "Cached"
+      : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
     const viewAsSel = document.getElementById("viewAsSelect");
     if (currentState.canSwitchView) {
@@ -898,9 +1036,9 @@
           }
         }
       } catch (_) {}
-    } else {
-      document.getElementById("syncTag").textContent = "Syncing...";
     }
+
+    showIsland("Syncing records...", "syncing", true);
 
     const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(requestedSheet)}&viewAs=${encodeURIComponent(viewAs)}`;
     try {
@@ -911,7 +1049,7 @@
           showAuthBlocked("Access Denied", `Account "${currentState.email}" is not authorized in IT_Config.`);
           return;
         }
-        showBanner((data && data.error) || "Failed to load data.", "err");
+        showIsland((data && data.error) || "Sync failed", "err", false);
         return;
       }
 
@@ -922,11 +1060,12 @@
 
       if (Object.keys(currentState.pendingOps).length === 0) {
         applyDashboardPayload(data, false);
+        showIsland(`${data.activeSheet} Synced`, "ok", false);
       } else {
-        document.getElementById("syncTag").textContent = "Unsaved edits staged";
+        showIsland("Unsaved changes staged", "syncing", true);
       }
     } catch (err) {
-      showBanner("Sync warning: " + err.message, "err");
+      showIsland("Sync warning: " + err.message, "err", false);
     }
   }
 
@@ -934,15 +1073,17 @@
     const sheet = currentState.activeSheet || "RED";
     const viewAs = document.getElementById("viewAsSelect").value || "";
     document.getElementById("auditCountLabel").textContent = "Loading logs...";
+    showIsland("Loading audit logs...", "syncing", true);
     const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(sheet)}&viewAs=${encodeURIComponent(viewAs)}&includeLogs=1`;
     try {
       const data = await jsonpGet(url);
       if (data && data.ok) {
         currentState.auditLogs = data.auditLogs || [];
         renderAuditPage();
+        showIsland("Audit logs loaded", "ok", false);
       }
     } catch (err) {
-      showBanner("Failed to load audit logs: " + err.message, "err");
+      showIsland("Failed to load logs", "err", false);
     }
   }
 
@@ -984,13 +1125,15 @@
     renderTable();
   }
 
-  /* ================= Global Staging & Save (All Roles Including IT Admin) ================= */
+  /* ================= Global Staging & Save ================= */
 
   function stageOperation(opKey, opObj) {
     currentState.pendingOps[opKey] = Object.assign({ key: opKey }, opObj);
     updateBatchBar();
     renderApprovals();
     renderTable();
+    const n = Object.keys(currentState.pendingOps).length;
+    showIsland(`${n} change(s) ready • Click Save`, "syncing", true);
   }
 
   function unstageOperation(opKey) {
@@ -998,12 +1141,16 @@
     updateBatchBar();
     renderApprovals();
     renderTable();
+    const n = Object.keys(currentState.pendingOps).length;
+    if (n === 0) showIsland("Change reverted", "ok", false);
+    else showIsland(`${n} change(s) ready • Click Save`, "syncing", true);
   }
 
   function discardBatchChanges() {
     currentState.pendingOps = {};
     updateBatchBar();
     loadData(false);
+    showIsland("All staged changes discarded", "ok", false);
   }
 
   function updateBatchBar() {
@@ -1026,7 +1173,7 @@
 
     const sheet = currentState.activeSheet;
     const viewAs = document.getElementById("viewAsSelect").value || "";
-    showBanner(`Saving ${ops.length} change(s)...`, "ok");
+    showIsland(`Saving ${ops.length} change(s)...`, "syncing", true);
 
     try {
       await fetch(GAS_URL, {
@@ -1042,14 +1189,13 @@
         })
       });
 
-      // Clear stale local snapshot so fresh server truth replaces it cleanly
       localStorage.removeItem(getSnapshotCacheKey(sheet, viewAs));
       currentState.pendingOps = {};
       updateBatchBar();
-      showBanner(`Saved ${ops.length} change(s). Syncing...`, "ok");
+      showIsland(`Saved ${ops.length} change(s)`, "ok", false);
       setTimeout(() => loadData(true), 1000);
     } catch (err) {
-      showBanner("Save error: " + err.message, "err");
+      showIsland("Save error: " + err.message, "err", false);
     }
   }
 
@@ -1128,10 +1274,10 @@
       return `<b>${esc(rec.id)}</b>${stagedTag}`;
     }
     if (headerName === "Name") {
-      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:165px;max-width:270px;"><b>${esc(rec.name)}</b></div>`, "Name");
+      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:170px;max-width:280px;"><b>${esc(rec.name)}</b></div>`, "Name");
     }
     if (headerName === "Filter / Service Name" || headerName === "Phone Number") {
-      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:145px;max-width:250px;">${esc(rec.filterOrPhone)}</div>`, headerName);
+      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:150px;max-width:260px;">${esc(rec.filterOrPhone)}</div>`, headerName);
     }
     if (headerName === "Machine Usage" || headerName === "Machine usage") {
       return wrapDiff(`<span class="badge ${rec.machineUsage ? "ok" : "neutral"}">${rec.machineUsage ? "TRUE" : "FALSE"}</span>`, "Machine Usage");
@@ -1226,17 +1372,17 @@
         copy.notified = true;
         copy.cells["Notification Status"] = true;
       } else if (op.type === "update" && op.payload) {
-        if (op.payload["Name"] !== undefined && op.payload["Name"] !== r.name) {
+        if (op.payload["Name"] !== undefined && String(op.payload["Name"]).trim() !== String(r.name || "").trim()) {
           diffs["Name"] = { oldVal: r.name, newVal: op.payload["Name"] };
           copy.name = op.payload["Name"];
           copy.cells["Name"] = op.payload["Name"];
         }
-        if (op.payload["Filter / Service Name"] !== undefined && op.payload["Filter / Service Name"] !== r.filterOrPhone) {
+        if (op.payload["Filter / Service Name"] !== undefined && String(op.payload["Filter / Service Name"]).trim() !== String(r.filterOrPhone || "").trim()) {
           diffs["Filter / Service Name"] = { oldVal: r.filterOrPhone, newVal: op.payload["Filter / Service Name"] };
           copy.filterOrPhone = op.payload["Filter / Service Name"];
           copy.cells["Filter / Service Name"] = op.payload["Filter / Service Name"];
         }
-        if (op.payload["Phone Number"] !== undefined && op.payload["Phone Number"] !== r.filterOrPhone) {
+        if (op.payload["Phone Number"] !== undefined && String(op.payload["Phone Number"]).trim() !== String(r.filterOrPhone || "").trim()) {
           diffs["Phone Number"] = { oldVal: r.filterOrPhone, newVal: op.payload["Phone Number"] };
           copy.filterOrPhone = op.payload["Phone Number"];
           copy.cells["Phone Number"] = op.payload["Phone Number"];
@@ -1246,7 +1392,7 @@
           copy.machineUsage = op.payload["Machine usage"];
           copy.cells["Machine Usage"] = op.payload["Machine usage"];
         }
-        if (op.payload["Last Changed Date"] !== undefined && op.payload["Last Changed Date"] !== r.lastChangedDate) {
+        if (op.payload["Last Changed Date"] !== undefined && String(op.payload["Last Changed Date"]).trim() !== String(r.lastChangedDate || "").trim()) {
           diffs["Last Changed Date"] = { oldVal: r.lastChangedDate, newVal: op.payload["Last Changed Date"] };
           copy.lastChangedDate = op.payload["Last Changed Date"];
           copy.cells["Last Changed Date"] = op.payload["Last Changed Date"];
@@ -1448,7 +1594,7 @@
     setSelectWithOther("fCycleSelect", "fCycleOther", defaultCycle);
 
     document.getElementById("editModal").classList.add("show");
-    setTimeout(() => document.getElementById("fName").focus(), 40);
+    setTimeout(() => document.getElementById("fName").focus(), 50);
   }
 
   function openEditModal(rec) {
@@ -1473,7 +1619,7 @@
     setSelectWithOther("fCycleSelect", "fCycleOther", String(rec.cycleDays || 180));
 
     document.getElementById("editModal").classList.add("show");
-    setTimeout(() => document.getElementById("fName").focus(), 40);
+    setTimeout(() => document.getElementById("fName").focus(), 50);
   }
 
   function closeModal() {
@@ -1488,7 +1634,7 @@
     const cycleVal = Number(readSelectOrOther("fCycleSelect", "fCycleOther") || 180);
 
     if (!name) {
-      showBanner("Name is required.", "err");
+      showIsland("Name is required", "err", false);
       return;
     }
 
@@ -1511,6 +1657,22 @@
     closeModal();
 
     if (id) {
+      // Prevent false-positive "Unsaved" if nothing actually changed
+      const orig = currentState.records.find(r => String(r.id) === String(id));
+      if (orig) {
+        const sameName = String(payload["Name"]).trim() === String(orig.name || "").trim();
+        const sameDate = String(payload["Last Changed Date"]).trim() === String(orig.lastChangedDate || "").trim();
+        const sameCycle = Number(payload["Change Cycle (Days)"]) === Number(orig.cycleDays);
+        const sameExtra = isRed
+          ? String(payload["Filter / Service Name"]).trim() === String(orig.filterOrPhone || "").trim()
+          : String(payload["Phone Number"]).trim() === String(orig.filterOrPhone || "").trim();
+        const sameUsage = !isRed || (Boolean(payload["Machine usage"]) === Boolean(orig.machineUsage));
+
+        if (sameName && sameDate && sameCycle && sameExtra && sameUsage) {
+          showIsland("No changes made", "ok", false);
+          return;
+        }
+      }
       stageOperation(`row_${id}`, { id, type: "update", payload });
     } else {
       const newKey = `new_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
