@@ -132,7 +132,7 @@
     .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
     .row-actions { display: flex; flex-wrap: wrap; gap: 4px; }
     .row-actions button { padding: 4px 8px; font-size: 12px; }
-    .status-box { max-width: 480px; margin: 60px auto; text-align: center; }
+    .gate-box { max-width: 480px; margin: 60px auto; text-align: center; }
     .banner-msg {
       padding: 10px 14px;
       border-radius: 6px;
@@ -144,7 +144,7 @@
     .banner-msg.ok { background: var(--ok-bg); color: var(--ok-text); }
     .banner-msg.err { background: var(--danger-bg); color: var(--danger-text); }
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: center; justify-content: center; z-index: 50;
     }
     .modal-backdrop.show { display: flex; }
@@ -175,7 +175,7 @@
       <option value="ADMIN_A">View As: Admin A</option>
       <option value="ADMIN_L">View As: Admin L</option>
     </select>
-    <button id="themeToggleBtn" onclick="cycleTheme()">Theme: Auto</button>
+    <button id="themeToggleBtn" class="ghost" onclick="cycleTheme()">Theme: Auto</button>
     <button class="primary" onclick="openCreateModal()">+ New Record</button>
     <button onclick="loadData()">Refresh</button>
     <button class="ghost" onclick="logout()">Logout</button>
@@ -185,14 +185,13 @@
 <main>
   <div id="banner" class="banner-msg"></div>
 
-  <div id="authGateView" class="card status-box">
-    <h3 id="authGateTitle" style="margin-top:0;">Verifying Cloudflare Zero Trust Session...</h3>
+  <div id="authGateView" class="card gate-box">
+    <h2 id="authGateTitle" style="margin-top:0;">Verifying Access...</h2>
     <p id="authGateDesc" style="font-size:13px;color:var(--muted);">
-      Please wait while we verify your authenticated session.
+      Checking Cloudflare Zero Trust session and role permissions...
     </p>
     <div id="authGateActions" style="display:none;margin-top:14px;">
-      <button class="primary" onclick="location.reload()">Retry Verification</button>
-      <button class="ghost" onclick="logout()">Logout</button>
+      <button class="primary" onclick="window.location.reload()">Retry Verification</button>
     </div>
   </div>
 
@@ -367,7 +366,9 @@
     const el = document.getElementById("banner");
     el.textContent = msg;
     el.className = `banner-msg show ${type}`;
-    setTimeout(() => { el.className = "banner-msg"; }, 6000);
+    if (type === "ok") {
+      setTimeout(() => { el.className = "banner-msg"; }, 5000);
+    }
   }
 
   async function resolveZeroTrustEmail() {
@@ -416,8 +417,8 @@
       const script = document.createElement("script");
       const timer = setTimeout(() => {
         cleanup();
-        reject(new Error("JSONP request timed out"));
-      }, 15000);
+        reject(new Error("JSONP request timed out (45s)"));
+      }, 45000);
 
       function cleanup() {
         clearTimeout(timer);
@@ -446,10 +447,7 @@
     const sheet = sheetSel.value || "RED";
     const viewAs = viewAsSel.value || "";
 
-    if (!GAS_URL || GAS_URL.includes("YOUR_GAS_WEB_APP_URL")) {
-      showBanner("GAS_URL is not configured yet in index.html.", "err");
-      return;
-    }
+    showBanner("Loading records from Google Sheets...", "ok");
 
     const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(sheet)}&viewAs=${encodeURIComponent(viewAs)}`;
     try {
@@ -495,6 +493,7 @@
       updateKpis(data.summary || {}, currentState.records);
       renderApprovals();
       renderTable();
+      document.getElementById("banner").className = "banner-msg";
     } catch (err) {
       showBanner("GAS request error: " + err.message, "err");
     }
