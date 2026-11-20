@@ -926,12 +926,7 @@
 
   function populateConfigurableSelects() {
     const opts = currentState.dropdownOptions || {};
-    const baseRed = opts.redFilter || ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter"];
-    // Merge unique existing filter values from loaded records so editing never misfires into "Other"
-    const existingRed = currentState.activeSheet === "RED"
-      ? Array.from(new Set(currentState.records.map(r => String(r.filterOrPhone || "").trim()).filter(Boolean)))
-      : [];
-    const redList = Array.from(new Set([...baseRed, ...existingRed]));
+    const redList = opts.redFilter || ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter", "UV / UF Cartridge Set"];
 
     const greenList = opts.greenPlan || ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"];
     const cycleList = opts.cycles || [90, 180, 365];
