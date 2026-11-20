@@ -6,13 +6,13 @@
   <title>Filter Service & Dispatch Dashboard</title>
   <style>
     :root {
-      --bg: #f3f5f8;
+      --bg: #f1f5f9;
       --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --table-head: #f9fafb;
-      --table-hover: #f3f4f6;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --table-head: #f8fafc;
+      --table-hover: #f1f5f9;
       --kpi-bg: #ffffff;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
@@ -25,60 +25,60 @@
       --warn-text: #92400e;
       --ok-bg: #dcfce7;
       --ok-text: #166534;
-      --hidden-bg: #f3f4f6;
+      --hidden-bg: #f1f5f9;
       --dirty-bg: rgba(37, 99, 235, 0.08);
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow: 0 4px 12px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
     }
 
     :root[data-theme="dark"] {
-      --bg: #0b0f17;
+      --bg: #090d16;
       --card: #111827;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --border: #1f2937;
-      --table-head: #161f30;
-      --table-hover: #1a2438;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #1e293b;
+      --table-head: #151f32;
+      --table-hover: #1b2840;
       --kpi-bg: #111827;
       --primary: #3b82f6;
       --primary-hover: #2563eb;
       --primary-text: #ffffff;
-      --danger-bg: rgba(239, 68, 68, 0.2);
-      --danger-row: rgba(239, 68, 68, 0.12);
+      --danger-bg: rgba(239, 68, 68, 0.22);
+      --danger-row: rgba(239, 68, 68, 0.11);
       --danger-text: #fca5a5;
-      --warn-bg: rgba(245, 158, 11, 0.2);
-      --warn-row: rgba(245, 158, 11, 0.12);
+      --warn-bg: rgba(245, 158, 11, 0.22);
+      --warn-row: rgba(245, 158, 11, 0.11);
       --warn-text: #fcd34d;
-      --ok-bg: rgba(34, 197, 94, 0.2);
+      --ok-bg: rgba(34, 197, 94, 0.22);
       --ok-text: #86efac;
-      --hidden-bg: #1f2937;
+      --hidden-bg: #1e293b;
       --dirty-bg: rgba(59, 130, 246, 0.16);
-      --shadow: 0 1px 3px rgba(0,0,0,0.35);
+      --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     }
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --bg: #0b0f17;
+        --bg: #090d16;
         --card: #111827;
-        --text: #f3f4f6;
-        --muted: #9ca3af;
-        --border: #1f2937;
-        --table-head: #161f30;
-        --table-hover: #1a2438;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --border: #1e293b;
+        --table-head: #151f32;
+        --table-hover: #1b2840;
         --kpi-bg: #111827;
         --primary: #3b82f6;
         --primary-hover: #2563eb;
         --primary-text: #ffffff;
-        --danger-bg: rgba(239, 68, 68, 0.2);
-        --danger-row: rgba(239, 68, 68, 0.12);
+        --danger-bg: rgba(239, 68, 68, 0.22);
+        --danger-row: rgba(239, 68, 68, 0.11);
         --danger-text: #fca5a5;
-        --warn-bg: rgba(245, 158, 11, 0.2);
-        --warn-row: rgba(245, 158, 11, 0.12);
+        --warn-bg: rgba(245, 158, 11, 0.22);
+        --warn-row: rgba(245, 158, 11, 0.11);
         --warn-text: #fcd34d;
-        --ok-bg: rgba(34, 197, 94, 0.2);
+        --ok-bg: rgba(34, 197, 94, 0.22);
         --ok-text: #86efac;
-        --hidden-bg: #1f2937;
+        --hidden-bg: #1e293b;
         --dirty-bg: rgba(59, 130, 246, 0.16);
-        --shadow: 0 1px 3px rgba(0,0,0,0.35);
+        --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
       }
     }
 
@@ -89,9 +89,10 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      background: var(--card);
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
-      padding: 8px 16px;
+      padding: 10px 18px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -100,32 +101,29 @@
       box-shadow: var(--shadow);
     }
     .brand-wrap { display: flex; align-items: center; gap: 10px; }
-    .brand { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; letter-spacing: -0.01em; }
+    .brand { font-weight: 700; font-size: 15.5px; display: flex; align-items: center; gap: 7px; letter-spacing: -0.01em; }
     .role-pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
+      justify-content: center;
+      padding: 3px 11px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
-      background: rgba(37, 99, 235, 0.12);
+      background: rgba(37, 99, 235, 0.14);
       color: var(--primary);
     }
-    .sync-tag {
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .sync-tag { font-size: 11.5px; color: var(--muted); }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 
     select, input, button {
       padding: 5px 10px;
-      border-radius: 6px;
+      border-radius: 7px;
       border: 1px solid var(--border);
       font-size: 12.5px;
       background: var(--card);
       color: var(--text);
-      height: 30px;
+      height: 31px;
     }
     button {
       cursor: pointer;
@@ -136,7 +134,7 @@
       gap: 5px;
       transition: all 0.15s ease;
     }
-    button:hover { background: var(--table-hover); }
+    button:hover { background: var(--table-hover); transform: translateY(-0.5px); }
     button.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
     button.primary:hover { background: var(--primary-hover); }
     button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
@@ -145,36 +143,37 @@
     button.success:hover { background: #15803d; }
     button.warning { background: #d97706; color: #fff; border-color: #d97706; }
     button.warning:hover { background: #b45309; }
-    button.icon-only { padding: 4px 7px; height: 26px; font-size: 12px; }
+    button.icon-only { padding: 4px 7px; height: 27px; font-size: 12px; }
     button.icon-only svg, button svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    main { width: 100%; max-width: 100%; margin: 0; padding: 12px 16px; }
+    main { width: 100%; max-width: 100%; margin: 0 auto; padding: 14px 18px; }
 
     .grid-kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
     }
     .kpi {
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
+      border-radius: 10px;
+      padding: 12px 14px;
       background: var(--kpi-bg);
       box-shadow: var(--shadow);
       cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.12s ease;
+      text-align: center;
+      transition: transform 0.15s ease, border-color 0.15s ease;
     }
-    .kpi:hover { transform: translateY(-1px); border-color: var(--primary); }
-    .kpi .label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
-    .kpi .val { font-size: 20px; font-weight: 700; margin-top: 2px; }
+    .kpi:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .kpi .label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 12px;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
       box-shadow: var(--shadow);
     }
 
@@ -186,17 +185,26 @@
       gap: 8px;
       margin-bottom: 10px;
     }
-    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 
     .table-wrap {
       width: 100%;
       overflow: auto;
-      max-height: calc(100vh - 205px);
+      max-height: calc(100vh - 220px);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
     }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-    th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 6px 9px; text-align: left; vertical-align: middle; white-space: nowrap; }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      padding: 7px 10px;
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3) { text-align: left; }
     th:last-child, td:last-child { border-right: none; }
     th {
       position: sticky;
@@ -208,22 +216,23 @@
       cursor: pointer;
     }
     th:hover { background: var(--table-hover); }
-    th .th-inner { display: inline-flex; align-items: center; gap: 4px; }
+    th .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; }
     th .sort-ind { font-size: 10px; color: var(--primary); }
     th.no-sort { cursor: default; }
 
-    tbody tr:hover { filter: brightness(0.98); }
+    tbody tr:hover { filter: brightness(0.985); }
     tr.overdue { background: var(--danger-row); }
     tr.pending { background: var(--warn-row); }
     tr.hidden-row { opacity: 0.65; background: var(--hidden-bg); }
-    tr.dirty-row { background: var(--dirty-bg) !important; outline: 1px solid var(--primary); }
+    tr.dirty-row { background: var(--dirty-bg) !important; box-shadow: inset 3px 0 0 var(--primary); }
     td.wrap-cell { white-space: normal; min-width: 170px; max-width: 280px; }
 
     .badge {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
-      padding: 2px 8px;
+      padding: 2px 9px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 600;
@@ -234,34 +243,44 @@
     .badge.neutral { background: var(--hidden-bg); color: var(--muted); }
     .badge.dirty { background: var(--primary); color: #fff; }
 
-    .row-actions { display: inline-flex; align-items: center; gap: 4px; }
-    .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 28px; }
+    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+    .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 30px; }
 
     .banner-msg {
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-bottom: 10px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
       font-size: 12.5px;
       display: none;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      text-align: center;
+      font-weight: 500;
     }
     .banner-msg.show { display: flex; }
     .banner-msg.ok { background: var(--ok-bg); color: var(--ok-text); }
     .banner-msg.err { background: var(--danger-bg); color: var(--danger-text); }
 
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      position: fixed; inset: 0; background: rgba(2, 6, 23, 0.58);
+      backdrop-filter: blur(3px);
       display: none; align-items: center; justify-content: center; z-index: 60; padding: 16px;
     }
     .modal-backdrop.show { display: flex; }
     .modal {
-      background: var(--card); border-radius: 10px; padding: 20px;
-      width: 100%; max-width: 460px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      background: var(--card); border-radius: 12px; padding: 22px;
+      width: 100%; max-width: 470px; border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     }
-    .field { margin-bottom: 11px; }
-    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
-    .field input, .field select { width: 100%; height: 34px; }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { margin: 0; font-size: 15.5px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+    .field input, .field select { width: 100%; height: 35px; }
+    .other-input { margin-top: 7px; }
   </style>
 </head>
 <body>
@@ -280,13 +299,14 @@
     <select id="sheetSelect" onchange="loadData(false)"></select>
 
     <select id="viewAsSelect" style="display:none;" onchange="onViewAsChange()">
-      <option value="">View As: IT Admin (Actual)</option>
+      <option value="">View As: IT Admin</option>
       <option value="BOSS">View As: Boss</option>
       <option value="ADMIN_H">View As: Hafila</option>
       <option value="ADMIN_A">View As: Atira</option>
       <option value="ADMIN_L">View As: Ms. Lai</option>
     </select>
 
+    <!-- Global Save & Discard (Available to ALL roles including IT Admin) -->
     <button id="batchSaveBtn" class="warning" style="display:none;" onclick="commitBatchChanges()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span id="batchSaveLabel">Save (0)</span>
@@ -306,7 +326,7 @@
 
     <button class="primary" onclick="openCreateModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span>New Record</span>
+      <span id="addNewBtnText">Add New</span>
     </button>
 
     <button onclick="loadData(true)" title="Force Sync from Google Sheets">
@@ -343,7 +363,7 @@
     </div>
 
     <div class="card" id="approvalCard" style="display:none; border-color: #f59e0b;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="modal-header" style="margin-bottom:10px;padding-bottom:8px;">
         <h3 style="margin:0;font-size:14px;">Pending Deletion Approvals</h3>
         <span class="badge warn" id="approvalCountBadge">0 pending</span>
       </div>
@@ -363,10 +383,10 @@
       </div>
     </div>
 
-    <div class="card" style="padding:10px 12px;">
+    <div class="card" style="padding:12px;">
       <div class="controls-bar">
         <div class="controls-left">
-          <input type="text" id="searchInput" placeholder="Filter by customer, ID, or filter/phone..." oninput="renderTable()" style="width:270px;" />
+          <input type="text" id="searchInput" placeholder="Search customer, ID, or filter/phone..." oninput="renderTable()" style="width:270px;" />
           <select id="statusFilter" onchange="renderTable()">
             <option value="ALL">Status: All</option>
             <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
@@ -392,7 +412,7 @@
             <tr>
               <th onclick="toggleSort('id')"><span class="th-inner">ID <span class="sort-ind" id="sort_id">▲</span></span></th>
               <th onclick="toggleSort('name')"><span class="th-inner">Customer Name <span class="sort-ind" id="sort_name"></span></span></th>
-              <th onclick="toggleSort('filterOrPhone')"><span class="th-inner"><span id="colExtraHead">Filter / Phone</span> <span class="sort-ind" id="sort_filterOrPhone"></span></span></th>
+              <th onclick="toggleSort('filterOrPhone')"><span class="th-inner"><span id="colExtraHead">Filter / Service</span> <span class="sort-ind" id="sort_filterOrPhone"></span></span></th>
               <th id="colMachineUsageHead" onclick="toggleSort('machineUsage')"><span class="th-inner">Usage <span class="sort-ind" id="sort_machineUsage"></span></span></th>
               <th onclick="toggleSort('lastChangedDate')"><span class="th-inner">Last Changed <span class="sort-ind" id="sort_lastChangedDate"></span></span></th>
               <th onclick="toggleSort('cycleDays')"><span class="th-inner">Cycle <span class="sort-ind" id="sort_cycleDays"></span></span></th>
@@ -409,18 +429,51 @@
   </div>
 </main>
 
+<!-- Dedicated Add New / Edit Modal (Supports Dropdown + "Other..." Free Text for Both RED & GREEN) -->
 <div id="editModal" class="modal-backdrop">
   <div class="modal">
-    <h3 id="modalTitle" style="margin-top:0;">New Record</h3>
+    <div class="modal-header">
+      <h3 id="modalTitle">Add New Record</h3>
+      <button class="icon-only" onclick="closeModal()">✕</button>
+    </div>
     <input type="hidden" id="editRecordId" />
+
     <div class="field">
       <label>Customer Name *</label>
-      <input type="text" id="fName" required />
+      <input type="text" id="fName" placeholder="Enter customer name" required />
     </div>
-    <div class="field">
-      <label id="fExtraLabel">Filter / Service Name</label>
-      <input type="text" id="fExtra" />
+
+    <!-- RED Sheet: Filter / Service Dropdown + Other -->
+    <div class="field" id="fRedFilterGroup">
+      <label>Filter / Service Name</label>
+      <select id="fRedFilterSelect" onchange="toggleOtherInput('fRedFilterSelect', 'fRedFilterOther')">
+        <option value="RO Water Filter">RO Water Filter</option>
+        <option value="Alkaline Water Filter">Alkaline Water Filter</option>
+        <option value="Outdoor Filter">Outdoor Filter</option>
+        <option value="UV / UF Cartridge Set">UV / UF Cartridge Set</option>
+        <option value="__OTHER__">Other (Type custom...)</option>
+      </select>
+      <input type="text" id="fRedFilterOther" class="other-input" placeholder="Type custom filter / service name..." style="display:none;" />
     </div>
+
+    <!-- GREEN Sheet: Phone Number + Service Plan Dropdown + Other -->
+    <div class="field" id="fGreenPhoneGroup" style="display:none;">
+      <label>Phone Number</label>
+      <input type="text" id="fGreenPhone" placeholder="e.g. 012-3456789" />
+    </div>
+
+    <div class="field" id="fGreenPlanGroup" style="display:none;">
+      <label>Service / Filter Plan</label>
+      <select id="fGreenPlanSelect" onchange="toggleOtherInput('fGreenPlanSelect', 'fGreenPlanOther')">
+        <option value="Standard Filter Service">Standard Filter Service</option>
+        <option value="RO Maintenance">RO Maintenance</option>
+        <option value="Outdoor Filter Flush">Outdoor Filter Flush</option>
+        <option value="__OTHER__">Other (Type custom...)</option>
+      </select>
+      <input type="text" id="fGreenPlanOther" class="other-input" placeholder="Type custom plan or notes..." style="display:none;" />
+    </div>
+
+    <!-- RED Sheet Only: Machine Usage -->
     <div class="field" id="fUsageGroup">
       <label>Machine Usage</label>
       <select id="fUsage">
@@ -428,28 +481,38 @@
         <option value="FALSE">FALSE (Not in Use)</option>
       </select>
     </div>
+
     <div class="field">
       <label>Last Changed Date *</label>
       <input type="date" id="fLastDate" required />
     </div>
+
     <div class="field">
       <label>Change Cycle (Days) *</label>
-      <input type="number" id="fCycle" value="180" min="1" required />
+      <select id="fCycleSelect" onchange="toggleOtherInput('fCycleSelect', 'fCycleOther')">
+        <option value="90">90 Days (3 Months)</option>
+        <option value="180" selected>180 Days (6 Months)</option>
+        <option value="365">365 Days (12 Months)</option>
+        <option value="__OTHER__">Other (Type custom days...)</option>
+      </select>
+      <input type="number" id="fCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
       <button onclick="closeModal()">Cancel</button>
-      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Apply</button>
+      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Stage & Save</button>
     </div>
   </div>
 </div>
 
+<!-- Audit Log Modal -->
 <div id="auditModal" class="modal-backdrop">
   <div class="modal" style="max-width:780px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <h3 style="margin:0;">Recent Audit Logs</h3>
+    <div class="modal-header">
+      <h3>Recent Audit Logs</h3>
       <button onclick="document.getElementById('auditModal').classList.remove('show')">Close</button>
     </div>
-    <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:6px;">
+    <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:8px;">
       <table>
         <thead>
           <tr><th>Time</th><th>Actor</th><th>ID</th><th>Customer</th><th>Action</th><th>Reason</th></tr>
@@ -466,7 +529,7 @@
   const STORAGE_KEY = "wf_zt_email";
   const VIEW_AS_KEY = "wf_view_as";
   const THEME_KEY = "wf_theme_mode";
-  const CLIENT_CACHE_PREFIX = "wf_snap_v3_";
+  const CLIENT_CACHE_PREFIX = "wf_snap_v4_";
 
   const ICONS = {
     check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -489,7 +552,7 @@
     auditLogs: [],
     sortCol: "id",
     sortDir: "asc",
-    pendingOps: {}
+    pendingOps: {} // key -> { key, id, type, payload, reason }
   };
 
   function applyTheme(mode) {
@@ -658,13 +721,13 @@
       : `${currentState.roleDisplayName}`;
 
     const syncTag = document.getElementById("syncTag");
-    syncTag.textContent = isFromCache ? "Instant Cache (Syncing...)" : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+    syncTag.textContent = isFromCache ? "Instant Cache" : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
 
     const viewAsSel = document.getElementById("viewAsSelect");
     if (currentState.canSwitchView) {
       viewAsSel.style.display = "inline-block";
       const labels = currentState.roleLabels;
-      viewAsSel.options[0].text = `View As: ${labels.IT || "IT Admin"} (Actual)`;
+      viewAsSel.options[0].text = `View As: ${labels.IT || "IT Admin"}`;
       viewAsSel.options[1].text = `View As: ${labels.BOSS || "Boss"}`;
       viewAsSel.options[2].text = `View As: ${labels.ADMIN_H || "Hafila"}`;
       viewAsSel.options[3].text = `View As: ${labels.ADMIN_A || "Atira"}`;
@@ -684,14 +747,12 @@
     sheetSel.value = data.activeSheet;
     sheetSel.disabled = (currentState.allowedSheets.length <= 1);
 
-    document.getElementById("auditBtn").style.display = (["IT", "BOSS"].includes(data.effectiveRole)) ? "inline-flex" : "none";
-
     const isRed = (data.activeSheet === "RED");
+    document.getElementById("addNewBtnText").textContent = isRed ? "Add New (RED)" : "Add New (GREEN)";
+    document.getElementById("auditBtn").style.display = (["IT", "BOSS"].includes(data.effectiveRole)) ? "inline-flex" : "none";
     document.getElementById("colMachineUsageHead").style.display = isRed ? "" : "none";
     document.getElementById("usageFilter").style.display = isRed ? "inline-block" : "none";
-    document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
-    document.getElementById("colExtraHead").textContent = isRed ? "Filter / Service" : "Phone Number";
-    document.getElementById("fExtraLabel").textContent = isRed ? "Filter / Service Name" : "Phone Number";
+    document.getElementById("colExtraHead").textContent = isRed ? "Filter / Service" : "Phone / Plan";
 
     updateKpis(data.summary || {}, currentState.records);
     renderApprovals();
@@ -798,15 +859,16 @@
     });
   }
 
-  function stageOperation(id, opObj) {
-    const key = String(id);
-    currentState.pendingOps[key] = Object.assign({ id: key }, opObj);
+  /* ================= Global Staging & Save ================= */
+
+  function stageOperation(opKey, opObj) {
+    currentState.pendingOps[opKey] = Object.assign({ key: opKey }, opObj);
     updateBatchBar();
     renderTable();
   }
 
-  function unstageOperation(id) {
-    delete currentState.pendingOps[String(id)];
+  function unstageOperation(opKey) {
+    delete currentState.pendingOps[opKey];
     updateBatchBar();
     renderTable();
   }
@@ -835,7 +897,7 @@
     const ops = Object.values(currentState.pendingOps);
     if (ops.length === 0) return;
 
-    showBanner(`Saving ${ops.length} change(s) to Google Sheets...`, "ok");
+    showBanner(`Saving ${ops.length} change(s)...`, "ok");
     try {
       await fetch(GAS_URL, {
         method: "POST",
@@ -894,10 +956,32 @@
     const canApproveOrRestore = ["IT", "BOSS", "ADMIN_H"].includes(role);
     const canRequestDelete = (role === "ADMIN_A" || role === "IT");
 
-    const mergedRecords = currentState.records.map(r => {
-      const op = currentState.pendingOps[String(r.id)];
-      if (!op) return r;
-      const copy = Object.assign({}, r, { _staged: op });
+    const stagedCreates = Object.values(currentState.pendingOps)
+      .filter(op => op.type === "create")
+      .map((op, idx) => ({
+        _opKey: op.key,
+        _staged: op,
+        id: `NEW-${idx + 1}`,
+        name: op.payload["Name"] || "",
+        filterOrPhone: isRed
+          ? (op.payload["Filter / Service Name"] || "")
+          : `${op.payload["Phone Number"] || ""} ${op.payload["Service Plan"] ? "(" + op.payload["Service Plan"] + ")" : ""}`.trim(),
+        machineUsage: op.payload["Machine usage"] !== false,
+        lastChangedDate: op.payload["Last Changed Date"] || "",
+        cycleDays: op.payload["Change Cycle (Days)"] || 180,
+        nextChangeDate: "Auto-calc on Save",
+        status: "Normal",
+        statusRank: 3,
+        overdueDays: 0,
+        approvalStatus: "STAGED_NEW",
+        isHidden: false
+      }));
+
+    const mergedExisting = currentState.records.map(r => {
+      const opKey = `row_${r.id}`;
+      const op = currentState.pendingOps[opKey];
+      if (!op) return Object.assign({}, r, { _opKey: opKey });
+      const copy = Object.assign({}, r, { _opKey: opKey, _staged: op });
       if (op.type === "update" && op.payload) {
         if (op.payload["Name"] !== undefined) copy.name = op.payload["Name"];
         if (op.payload["Filter / Service Name"] !== undefined) copy.filterOrPhone = op.payload["Filter / Service Name"];
@@ -920,7 +1004,9 @@
       return copy;
     });
 
-    let filtered = mergedRecords.filter(r => {
+    const combined = stagedCreates.concat(mergedExisting);
+
+    let filtered = combined.filter(r => {
       if (stFilter !== "ALL" && r.status !== stFilter) return false;
       if (isRed && usFilter !== "ALL") {
         const want = (usFilter === "TRUE");
@@ -935,6 +1021,9 @@
     const col = currentState.sortCol;
     const dir = currentState.sortDir === "asc" ? 1 : -1;
     filtered.sort((a, b) => {
+      if (a._staged && a._staged.type === "create") return -1;
+      if (b._staged && b._staged.type === "create") return 1;
+
       let va = a[col];
       let vb = b[col];
       if (col === "id" || col === "cycleDays" || col === "statusRank") {
@@ -951,7 +1040,7 @@
       return String(va || "").localeCompare(String(vb || ""), undefined, { numeric: true, sensitivity: "base" }) * dir;
     });
 
-    document.getElementById("rowCountLabel").textContent = `Showing ${filtered.length} of ${mergedRecords.length} records`;
+    document.getElementById("rowCountLabel").textContent = `Showing ${filtered.length} of ${combined.length} records`;
 
     const tbody = document.getElementById("recordsTbody");
     tbody.innerHTML = filtered.map(r => {
@@ -970,15 +1059,15 @@
 
       let actions = "";
       if (r._staged) {
-        actions += `<button class="icon-only" onclick="unstageOperation('${esc(r.id)}')" title="Undo Unsaved Change">${ICONS.restore}</button>`;
+        actions += `<button class="icon-only" onclick="unstageOperation('${esc(r._opKey)}')" title="Undo Unsaved Change">${ICONS.restore}</button>`;
       } else {
-        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r.id)}', { type: 'confirmDone' })" title="Confirm Done (Stage)">${ICONS.check}</button>`;
+        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'confirmDone' })" title="Confirm Done (Stage)">${ICONS.check}</button>`;
         actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
 
         if (!r.isHidden) {
-          actions += `<button class="danger icon-only" onclick="promptStageAction('directHide', '${esc(r.id)}', 'Delete reason:')" title="Delete (Hide)">${ICONS.trash}</button>`;
+          actions += `<button class="danger icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'directHide', 'Delete reason:')" title="Delete">${ICONS.trash}</button>`;
           if (canRequestDelete) {
-            actions += `<button class="icon-only" onclick="promptStageAction('requestDelete', '${esc(r.id)}', 'Request deletion approval reason:')" title="Request Delete Approval">${ICONS.flag}</button>`;
+            actions += `<button class="icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'requestDelete', 'Request deletion approval reason:')" title="Request Delete">${ICONS.flag}</button>`;
           }
         } else if (canApproveOrRestore) {
           actions += `<button class="primary icon-only" onclick="postImmediateAction('restoreRow', '${esc(r.id)}')" title="Restore Record">${ICONS.restore}</button>`;
@@ -1002,10 +1091,10 @@
     }).join("");
   }
 
-  function promptStageAction(type, id, promptText) {
+  function promptStageAction(opKey, id, type, promptText) {
     const reason = prompt(promptText, "");
     if (reason === null) return;
-    stageOperation(id, { type, reason });
+    stageOperation(opKey, { id, type, reason });
   }
 
   async function postImmediateAction(action, id, reason = "", payload = null) {
@@ -1032,27 +1121,101 @@
     }
   }
 
+  function toggleOtherInput(selectId, inputId) {
+    const sel = document.getElementById(selectId);
+    const inp = document.getElementById(inputId);
+    if (!sel || !inp) return;
+    if (sel.value === "__OTHER__") {
+      inp.style.display = "block";
+      inp.focus();
+    } else {
+      inp.style.display = "none";
+      inp.value = "";
+    }
+  }
+
+  function setSelectWithOther(selectId, inputId, val) {
+    const sel = document.getElementById(selectId);
+    const inp = document.getElementById(inputId);
+    const strVal = String(val ?? "").trim();
+    const matched = Array.from(sel.options).some(opt => opt.value === strVal && opt.value !== "__OTHER__");
+    if (matched) {
+      sel.value = strVal;
+      inp.style.display = "none";
+      inp.value = "";
+    } else if (strVal) {
+      sel.value = "__OTHER__";
+      inp.style.display = "block";
+      inp.value = strVal;
+    } else {
+      sel.selectedIndex = 0;
+      inp.style.display = "none";
+      inp.value = "";
+    }
+  }
+
+  function readSelectOrOther(selectId, inputId) {
+    const sel = document.getElementById(selectId);
+    const inp = document.getElementById(inputId);
+    if (sel.value === "__OTHER__") {
+      return inp.value.trim();
+    }
+    return sel.value;
+  }
+
+  function configureModalForSheet(isRed) {
+    document.getElementById("fRedFilterGroup").style.display = isRed ? "block" : "none";
+    document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
+    document.getElementById("fGreenPhoneGroup").style.display = isRed ? "none" : "block";
+    document.getElementById("fGreenPlanGroup").style.display = isRed ? "none" : "block";
+  }
+
   function openCreateModal() {
-    document.getElementById("modalTitle").textContent = "New Customer Record";
-    document.getElementById("modalSubmitBtn").textContent = "Create Now";
+    const isRed = (currentState.activeSheet === "RED");
+    configureModalForSheet(isRed);
+
+    document.getElementById("modalTitle").textContent = isRed ? "Add New — RED (Water Filter)" : "Add New — GREEN (Itsaso Filter)";
+    document.getElementById("modalSubmitBtn").textContent = "Stage (Click Save Top-Right)";
     document.getElementById("editRecordId").value = "";
     document.getElementById("fName").value = "";
-    document.getElementById("fExtra").value = "";
+
+    setSelectWithOther("fRedFilterSelect", "fRedFilterOther", "RO Water Filter");
+    document.getElementById("fGreenPhone").value = "";
+    setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", "Standard Filter Service");
     document.getElementById("fUsage").value = "TRUE";
     document.getElementById("fLastDate").value = new Date().toISOString().slice(0, 10);
-    document.getElementById("fCycle").value = "180";
+    setSelectWithOther("fCycleSelect", "fCycleOther", "180");
+
     document.getElementById("editModal").classList.add("show");
   }
 
   function openEditModal(rec) {
-    document.getElementById("modalTitle").textContent = `Edit Record #${rec.id}`;
-    document.getElementById("modalSubmitBtn").textContent = "Apply (Click Save Top-Right)";
+    const isRed = (currentState.activeSheet === "RED");
+    configureModalForSheet(isRed);
+
+    document.getElementById("modalTitle").textContent = `Edit Record #${rec.id} (${isRed ? "RED" : "GREEN"})`;
+    document.getElementById("modalSubmitBtn").textContent = "Stage (Click Save Top-Right)";
     document.getElementById("editRecordId").value = rec.id;
     document.getElementById("fName").value = rec.name || "";
-    document.getElementById("fExtra").value = rec.filterOrPhone || "";
-    document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
+
+    if (isRed) {
+      setSelectWithOther("fRedFilterSelect", "fRedFilterOther", rec.filterOrPhone || "");
+      document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
+    } else {
+      const raw = String(rec.filterOrPhone || "");
+      const m = raw.match(/^(.*?)\s*\(([^()]+)\)\s*$/);
+      if (m) {
+        document.getElementById("fGreenPhone").value = m[1].trim();
+        setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", m[2].trim());
+      } else {
+        document.getElementById("fGreenPhone").value = raw;
+        setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", "Standard Filter Service");
+      }
+    }
+
     document.getElementById("fLastDate").value = rec.lastChangedDate || "";
-    document.getElementById("fCycle").value = rec.cycleDays || 180;
+    setSelectWithOther("fCycleSelect", "fCycleOther", String(rec.cycleDays || 180));
+
     document.getElementById("editModal").classList.add("show");
   }
 
@@ -1063,26 +1226,41 @@
   function submitModal() {
     const id = document.getElementById("editRecordId").value;
     const isRed = (currentState.activeSheet === "RED");
-    const payload = {
-      "Name": document.getElementById("fName").value.trim(),
-      "Last Changed Date": document.getElementById("fLastDate").value,
-      "Change Cycle (Days)": Number(document.getElementById("fCycle").value || 180)
-    };
-    if (isRed) {
-      payload["Filter / Service Name"] = document.getElementById("fExtra").value.trim();
-      payload["Machine usage"] = document.getElementById("fUsage").value === "TRUE";
-    } else {
-      payload["Phone Number"] = document.getElementById("fExtra").value.trim();
-    }
-    if (!payload["Name"]) {
+    const name = document.getElementById("fName").value.trim();
+    const lastDate = document.getElementById("fLastDate").value;
+    const cycleVal = Number(readSelectOrOther("fCycleSelect", "fCycleOther") || 180);
+
+    if (!name) {
       showBanner("Customer Name is required.", "err");
       return;
     }
-    closeModal();
-    if (id) {
-      stageOperation(id, { type: "update", payload });
+
+    const payload = {
+      "Name": name,
+      "Last Changed Date": lastDate,
+      "Change Cycle (Days)": cycleVal > 0 ? cycleVal : 180
+    };
+
+    if (isRed) {
+      payload["Filter / Service Name"] = readSelectOrOther("fRedFilterSelect", "fRedFilterOther");
+      payload["Machine usage"] = (document.getElementById("fUsage").value === "TRUE");
     } else {
-      postImmediateAction("createRecord", null, "Created via modal", payload);
+      const phone = document.getElementById("fGreenPhone").value.trim();
+      const plan = readSelectOrOther("fGreenPlanSelect", "fGreenPlanOther");
+      payload["Phone Number"] = phone;
+      payload["Service Plan"] = plan;
+      if (!payload["Phone Number"] && plan) {
+        payload["Phone Number"] = plan;
+      }
+    }
+
+    closeModal();
+
+    if (id) {
+      stageOperation(`row_${id}`, { id, type: "update", payload });
+    } else {
+      const newKey = `new_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      stageOperation(newKey, { id: null, type: "create", payload });
     }
   }
 
