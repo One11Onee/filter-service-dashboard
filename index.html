@@ -26,6 +26,7 @@
       --ok-bg: #dcfce7;
       --ok-text: #166534;
       --hidden-bg: #f3f4f6;
+      --dirty-bg: rgba(37, 99, 235, 0.08);
       --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     }
 
@@ -50,6 +51,7 @@
       --ok-bg: rgba(34, 197, 94, 0.2);
       --ok-text: #86efac;
       --hidden-bg: #1f2937;
+      --dirty-bg: rgba(59, 130, 246, 0.16);
       --shadow: 0 1px 3px rgba(0,0,0,0.35);
     }
 
@@ -75,6 +77,7 @@
         --ok-bg: rgba(34, 197, 94, 0.2);
         --ok-text: #86efac;
         --hidden-bg: #1f2937;
+        --dirty-bg: rgba(59, 130, 246, 0.16);
         --shadow: 0 1px 3px rgba(0,0,0,0.35);
       }
     }
@@ -82,7 +85,6 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     body { margin: 0; background: var(--bg); color: var(--text); font-size: 13px; }
 
-    /* Compact Sticky Header */
     header {
       position: sticky;
       top: 0;
@@ -103,12 +105,16 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 3px 9px;
+      padding: 3px 10px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
       background: rgba(37, 99, 235, 0.12);
       color: var(--primary);
+    }
+    .sync-tag {
+      font-size: 11px;
+      color: var(--muted);
     }
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 
@@ -137,15 +143,16 @@
     button.danger:hover { background: #b91c1c; }
     button.success { background: #16a34a; color: #fff; border-color: #16a34a; }
     button.success:hover { background: #15803d; }
+    button.warning { background: #d97706; color: #fff; border-color: #d97706; }
+    button.warning:hover { background: #b45309; }
     button.icon-only { padding: 4px 7px; height: 26px; font-size: 12px; }
     button.icon-only svg, button svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* Full-width Maximized Workspace */
     main { width: 100%; max-width: 100%; margin: 0; padding: 12px 16px; }
 
     .grid-kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
       gap: 10px;
       margin-bottom: 12px;
     }
@@ -159,7 +166,7 @@
       transition: transform 0.12s ease, border-color 0.12s ease;
     }
     .kpi:hover { transform: translateY(-1px); border-color: var(--primary); }
-    .kpi .label { font-size: 11.5px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em; }
+    .kpi .label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
     .kpi .val { font-size: 20px; font-weight: 700; margin-top: 2px; }
 
     .card {
@@ -209,7 +216,8 @@
     tr.overdue { background: var(--danger-row); }
     tr.pending { background: var(--warn-row); }
     tr.hidden-row { opacity: 0.65; background: var(--hidden-bg); }
-    td.wrap-cell { white-space: normal; min-width: 180px; max-width: 300px; }
+    tr.dirty-row { background: var(--dirty-bg) !important; outline: 1px solid var(--primary); }
+    td.wrap-cell { white-space: normal; min-width: 170px; max-width: 280px; }
 
     .badge {
       display: inline-flex;
@@ -224,6 +232,7 @@
     .badge.warn { background: var(--warn-bg); color: var(--warn-text); }
     .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
     .badge.neutral { background: var(--hidden-bg); color: var(--muted); }
+    .badge.dirty { background: var(--primary); color: #fff; }
 
     .row-actions { display: inline-flex; align-items: center; gap: 4px; }
     .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 28px; }
@@ -264,18 +273,26 @@
       <span>Filter Service Operations</span>
     </div>
     <span id="userBadge" class="role-pill" style="display:none;"></span>
+    <span id="syncTag" class="sync-tag"></span>
   </div>
 
   <div class="toolbar" id="appToolbar" style="display:none;">
-    <select id="sheetSelect" onchange="loadData()"></select>
+    <select id="sheetSelect" onchange="loadData(false)"></select>
 
     <select id="viewAsSelect" style="display:none;" onchange="onViewAsChange()">
-      <option value="">View As: IT (Actual)</option>
+      <option value="">View As: IT Admin (Actual)</option>
       <option value="BOSS">View As: Boss</option>
-      <option value="ADMIN_H">View As: Hafila (Admin H)</option>
-      <option value="ADMIN_A">View As: Atira (Admin A)</option>
-      <option value="ADMIN_L">View As: Ms. Lai (Admin L)</option>
+      <option value="ADMIN_H">View As: Hafila</option>
+      <option value="ADMIN_A">View As: Atira</option>
+      <option value="ADMIN_L">View As: Ms. Lai</option>
     </select>
+
+    <button id="batchSaveBtn" class="warning" style="display:none;" onclick="commitBatchChanges()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span id="batchSaveLabel">Save (0)</span>
+    </button>
+
+    <button id="batchDiscardBtn" style="display:none;" onclick="discardBatchChanges()" title="Discard Unsaved Changes">Discard</button>
 
     <button id="auditBtn" style="display:none;" onclick="openAuditModal()" title="View Audit Log">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -292,9 +309,9 @@
       <span>New Record</span>
     </button>
 
-    <button onclick="loadData()" title="Refresh Data">
+    <button onclick="loadData(true)" title="Force Sync from Google Sheets">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      <span>Refresh</span>
+      <span>Sync</span>
     </button>
 
     <button onclick="logout()" title="Sign Out">
@@ -325,7 +342,6 @@
       <div class="kpi"><div class="label">Max Overdue (Days)</div><div class="val" id="kpiMaxOverdue">0</div></div>
     </div>
 
-    <!-- Pending Approvals Panel for Hafila (Admin H) / Boss / IT -->
     <div class="card" id="approvalCard" style="display:none; border-color: #f59e0b;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h3 style="margin:0;font-size:14px;">Pending Deletion Approvals</h3>
@@ -374,7 +390,7 @@
         <table>
           <thead>
             <tr>
-              <th onclick="toggleSort('id')"><span class="th-inner">ID <span class="sort-ind" id="sort_id"></span></span></th>
+              <th onclick="toggleSort('id')"><span class="th-inner">ID <span class="sort-ind" id="sort_id">▲</span></span></th>
               <th onclick="toggleSort('name')"><span class="th-inner">Customer Name <span class="sort-ind" id="sort_name"></span></span></th>
               <th onclick="toggleSort('filterOrPhone')"><span class="th-inner"><span id="colExtraHead">Filter / Phone</span> <span class="sort-ind" id="sort_filterOrPhone"></span></span></th>
               <th id="colMachineUsageHead" onclick="toggleSort('machineUsage')"><span class="th-inner">Usage <span class="sort-ind" id="sort_machineUsage"></span></span></th>
@@ -393,7 +409,6 @@
   </div>
 </main>
 
-<!-- Create / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
   <div class="modal">
     <h3 id="modalTitle" style="margin-top:0;">New Record</h3>
@@ -423,12 +438,11 @@
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
       <button onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="submitModal()">Save Record</button>
+      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Apply</button>
     </div>
   </div>
 </div>
 
-<!-- Audit Log Modal (IT / Boss) -->
 <div id="auditModal" class="modal-backdrop">
   <div class="modal" style="max-width:780px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -452,6 +466,7 @@
   const STORAGE_KEY = "wf_zt_email";
   const VIEW_AS_KEY = "wf_view_as";
   const THEME_KEY = "wf_theme_mode";
+  const CLIENT_CACHE_PREFIX = "wf_snap_v3_";
 
   const ICONS = {
     check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -472,8 +487,9 @@
     activeSheet: "RED",
     records: [],
     auditLogs: [],
-    sortCol: "statusRank",
-    sortDir: "asc"
+    sortCol: "id",
+    sortDir: "asc",
+    pendingOps: {}
   };
 
   function applyTheme(mode) {
@@ -531,7 +547,7 @@
     document.getElementById("authGateView").style.display = "none";
     document.getElementById("dashboardView").style.display = "block";
     document.getElementById("appToolbar").style.display = "flex";
-    loadData();
+    loadData(false);
   }
 
   function showBanner(msg, type = "ok") {
@@ -539,7 +555,7 @@
     el.innerHTML = `<span>${esc(msg)}</span>`;
     el.className = `banner-msg show ${type}`;
     if (type === "ok") {
-      setTimeout(() => { el.className = "banner-msg"; }, 4500);
+      setTimeout(() => { el.className = "banner-msg"; }, 4000);
     }
   }
 
@@ -578,7 +594,9 @@
   function onViewAsChange() {
     const val = document.getElementById("viewAsSelect").value || "";
     localStorage.setItem(VIEW_AS_KEY, val);
-    loadData();
+    currentState.pendingOps = {};
+    updateBatchBar();
+    loadData(false);
   }
 
   function jsonpGet(url) {
@@ -587,7 +605,7 @@
       const script = document.createElement("script");
       const timer = setTimeout(() => {
         cleanup();
-        reject(new Error("Request timed out (45s). Please click Refresh."));
+        reject(new Error("Request timed out (45s). Please click Sync."));
       }, 45000);
 
       function cleanup() {
@@ -611,13 +629,95 @@
     });
   }
 
-  async function loadData() {
+  function getSnapshotCacheKey(sheet, viewAs) {
+    return `${CLIENT_CACHE_PREFIX}${currentState.email}_${sheet || "DEFAULT"}_${viewAs || "ACTUAL"}`;
+  }
+
+  function applyDashboardPayload(data, isFromCache) {
+    currentState.actualRole = data.actualRole;
+    currentState.effectiveRole = data.effectiveRole;
+    currentState.roleDisplayName = data.roleDisplayName || data.effectiveRole;
+    currentState.roleLabels = data.roleLabels || {};
+    currentState.canSwitchView = Boolean(data.canSwitchView);
+    currentState.allowedSheets = data.allowedSheets || ["RED"];
+    currentState.activeSheet = data.activeSheet;
+    currentState.auditLogs = data.auditLogs || [];
+
+    currentState.records = (data.records || []).map(r => {
+      let rank = 3;
+      if (r.isHidden || r.status === "Archived") rank = 4;
+      else if (r.status === "REPLACEMENT REQUIRED") rank = 1;
+      else if (r.status === "Pending Notification") rank = 2;
+      return Object.assign({}, r, { statusRank: rank });
+    });
+
+    const badge = document.getElementById("userBadge");
+    badge.style.display = "inline-flex";
+    badge.textContent = (data.actualRole === "IT" && data.effectiveRole !== "IT")
+      ? `IT Admin → ${currentState.roleDisplayName}`
+      : `${currentState.roleDisplayName}`;
+
+    const syncTag = document.getElementById("syncTag");
+    syncTag.textContent = isFromCache ? "Instant Cache (Syncing...)" : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+
+    const viewAsSel = document.getElementById("viewAsSelect");
+    if (currentState.canSwitchView) {
+      viewAsSel.style.display = "inline-block";
+      const labels = currentState.roleLabels;
+      viewAsSel.options[0].text = `View As: ${labels.IT || "IT Admin"} (Actual)`;
+      viewAsSel.options[1].text = `View As: ${labels.BOSS || "Boss"}`;
+      viewAsSel.options[2].text = `View As: ${labels.ADMIN_H || "Hafila"}`;
+      viewAsSel.options[3].text = `View As: ${labels.ADMIN_A || "Atira"}`;
+      viewAsSel.options[4].text = `View As: ${labels.ADMIN_L || "Ms. Lai"}`;
+    } else {
+      viewAsSel.style.display = "none";
+    }
+
+    const sheetSel = document.getElementById("sheetSelect");
+    const sheetNameMap = {
+      "RED": "RED: Water Filter Service",
+      "GREEN": "GREEN: Itsaso Filter"
+    };
+    sheetSel.innerHTML = currentState.allowedSheets
+      .map(code => `<option value="${code}">${sheetNameMap[code] || code}</option>`)
+      .join("");
+    sheetSel.value = data.activeSheet;
+    sheetSel.disabled = (currentState.allowedSheets.length <= 1);
+
+    document.getElementById("auditBtn").style.display = (["IT", "BOSS"].includes(data.effectiveRole)) ? "inline-flex" : "none";
+
+    const isRed = (data.activeSheet === "RED");
+    document.getElementById("colMachineUsageHead").style.display = isRed ? "" : "none";
+    document.getElementById("usageFilter").style.display = isRed ? "inline-block" : "none";
+    document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
+    document.getElementById("colExtraHead").textContent = isRed ? "Filter / Service" : "Phone Number";
+    document.getElementById("fExtraLabel").textContent = isRed ? "Filter / Service Name" : "Phone Number";
+
+    updateKpis(data.summary || {}, currentState.records);
+    renderApprovals();
+    renderTable();
+  }
+
+  async function loadData(forceFresh = false) {
     const sheetSel = document.getElementById("sheetSelect");
     const viewAsSel = document.getElementById("viewAsSelect");
     const requestedSheet = sheetSel.value || "";
     const viewAs = viewAsSel.value || "";
+    const snapKey = getSnapshotCacheKey(requestedSheet, viewAs);
 
-    showBanner("Syncing records...", "ok");
+    if (!forceFresh) {
+      try {
+        const cachedRaw = localStorage.getItem(snapKey);
+        if (cachedRaw) {
+          const cachedData = JSON.parse(cachedRaw);
+          if (cachedData && cachedData.ok) {
+            applyDashboardPayload(cachedData, true);
+          }
+        }
+      } catch (_) {}
+    } else {
+      showBanner("Syncing latest records...", "ok");
+    }
 
     const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(requestedSheet)}&viewAs=${encodeURIComponent(viewAs)}`;
     try {
@@ -632,70 +732,19 @@
         return;
       }
 
-      currentState.actualRole = data.actualRole;
-      currentState.effectiveRole = data.effectiveRole;
-      currentState.roleDisplayName = data.roleDisplayName || data.effectiveRole;
-      currentState.roleLabels = data.roleLabels || {};
-      currentState.canSwitchView = Boolean(data.canSwitchView);
-      currentState.allowedSheets = data.allowedSheets || ["RED"];
-      currentState.activeSheet = data.activeSheet;
-      currentState.auditLogs = data.auditLogs || [];
+      try {
+        localStorage.setItem(snapKey, JSON.stringify(data));
+        localStorage.setItem(getSnapshotCacheKey(data.activeSheet, viewAs), JSON.stringify(data));
+      } catch (_) {}
 
-      // Map statusRank for Excel-style status sorting (Red=1, Yellow=2, White/Normal=3, Archived=4)
-      currentState.records = (data.records || []).map(r => {
-        let rank = 3;
-        if (r.isHidden || r.status === "Archived") rank = 4;
-        else if (r.status === "REPLACEMENT REQUIRED") rank = 1;
-        else if (r.status === "Pending Notification") rank = 2;
-        return Object.assign({}, r, { statusRank: rank });
-      });
-
-      // Update Header Role Pill & Dynamic ViewAs Names from IT_Config
-      const badge = document.getElementById("userBadge");
-      badge.style.display = "inline-flex";
-      badge.textContent = (data.actualRole === "IT" && data.effectiveRole !== "IT")
-        ? `IT → ${currentState.roleDisplayName}`
-        : `${currentState.roleDisplayName} (${data.actorEmail})`;
-
-      if (currentState.canSwitchView) {
-        viewAsSel.style.display = "inline-block";
-        const labels = currentState.roleLabels;
-        viewAsSel.options[0].text = `View As: ${labels.IT || "IT"} (Actual)`;
-        viewAsSel.options[1].text = `View As: ${labels.BOSS || "Boss"}`;
-        viewAsSel.options[2].text = `View As: ${labels.ADMIN_H || "Hafila"} (Admin H)`;
-        viewAsSel.options[3].text = `View As: ${labels.ADMIN_A || "Atira"} (Admin A)`;
-        viewAsSel.options[4].text = `View As: ${labels.ADMIN_L || "Ms. Lai"} (Admin L)`;
+      if (Object.keys(currentState.pendingOps).length === 0) {
+        applyDashboardPayload(data, false);
       } else {
-        viewAsSel.style.display = "none";
+        document.getElementById("syncTag").textContent = "Unsaved edits staged";
       }
-
-      // Dynamically render ONLY allowed sheets in dropdown (Atira/Hafila see only RED, Ms. Lai sees only GREEN)
-      const sheetNameMap = {
-        "RED": "RED: Water Filter Service",
-        "GREEN": "GREEN: Itsaso Filter"
-      };
-      sheetSel.innerHTML = currentState.allowedSheets
-        .map(code => `<option value="${code}">${sheetNameMap[code] || code}</option>`)
-        .join("");
-      sheetSel.value = data.activeSheet;
-      sheetSel.disabled = (currentState.allowedSheets.length <= 1);
-
-      // Audit button for IT / Boss
-      document.getElementById("auditBtn").style.display = (["IT", "BOSS"].includes(data.effectiveRole)) ? "inline-flex" : "none";
-
-      const isRed = (data.activeSheet === "RED");
-      document.getElementById("colMachineUsageHead").style.display = isRed ? "" : "none";
-      document.getElementById("usageFilter").style.display = isRed ? "inline-block" : "none";
-      document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
-      document.getElementById("colExtraHead").textContent = isRed ? "Filter / Service" : "Phone Number";
-      document.getElementById("fExtraLabel").textContent = isRed ? "Filter / Service Name" : "Phone Number";
-
-      updateKpis(data.summary || {}, currentState.records);
-      renderApprovals();
-      renderTable();
-      document.getElementById("banner").className = "banner-msg";
+      if (forceFresh) document.getElementById("banner").className = "banner-msg";
     } catch (err) {
-      showBanner("Error: " + err.message, "err");
+      showBanner("Sync warning: " + err.message, "err");
     }
   }
 
@@ -721,7 +770,7 @@
     document.getElementById("searchInput").value = "";
     document.getElementById("statusFilter").value = "ALL";
     document.getElementById("usageFilter").value = "ALL";
-    currentState.sortCol = "statusRank";
+    currentState.sortCol = "id";
     currentState.sortDir = "asc";
     renderTable();
   }
@@ -749,6 +798,66 @@
     });
   }
 
+  function stageOperation(id, opObj) {
+    const key = String(id);
+    currentState.pendingOps[key] = Object.assign({ id: key }, opObj);
+    updateBatchBar();
+    renderTable();
+  }
+
+  function unstageOperation(id) {
+    delete currentState.pendingOps[String(id)];
+    updateBatchBar();
+    renderTable();
+  }
+
+  function discardBatchChanges() {
+    currentState.pendingOps = {};
+    updateBatchBar();
+    loadData(false);
+  }
+
+  function updateBatchBar() {
+    const count = Object.keys(currentState.pendingOps).length;
+    const saveBtn = document.getElementById("batchSaveBtn");
+    const discBtn = document.getElementById("batchDiscardBtn");
+    if (count > 0) {
+      saveBtn.style.display = "inline-flex";
+      discBtn.style.display = "inline-flex";
+      document.getElementById("batchSaveLabel").textContent = `Save (${count})`;
+    } else {
+      saveBtn.style.display = "none";
+      discBtn.style.display = "none";
+    }
+  }
+
+  async function commitBatchChanges() {
+    const ops = Object.values(currentState.pendingOps);
+    if (ops.length === 0) return;
+
+    showBanner(`Saving ${ops.length} change(s) to Google Sheets...`, "ok");
+    try {
+      await fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "batchSave",
+          email: currentState.email,
+          viewAs: document.getElementById("viewAsSelect").value || "",
+          sheet: currentState.activeSheet,
+          operations: ops
+        })
+      });
+      currentState.pendingOps = {};
+      updateBatchBar();
+      showBanner(`Saved ${ops.length} change(s). Syncing...`, "ok");
+      setTimeout(() => loadData(true), 900);
+    } catch (err) {
+      showBanner("Save error: " + err.message, "err");
+    }
+  }
+
   function renderApprovals() {
     const canApprove = ["IT", "BOSS", "ADMIN_H"].includes(currentState.effectiveRole);
     const pendingItems = currentState.records.filter(r => r.approvalStatus === "PENDING_DELETE");
@@ -768,8 +877,8 @@
         <td>${esc(r.status)}</td>
         <td>${r.overdueDays > 0 ? r.overdueDays + "d" : "-"}</td>
         <td class="row-actions">
-          <button class="success" onclick="postAction('approveDelete', '${esc(r.id)}')">${ICONS.check} Approve Delete</button>
-          <button class="danger" onclick="postAction('rejectDelete', '${esc(r.id)}')">Reject</button>
+          <button class="success" onclick="postImmediateAction('approveDelete', '${esc(r.id)}')">${ICONS.check} Approve Delete</button>
+          <button class="danger" onclick="postImmediateAction('rejectDelete', '${esc(r.id)}')">Reject</button>
         </td>
       </tr>
     `).join("");
@@ -783,8 +892,35 @@
     const isRed = (currentState.activeSheet === "RED");
     const role = currentState.effectiveRole;
     const canApproveOrRestore = ["IT", "BOSS", "ADMIN_H"].includes(role);
+    const canRequestDelete = (role === "ADMIN_A" || role === "IT");
 
-    let filtered = currentState.records.filter(r => {
+    const mergedRecords = currentState.records.map(r => {
+      const op = currentState.pendingOps[String(r.id)];
+      if (!op) return r;
+      const copy = Object.assign({}, r, { _staged: op });
+      if (op.type === "update" && op.payload) {
+        if (op.payload["Name"] !== undefined) copy.name = op.payload["Name"];
+        if (op.payload["Filter / Service Name"] !== undefined) copy.filterOrPhone = op.payload["Filter / Service Name"];
+        if (op.payload["Phone Number"] !== undefined) copy.filterOrPhone = op.payload["Phone Number"];
+        if (op.payload["Machine usage"] !== undefined) copy.machineUsage = op.payload["Machine usage"];
+        if (op.payload["Last Changed Date"] !== undefined) copy.lastChangedDate = op.payload["Last Changed Date"];
+        if (op.payload["Change Cycle (Days)"] !== undefined) copy.cycleDays = op.payload["Change Cycle (Days)"];
+      } else if (op.type === "confirmDone") {
+        copy.lastChangedDate = new Date().toISOString().slice(0, 10);
+        copy.status = "Normal";
+        copy.statusRank = 3;
+        copy.overdueDays = 0;
+      } else if (op.type === "directHide") {
+        copy.status = "Archived";
+        copy.statusRank = 4;
+        copy.isHidden = true;
+      } else if (op.type === "requestDelete") {
+        copy.approvalStatus = "PENDING_DELETE";
+      }
+      return copy;
+    });
+
+    let filtered = mergedRecords.filter(r => {
       if (stFilter !== "ALL" && r.status !== stFilter) return false;
       if (isRed && usFilter !== "ALL") {
         const want = (usFilter === "TRUE");
@@ -796,7 +932,6 @@
         || String(r.filterOrPhone).toLowerCase().includes(q);
     });
 
-    // Multi-column Excel-style sorting
     const col = currentState.sortCol;
     const dir = currentState.sortDir === "asc" ? 1 : -1;
     filtered.sort((a, b) => {
@@ -806,9 +941,7 @@
         va = Number(va || 0);
         vb = Number(vb || 0);
         if (va !== vb) return (va - vb) * dir;
-        // Tie-breaker: overdue days descending, then nextChangeDate ascending
-        if (b.overdueDays !== a.overdueDays) return b.overdueDays - a.overdueDays;
-        return String(a.nextChangeDate || "9999").localeCompare(String(b.nextChangeDate || "9999"));
+        return Number(a.id || 0) - Number(b.id || 0);
       }
       if (col === "machineUsage") {
         va = va ? 1 : 0;
@@ -818,35 +951,43 @@
       return String(va || "").localeCompare(String(vb || ""), undefined, { numeric: true, sensitivity: "base" }) * dir;
     });
 
-    document.getElementById("rowCountLabel").textContent = `Showing ${filtered.length} of ${currentState.records.length} records`;
+    document.getElementById("rowCountLabel").textContent = `Showing ${filtered.length} of ${mergedRecords.length} records`;
 
     const tbody = document.getElementById("recordsTbody");
     tbody.innerHTML = filtered.map(r => {
-      const trClass = r.isHidden
-        ? "hidden-row"
-        : (r.status === "REPLACEMENT REQUIRED" ? "overdue" : (r.status === "Pending Notification" ? "pending" : ""));
+      const trClasses = [];
+      if (r._staged) trClasses.push("dirty-row");
+      if (r.isHidden) trClasses.push("hidden-row");
+      else if (r.status === "REPLACEMENT REQUIRED") trClasses.push("overdue");
+      else if (r.status === "Pending Notification") trClasses.push("pending");
 
       const badgeClass = r.isHidden
         ? "neutral"
         : (r.status === "REPLACEMENT REQUIRED" ? "danger" : (r.status === "Pending Notification" ? "warn" : "ok"));
 
       const statusLabel = r.overdueDays > 0 ? `${r.status} (+${r.overdueDays}d)` : r.status;
+      const stagedTag = r._staged ? ` <span class="badge dirty">Unsaved</span>` : "";
 
-      let actions = `<button class="success icon-only" onclick="postAction('confirmDone', '${esc(r.id)}')" title="Confirm Done (Roll to Next Cycle)">${ICONS.check}</button>`;
-      actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
+      let actions = "";
+      if (r._staged) {
+        actions += `<button class="icon-only" onclick="unstageOperation('${esc(r.id)}')" title="Undo Unsaved Change">${ICONS.restore}</button>`;
+      } else {
+        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r.id)}', { type: 'confirmDone' })" title="Confirm Done (Stage)">${ICONS.check}</button>`;
+        actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
 
-      if (!r.isHidden) {
-        actions += `<button class="danger icon-only" onclick="promptReasonAction('directHide', '${esc(r.id)}', 'Delete reason:')" title="Delete Record">${ICONS.trash}</button>`;
-        if (role === "ADMIN_A" || role === "IT") {
-          actions += `<button class="icon-only" onclick="promptReasonAction('requestDelete', '${esc(r.id)}', 'Request Hafila approval reason:')" title="Request Deletion Approval">${ICONS.flag}</button>`;
+        if (!r.isHidden) {
+          actions += `<button class="danger icon-only" onclick="promptStageAction('directHide', '${esc(r.id)}', 'Delete reason:')" title="Delete (Hide)">${ICONS.trash}</button>`;
+          if (canRequestDelete) {
+            actions += `<button class="icon-only" onclick="promptStageAction('requestDelete', '${esc(r.id)}', 'Request deletion approval reason:')" title="Request Delete Approval">${ICONS.flag}</button>`;
+          }
+        } else if (canApproveOrRestore) {
+          actions += `<button class="primary icon-only" onclick="postImmediateAction('restoreRow', '${esc(r.id)}')" title="Restore Record">${ICONS.restore}</button>`;
         }
-      } else if (canApproveOrRestore) {
-        actions += `<button class="primary icon-only" onclick="postAction('restoreRow', '${esc(r.id)}')" title="Restore Record">${ICONS.restore}</button>`;
       }
 
       return `
-        <tr class="${trClass}">
-          <td>${esc(r.id)}</td>
+        <tr class="${trClasses.join(" ")}">
+          <td>${esc(r.id)}${stagedTag}</td>
           <td class="wrap-cell"><b>${esc(r.name)}</b></td>
           <td class="wrap-cell">${esc(r.filterOrPhone)}</td>
           ${isRed ? `<td><span class="badge ${r.machineUsage ? "ok" : "neutral"}">${r.machineUsage ? "TRUE" : "FALSE"}</span></td>` : ""}
@@ -861,13 +1002,14 @@
     }).join("");
   }
 
-  function promptReasonAction(action, id, promptText) {
+  function promptStageAction(type, id, promptText) {
     const reason = prompt(promptText, "");
     if (reason === null) return;
-    postAction(action, id, reason);
+    stageOperation(id, { type, reason });
   }
 
-  async function postAction(action, id, reason = "", payload = null) {
+  async function postImmediateAction(action, id, reason = "", payload = null) {
+    showBanner("Processing...", "ok");
     try {
       await fetch(GAS_URL, {
         method: "POST",
@@ -883,8 +1025,8 @@
           payload
         })
       });
-      showBanner("Saved. Updating table...", "ok");
-      setTimeout(() => loadData(), 750);
+      showBanner("Done. Syncing...", "ok");
+      setTimeout(() => loadData(true), 800);
     } catch (err) {
       showBanner("Request error: " + err.message, "err");
     }
@@ -892,6 +1034,7 @@
 
   function openCreateModal() {
     document.getElementById("modalTitle").textContent = "New Customer Record";
+    document.getElementById("modalSubmitBtn").textContent = "Create Now";
     document.getElementById("editRecordId").value = "";
     document.getElementById("fName").value = "";
     document.getElementById("fExtra").value = "";
@@ -903,6 +1046,7 @@
 
   function openEditModal(rec) {
     document.getElementById("modalTitle").textContent = `Edit Record #${rec.id}`;
+    document.getElementById("modalSubmitBtn").textContent = "Apply (Click Save Top-Right)";
     document.getElementById("editRecordId").value = rec.id;
     document.getElementById("fName").value = rec.name || "";
     document.getElementById("fExtra").value = rec.filterOrPhone || "";
@@ -936,9 +1080,9 @@
     }
     closeModal();
     if (id) {
-      postAction("updateRecord", id, "Updated via modal", payload);
+      stageOperation(id, { type: "update", payload });
     } else {
-      postAction("createRecord", null, "Created via modal", payload);
+      postImmediateAction("createRecord", null, "Created via modal", payload);
     }
   }
 
