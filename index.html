@@ -25,6 +25,8 @@
       --warn-text: #92400e;
       --ok-bg: #dcfce7;
       --ok-text: #166534;
+      --info-bg: #e0f2fe;
+      --info-text: #075985;
       --hidden-bg: #f1f5f9;
       --dirty-bg: rgba(37, 99, 235, 0.08);
       --shadow: 0 4px 12px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -50,6 +52,8 @@
       --warn-text: #fcd34d;
       --ok-bg: rgba(34, 197, 94, 0.22);
       --ok-text: #86efac;
+      --info-bg: rgba(14, 165, 233, 0.22);
+      --info-text: #7dd3fc;
       --hidden-bg: #1e293b;
       --dirty-bg: rgba(59, 130, 246, 0.16);
       --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
@@ -76,6 +80,8 @@
         --warn-text: #fcd34d;
         --ok-bg: rgba(34, 197, 94, 0.22);
         --ok-text: #86efac;
+        --info-bg: rgba(14, 165, 233, 0.22);
+        --info-text: #7dd3fc;
         --hidden-bg: #1e293b;
         --dirty-bg: rgba(59, 130, 246, 0.16);
         --shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
@@ -141,6 +147,8 @@
     button.danger:hover { background: #b91c1c; }
     button.success { background: #16a34a; color: #fff; border-color: #16a34a; }
     button.success:hover { background: #15803d; }
+    button.info { background: #0284c7; color: #fff; border-color: #0284c7; }
+    button.info:hover { background: #0369a1; }
     button.warning { background: #d97706; color: #fff; border-color: #d97706; }
     button.warning:hover { background: #b45309; }
     button.icon-only { padding: 4px 7px; height: 27px; font-size: 12px; }
@@ -190,7 +198,7 @@
     .table-wrap {
       width: 100%;
       overflow: auto;
-      max-height: calc(100vh - 220px);
+      max-height: calc(100vh - 225px);
       border: 1px solid var(--border);
       border-radius: 8px;
     }
@@ -203,8 +211,6 @@
       vertical-align: middle;
       white-space: nowrap;
     }
-    th:nth-child(2), td:nth-child(2),
-    th:nth-child(3), td:nth-child(3) { text-align: left; }
     th:last-child, td:last-child { border-right: none; }
     th {
       position: sticky;
@@ -225,7 +231,6 @@
     tr.pending { background: var(--warn-row); }
     tr.hidden-row { opacity: 0.65; background: var(--hidden-bg); }
     tr.dirty-row { background: var(--dirty-bg) !important; box-shadow: inset 3px 0 0 var(--primary); }
-    td.wrap-cell { white-space: normal; min-width: 170px; max-width: 280px; }
 
     .badge {
       display: inline-flex;
@@ -240,10 +245,11 @@
     .badge.danger { background: var(--danger-bg); color: var(--danger-text); }
     .badge.warn { background: var(--warn-bg); color: var(--warn-text); }
     .badge.ok { background: var(--ok-bg); color: var(--ok-text); }
+    .badge.info { background: var(--info-bg); color: var(--info-text); }
     .badge.neutral { background: var(--hidden-bg); color: var(--muted); }
     .badge.dirty { background: var(--primary); color: #fff; }
 
-    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
     .gate-box { max-width: 460px; margin: 70px auto; text-align: center; padding: 30px; }
 
     .banner-msg {
@@ -281,6 +287,11 @@
     .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
     .field input, .field select { width: 100%; height: 35px; }
     .other-input { margin-top: 7px; }
+
+    .log-page-header {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 10px; margin-bottom: 14px;
+    }
   </style>
 </head>
 <body>
@@ -306,7 +317,6 @@
       <option value="ADMIN_L">View As: Ms. Lai</option>
     </select>
 
-    <!-- Global Save & Discard (Available to ALL roles including IT Admin) -->
     <button id="batchSaveBtn" class="warning" style="display:none;" onclick="commitBatchChanges()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <span id="batchSaveLabel">Save (0)</span>
@@ -314,9 +324,10 @@
 
     <button id="batchDiscardBtn" style="display:none;" onclick="discardBatchChanges()" title="Discard Unsaved Changes">Discard</button>
 
-    <button id="auditBtn" style="display:none;" onclick="openAuditModal()" title="View Audit Log">
+    <!-- Dedicated Audit Log Page Button -->
+    <button id="auditNavBtn" style="display:none;" onclick="openAuditPage()" title="Open Audit Log Page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <span>Audit</span>
+      <span>Audit Log</span>
     </button>
 
     <button id="themeToggleBtn" onclick="cycleTheme()" title="Switch Theme">
@@ -352,6 +363,7 @@
     </div>
   </div>
 
+  <!-- MAIN DASHBOARD PAGE -->
   <div id="dashboardView" style="display:none;">
     <div class="grid-kpis">
       <div class="kpi" onclick="quickFilterStatus('ALL')"><div class="label">Total Active</div><div class="val" id="kpiTotal">0</div></div>
@@ -386,7 +398,7 @@
     <div class="card" style="padding:12px;">
       <div class="controls-bar">
         <div class="controls-left">
-          <input type="text" id="searchInput" placeholder="Search customer, ID, or filter/phone..." oninput="renderTable()" style="width:270px;" />
+          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" style="width:250px;" />
           <select id="statusFilter" onchange="renderTable()">
             <option value="ALL">Status: All</option>
             <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
@@ -394,10 +406,15 @@
             <option value="Normal">Normal (White)</option>
             <option value="Archived">Archived / Deleted</option>
           </select>
+          <select id="notifFilter" onchange="renderTable()">
+            <option value="ALL">Notified: All</option>
+            <option value="FALSE">Not Notified (FALSE)</option>
+            <option value="TRUE">Already Notified (TRUE)</option>
+          </select>
           <select id="usageFilter" onchange="renderTable()" style="display:none;">
-            <option value="ALL">Usage: All</option>
-            <option value="TRUE">Usage: TRUE only</option>
-            <option value="FALSE">Usage: FALSE only</option>
+            <option value="ALL">Machine Usage: All</option>
+            <option value="TRUE">Machine Usage: TRUE</option>
+            <option value="FALSE">Machine Usage: FALSE</option>
           </select>
           <button onclick="resetSortAndFilters()" title="Reset Sort & Filters">Reset</button>
         </div>
@@ -408,28 +425,58 @@
 
       <div class="table-wrap">
         <table>
+          <thead id="dynamicThead"></thead>
+          <tbody id="recordsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEDICATED AUDIT LOG PAGE -->
+  <div id="auditPageView" style="display:none;">
+    <div class="card">
+      <div class="log-page-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="closeAuditPage()">← Back to Dashboard</button>
+          <h2 style="margin:0;font-size:16px;" id="auditPageTitle">Audit Log</h2>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <input type="text" id="auditSearchInput" placeholder="Search actor, customer, ID, reason..." oninput="renderAuditPage()" style="width:240px;" />
+          <select id="auditActionFilter" onchange="renderAuditPage()">
+            <option value="ALL">All Actions</option>
+            <option value="MARK_NOTIFIED">MARK_NOTIFIED</option>
+            <option value="CONFIRM_DONE">CONFIRM_DONE</option>
+            <option value="BATCH_UPDATE">BATCH_UPDATE</option>
+            <option value="BATCH_CREATE">BATCH_CREATE</option>
+            <option value="REQ_DELETE">REQ_DELETE</option>
+            <option value="APPROVE_DELETE">APPROVE_DELETE</option>
+            <option value="DELETE_HIDE">DELETE_HIDE</option>
+            <option value="RESTORE">RESTORE</option>
+          </select>
+          <span id="auditCountLabel" style="color:var(--muted);font-size:12px;">0 logs</span>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="max-height: calc(100vh - 180px);">
+        <table>
           <thead>
             <tr>
-              <th onclick="toggleSort('id')"><span class="th-inner">ID <span class="sort-ind" id="sort_id">▲</span></span></th>
-              <th onclick="toggleSort('name')"><span class="th-inner">Customer Name <span class="sort-ind" id="sort_name"></span></span></th>
-              <th onclick="toggleSort('filterOrPhone')"><span class="th-inner"><span id="colExtraHead">Filter / Service</span> <span class="sort-ind" id="sort_filterOrPhone"></span></span></th>
-              <th id="colMachineUsageHead" onclick="toggleSort('machineUsage')"><span class="th-inner">Usage <span class="sort-ind" id="sort_machineUsage"></span></span></th>
-              <th onclick="toggleSort('lastChangedDate')"><span class="th-inner">Last Changed <span class="sort-ind" id="sort_lastChangedDate"></span></span></th>
-              <th onclick="toggleSort('cycleDays')"><span class="th-inner">Cycle <span class="sort-ind" id="sort_cycleDays"></span></span></th>
-              <th onclick="toggleSort('nextChangeDate')"><span class="th-inner">Next Date <span class="sort-ind" id="sort_nextChangeDate"></span></span></th>
-              <th onclick="toggleSort('statusRank')"><span class="th-inner">Status <span class="sort-ind" id="sort_statusRank"></span></span></th>
-              <th onclick="toggleSort('approvalStatus')"><span class="th-inner">Approval <span class="sort-ind" id="sort_approvalStatus"></span></span></th>
-              <th class="no-sort">Actions</th>
+              <th class="no-sort">Time</th>
+              <th class="no-sort">Actor</th>
+              <th class="no-sort">ID</th>
+              <th class="no-sort">Customer</th>
+              <th class="no-sort">Action</th>
+              <th class="no-sort">Reason</th>
             </tr>
           </thead>
-          <tbody id="recordsTbody"></tbody>
+          <tbody id="auditPageTbody"></tbody>
         </table>
       </div>
     </div>
   </div>
 </main>
 
-<!-- Dedicated Add New / Edit Modal (Supports Dropdown + "Other..." Free Text for Both RED & GREEN) -->
+<!-- Dedicated Add New / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
@@ -439,24 +486,16 @@
     <input type="hidden" id="editRecordId" />
 
     <div class="field">
-      <label>Customer Name *</label>
+      <label>Name *</label>
       <input type="text" id="fName" placeholder="Enter customer name" required />
     </div>
 
-    <!-- RED Sheet: Filter / Service Dropdown + Other -->
     <div class="field" id="fRedFilterGroup">
       <label>Filter / Service Name</label>
-      <select id="fRedFilterSelect" onchange="toggleOtherInput('fRedFilterSelect', 'fRedFilterOther')">
-        <option value="RO Water Filter">RO Water Filter</option>
-        <option value="Alkaline Water Filter">Alkaline Water Filter</option>
-        <option value="Outdoor Filter">Outdoor Filter</option>
-        <option value="UV / UF Cartridge Set">UV / UF Cartridge Set</option>
-        <option value="__OTHER__">Other (Type custom...)</option>
-      </select>
+      <select id="fRedFilterSelect" onchange="toggleOtherInput('fRedFilterSelect', 'fRedFilterOther')"></select>
       <input type="text" id="fRedFilterOther" class="other-input" placeholder="Type custom filter / service name..." style="display:none;" />
     </div>
 
-    <!-- GREEN Sheet: Phone Number + Service Plan Dropdown + Other -->
     <div class="field" id="fGreenPhoneGroup" style="display:none;">
       <label>Phone Number</label>
       <input type="text" id="fGreenPhone" placeholder="e.g. 012-3456789" />
@@ -464,21 +503,15 @@
 
     <div class="field" id="fGreenPlanGroup" style="display:none;">
       <label>Service / Filter Plan</label>
-      <select id="fGreenPlanSelect" onchange="toggleOtherInput('fGreenPlanSelect', 'fGreenPlanOther')">
-        <option value="Standard Filter Service">Standard Filter Service</option>
-        <option value="RO Maintenance">RO Maintenance</option>
-        <option value="Outdoor Filter Flush">Outdoor Filter Flush</option>
-        <option value="__OTHER__">Other (Type custom...)</option>
-      </select>
+      <select id="fGreenPlanSelect" onchange="toggleOtherInput('fGreenPlanSelect', 'fGreenPlanOther')"></select>
       <input type="text" id="fGreenPlanOther" class="other-input" placeholder="Type custom plan or notes..." style="display:none;" />
     </div>
 
-    <!-- RED Sheet Only: Machine Usage -->
     <div class="field" id="fUsageGroup">
       <label>Machine Usage</label>
       <select id="fUsage">
-        <option value="TRUE">TRUE (In Use)</option>
-        <option value="FALSE">FALSE (Not in Use)</option>
+        <option value="TRUE">TRUE</option>
+        <option value="FALSE">FALSE</option>
       </select>
     </div>
 
@@ -489,36 +522,13 @@
 
     <div class="field">
       <label>Change Cycle (Days) *</label>
-      <select id="fCycleSelect" onchange="toggleOtherInput('fCycleSelect', 'fCycleOther')">
-        <option value="90">90 Days (3 Months)</option>
-        <option value="180" selected>180 Days (6 Months)</option>
-        <option value="365">365 Days (12 Months)</option>
-        <option value="__OTHER__">Other (Type custom days...)</option>
-      </select>
+      <select id="fCycleSelect" onchange="toggleOtherInput('fCycleSelect', 'fCycleOther')"></select>
       <input type="number" id="fCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
     </div>
 
     <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
       <button onclick="closeModal()">Cancel</button>
-      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Stage & Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Audit Log Modal -->
-<div id="auditModal" class="modal-backdrop">
-  <div class="modal" style="max-width:780px;">
-    <div class="modal-header">
-      <h3>Recent Audit Logs</h3>
-      <button onclick="document.getElementById('auditModal').classList.remove('show')">Close</button>
-    </div>
-    <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:8px;">
-      <table>
-        <thead>
-          <tr><th>Time</th><th>Actor</th><th>ID</th><th>Customer</th><th>Action</th><th>Reason</th></tr>
-        </thead>
-        <tbody id="auditTbody"></tbody>
-      </table>
+      <button class="primary" id="modalSubmitBtn" onclick="submitModal()">Stage</button>
     </div>
   </div>
 </div>
@@ -529,9 +539,10 @@
   const STORAGE_KEY = "wf_zt_email";
   const VIEW_AS_KEY = "wf_view_as";
   const THEME_KEY = "wf_theme_mode";
-  const CLIENT_CACHE_PREFIX = "wf_snap_v4_";
+  const CLIENT_CACHE_PREFIX = "wf_snap_v5_";
 
   const ICONS = {
+    bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
     check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>`,
     edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
     trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
@@ -548,11 +559,17 @@
     canSwitchView: false,
     allowedSheets: ["RED"],
     activeSheet: "RED",
+    sheetHeaders: [],
     records: [],
     auditLogs: [],
+    dropdownOptions: {
+      redFilter: ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter", "UV / UF Cartridge Set"],
+      greenPlan: ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"],
+      cycles: [90, 180, 365]
+    },
     sortCol: "id",
     sortDir: "asc",
-    pendingOps: {} // key -> { key, id, type, payload, reason }
+    pendingOps: {}
   };
 
   function applyTheme(mode) {
@@ -603,14 +620,28 @@
     document.getElementById("authGateActions").style.display = "block";
     document.getElementById("authGateView").style.display = "block";
     document.getElementById("dashboardView").style.display = "none";
+    document.getElementById("auditPageView").style.display = "none";
     document.getElementById("appToolbar").style.display = "none";
   }
 
   function showDashboard() {
     document.getElementById("authGateView").style.display = "none";
+    document.getElementById("auditPageView").style.display = "none";
     document.getElementById("dashboardView").style.display = "block";
     document.getElementById("appToolbar").style.display = "flex";
     loadData(false);
+  }
+
+  function openAuditPage() {
+    document.getElementById("dashboardView").style.display = "none";
+    document.getElementById("auditPageView").style.display = "block";
+    document.getElementById("auditPageTitle").textContent = `Audit Log — ${currentState.activeSheet}`;
+    renderAuditPage();
+  }
+
+  function closeAuditPage() {
+    document.getElementById("auditPageView").style.display = "none";
+    document.getElementById("dashboardView").style.display = "block";
   }
 
   function showBanner(msg, type = "ok") {
@@ -696,6 +727,25 @@
     return `${CLIENT_CACHE_PREFIX}${currentState.email}_${sheet || "DEFAULT"}_${viewAs || "ACTUAL"}`;
   }
 
+  function populateConfigurableSelects() {
+    const opts = currentState.dropdownOptions || {};
+    const redList = opts.redFilter || ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter"];
+    const greenList = opts.greenPlan || ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"];
+    const cycleList = opts.cycles || [90, 180, 365];
+
+    document.getElementById("fRedFilterSelect").innerHTML =
+      redList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
+      `<option value="__OTHER__">Other (Type custom...)</option>`;
+
+    document.getElementById("fGreenPlanSelect").innerHTML =
+      greenList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
+      `<option value="__OTHER__">Other (Type custom...)</option>`;
+
+    document.getElementById("fCycleSelect").innerHTML =
+      cycleList.map(n => `<option value="${esc(String(n))}">${esc(String(n))} Days</option>`).join("") +
+      `<option value="__OTHER__">Other (Type custom days...)</option>`;
+  }
+
   function applyDashboardPayload(data, isFromCache) {
     currentState.actualRole = data.actualRole;
     currentState.effectiveRole = data.effectiveRole;
@@ -704,7 +754,11 @@
     currentState.canSwitchView = Boolean(data.canSwitchView);
     currentState.allowedSheets = data.allowedSheets || ["RED"];
     currentState.activeSheet = data.activeSheet;
+    currentState.sheetHeaders = (data.sheetHeaders && data.sheetHeaders.length > 0)
+      ? data.sheetHeaders
+      : ["ID", "Name", "Filter / Service Name", "Machine Usage", "Last Changed Date", "Change Cycle (Days)", "Next Change Date", "Notification Date", "Status", "Notification Status", "Importance"];
     currentState.auditLogs = data.auditLogs || [];
+    if (data.dropdownOptions) currentState.dropdownOptions = data.dropdownOptions;
 
     currentState.records = (data.records || []).map(r => {
       let rank = 3;
@@ -713,6 +767,8 @@
       else if (r.status === "Pending Notification") rank = 2;
       return Object.assign({}, r, { statusRank: rank });
     });
+
+    populateConfigurableSelects();
 
     const badge = document.getElementById("userBadge");
     badge.style.display = "inline-flex";
@@ -749,14 +805,16 @@
 
     const isRed = (data.activeSheet === "RED");
     document.getElementById("addNewBtnText").textContent = isRed ? "Add New (RED)" : "Add New (GREEN)";
-    document.getElementById("auditBtn").style.display = (["IT", "BOSS"].includes(data.effectiveRole)) ? "inline-flex" : "none";
-    document.getElementById("colMachineUsageHead").style.display = isRed ? "" : "none";
+    const canViewAudit = ["IT", "BOSS", "ADMIN_H"].includes(data.effectiveRole);
+    document.getElementById("auditNavBtn").style.display = canViewAudit ? "inline-flex" : "none";
     document.getElementById("usageFilter").style.display = isRed ? "inline-block" : "none";
-    document.getElementById("colExtraHead").textContent = isRed ? "Filter / Service" : "Phone / Plan";
 
     updateKpis(data.summary || {}, currentState.records);
     renderApprovals();
     renderTable();
+    if (document.getElementById("auditPageView").style.display === "block") {
+      renderAuditPage();
+    }
   }
 
   async function loadData(forceFresh = false) {
@@ -830,6 +888,7 @@
   function resetSortAndFilters() {
     document.getElementById("searchInput").value = "";
     document.getElementById("statusFilter").value = "ALL";
+    document.getElementById("notifFilter").value = "ALL";
     document.getElementById("usageFilter").value = "ALL";
     currentState.sortCol = "id";
     currentState.sortDir = "asc";
@@ -844,19 +903,6 @@
       currentState.sortDir = "asc";
     }
     renderTable();
-  }
-
-  function updateSortIndicators() {
-    const cols = ["id", "name", "filterOrPhone", "machineUsage", "lastChangedDate", "cycleDays", "nextChangeDate", "statusRank", "approvalStatus"];
-    cols.forEach(c => {
-      const el = document.getElementById("sort_" + c);
-      if (!el) return;
-      if (currentState.sortCol === c) {
-        el.textContent = currentState.sortDir === "asc" ? "▲" : "▼";
-      } else {
-        el.textContent = "";
-      }
-    });
   }
 
   /* ================= Global Staging & Save ================= */
@@ -935,21 +981,88 @@
     tbody.innerHTML = pendingItems.map(r => `
       <tr>
         <td>${esc(r.id)}</td>
-        <td><b>${esc(r.name)}</b></td>
+        <td style="text-align:left;"><b>${esc(r.name)}</b></td>
         <td>${esc(r.status)}</td>
         <td>${r.overdueDays > 0 ? r.overdueDays + "d" : "-"}</td>
-        <td class="row-actions">
-          <button class="success" onclick="postImmediateAction('approveDelete', '${esc(r.id)}')">${ICONS.check} Approve Delete</button>
-          <button class="danger" onclick="postImmediateAction('rejectDelete', '${esc(r.id)}')">Reject</button>
+        <td>
+          <div class="row-actions">
+            <button class="success" onclick="postImmediateAction('approveDelete', '${esc(r.id)}')">${ICONS.check} Approve Delete</button>
+            <button class="danger" onclick="postImmediateAction('rejectDelete', '${esc(r.id)}')">Reject</button>
+          </div>
         </td>
       </tr>
     `).join("");
   }
 
+  function renderDynamicHeaders() {
+    const visibleHeaders = currentState.sheetHeaders.filter(h => h !== "Approval Status");
+    const sortKeyForHeader = (h) => {
+      if (h === "ID") return "id";
+      if (h === "Name") return "name";
+      if (h === "Filter / Service Name" || h === "Phone Number") return "filterOrPhone";
+      if (h === "Machine Usage" || h === "Machine usage") return "machineUsage";
+      if (h === "Last Changed Date") return "lastChangedDate";
+      if (h === "Change Cycle (Days)") return "cycleDays";
+      if (h === "Next Change Date") return "nextChangeDate";
+      if (h === "Notification Date") return "notificationDate";
+      if (h === "Status") return "statusRank";
+      if (h === "Notification Status") return "notified";
+      if (h === "Importance") return "importance";
+      return `cell:${h}`;
+    };
+
+    const ths = visibleHeaders.map(h => {
+      const sk = sortKeyForHeader(h);
+      const ind = (currentState.sortCol === sk) ? (currentState.sortDir === "asc" ? "▲" : "▼") : "";
+      return `<th onclick="toggleSort('${esc(sk)}')"><span class="th-inner">${esc(h)} <span class="sort-ind">${ind}</span></span></th>`;
+    });
+
+    ths.push(`<th class="no-sort">Actions</th>`);
+    document.getElementById("dynamicThead").innerHTML = `<tr>${ths.join("")}</tr>`;
+    return visibleHeaders;
+  }
+
+  function renderCellContent(rec, headerName) {
+    const cells = rec.cells || {};
+    let val = cells[headerName];
+
+    if (headerName === "ID") {
+      const stagedTag = rec._staged ? ` <span class="badge dirty">Unsaved</span>` : "";
+      return `<b>${esc(rec.id)}</b>${stagedTag}`;
+    }
+    if (headerName === "Name") {
+      return `<div style="text-align:left;white-space:normal;min-width:170px;max-width:280px;"><b>${esc(rec.name)}</b></div>`;
+    }
+    if (headerName === "Filter / Service Name" || headerName === "Phone Number") {
+      return `<div style="text-align:left;white-space:normal;min-width:150px;max-width:260px;">${esc(rec.filterOrPhone)}</div>`;
+    }
+    if (headerName === "Machine Usage" || headerName === "Machine usage") {
+      return `<span class="badge ${rec.machineUsage ? "ok" : "neutral"}">${rec.machineUsage ? "TRUE" : "FALSE"}</span>`;
+    }
+    if (headerName === "Status") {
+      const badgeClass = rec.isHidden
+        ? "neutral"
+        : (rec.status === "REPLACEMENT REQUIRED" ? "danger" : (rec.status === "Pending Notification" ? "warn" : "ok"));
+      const label = rec.overdueDays > 0 ? `${rec.status} (+${rec.overdueDays}d)` : rec.status;
+      return `<span class="badge ${badgeClass}">${esc(label)}</span>`;
+    }
+    if (headerName === "Notification Status") {
+      return rec.notified
+        ? `<span class="badge info">Notified</span>`
+        : `<span class="badge neutral">Unnotified</span>`;
+    }
+    if (headerName === "Last Changed Date") return esc(rec.lastChangedDate || val || "");
+    if (headerName === "Change Cycle (Days)") return esc(rec.cycleDays || val || "");
+    if (headerName === "Next Change Date") return esc(rec.nextChangeDate || val || "");
+    if (headerName === "Notification Date") return esc(rec.notificationDate || val || "");
+    return esc(val ?? "");
+  }
+
   function renderTable() {
-    updateSortIndicators();
+    const visibleHeaders = renderDynamicHeaders();
     const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
     const stFilter = document.getElementById("statusFilter").value;
+    const ntFilter = document.getElementById("notifFilter").value;
     const usFilter = document.getElementById("usageFilter").value;
     const isRed = (currentState.activeSheet === "RED");
     const role = currentState.effectiveRole;
@@ -958,42 +1071,77 @@
 
     const stagedCreates = Object.values(currentState.pendingOps)
       .filter(op => op.type === "create")
-      .map((op, idx) => ({
-        _opKey: op.key,
-        _staged: op,
-        id: `NEW-${idx + 1}`,
-        name: op.payload["Name"] || "",
-        filterOrPhone: isRed
+      .map((op, idx) => {
+        const extra = isRed
           ? (op.payload["Filter / Service Name"] || "")
-          : `${op.payload["Phone Number"] || ""} ${op.payload["Service Plan"] ? "(" + op.payload["Service Plan"] + ")" : ""}`.trim(),
-        machineUsage: op.payload["Machine usage"] !== false,
-        lastChangedDate: op.payload["Last Changed Date"] || "",
-        cycleDays: op.payload["Change Cycle (Days)"] || 180,
-        nextChangeDate: "Auto-calc on Save",
-        status: "Normal",
-        statusRank: 3,
-        overdueDays: 0,
-        approvalStatus: "STAGED_NEW",
-        isHidden: false
-      }));
+          : (op.payload["Phone Number"] || op.payload["Service Plan"] || "");
+        return {
+          _opKey: op.key,
+          _staged: op,
+          id: `NEW-${idx + 1}`,
+          name: op.payload["Name"] || "",
+          filterOrPhone: extra,
+          machineUsage: op.payload["Machine usage"] !== false,
+          lastChangedDate: op.payload["Last Changed Date"] || "",
+          cycleDays: op.payload["Change Cycle (Days)"] || 180,
+          nextChangeDate: "Auto on Save",
+          notificationDate: "-",
+          status: "Normal",
+          statusRank: 3,
+          overdueDays: 0,
+          notified: false,
+          approvalStatus: "STAGED_NEW",
+          isHidden: false,
+          cells: {
+            "ID": `NEW-${idx + 1}`,
+            "Name": op.payload["Name"] || "",
+            "Filter / Service Name": extra,
+            "Phone Number": op.payload["Phone Number"] || "",
+            "Machine Usage": op.payload["Machine usage"] !== false,
+            "Last Changed Date": op.payload["Last Changed Date"] || "",
+            "Change Cycle (Days)": op.payload["Change Cycle (Days)"] || 180,
+            "Status": "Normal",
+            "Notification Status": false
+          }
+        };
+      });
 
     const mergedExisting = currentState.records.map(r => {
       const opKey = `row_${r.id}`;
       const op = currentState.pendingOps[opKey];
       if (!op) return Object.assign({}, r, { _opKey: opKey });
-      const copy = Object.assign({}, r, { _opKey: opKey, _staged: op });
-      if (op.type === "update" && op.payload) {
-        if (op.payload["Name"] !== undefined) copy.name = op.payload["Name"];
-        if (op.payload["Filter / Service Name"] !== undefined) copy.filterOrPhone = op.payload["Filter / Service Name"];
-        if (op.payload["Phone Number"] !== undefined) copy.filterOrPhone = op.payload["Phone Number"];
-        if (op.payload["Machine usage"] !== undefined) copy.machineUsage = op.payload["Machine usage"];
-        if (op.payload["Last Changed Date"] !== undefined) copy.lastChangedDate = op.payload["Last Changed Date"];
-        if (op.payload["Change Cycle (Days)"] !== undefined) copy.cycleDays = op.payload["Change Cycle (Days)"];
+      const copy = Object.assign({}, r, { _opKey: opKey, _staged: op, cells: Object.assign({}, r.cells) });
+      if (op.type === "markNotified") {
+        copy.notified = true;
+        copy.cells["Notification Status"] = true;
+      } else if (op.type === "update" && op.payload) {
+        if (op.payload["Name"] !== undefined) { copy.name = op.payload["Name"]; copy.cells["Name"] = op.payload["Name"]; }
+        if (op.payload["Filter / Service Name"] !== undefined) {
+          copy.filterOrPhone = op.payload["Filter / Service Name"];
+          copy.cells["Filter / Service Name"] = op.payload["Filter / Service Name"];
+        }
+        if (op.payload["Phone Number"] !== undefined) {
+          copy.filterOrPhone = op.payload["Phone Number"];
+          copy.cells["Phone Number"] = op.payload["Phone Number"];
+        }
+        if (op.payload["Machine usage"] !== undefined) {
+          copy.machineUsage = op.payload["Machine usage"];
+          copy.cells["Machine Usage"] = op.payload["Machine usage"];
+        }
+        if (op.payload["Last Changed Date"] !== undefined) {
+          copy.lastChangedDate = op.payload["Last Changed Date"];
+          copy.cells["Last Changed Date"] = op.payload["Last Changed Date"];
+        }
+        if (op.payload["Change Cycle (Days)"] !== undefined) {
+          copy.cycleDays = op.payload["Change Cycle (Days)"];
+          copy.cells["Change Cycle (Days)"] = op.payload["Change Cycle (Days)"];
+        }
       } else if (op.type === "confirmDone") {
         copy.lastChangedDate = new Date().toISOString().slice(0, 10);
         copy.status = "Normal";
         copy.statusRank = 3;
         copy.overdueDays = 0;
+        copy.notified = false;
       } else if (op.type === "directHide") {
         copy.status = "Archived";
         copy.statusRank = 4;
@@ -1008,6 +1156,10 @@
 
     let filtered = combined.filter(r => {
       if (stFilter !== "ALL" && r.status !== stFilter) return false;
+      if (ntFilter !== "ALL") {
+        const wantNotified = (ntFilter === "TRUE");
+        if (Boolean(r.notified) !== wantNotified) return false;
+      }
       if (isRed && usFilter !== "ALL") {
         const want = (usFilter === "TRUE");
         if (Boolean(r.machineUsage) !== want) return false;
@@ -1024,15 +1176,23 @@
       if (a._staged && a._staged.type === "create") return -1;
       if (b._staged && b._staged.type === "create") return 1;
 
-      let va = a[col];
-      let vb = b[col];
-      if (col === "id" || col === "cycleDays" || col === "statusRank") {
+      let va, vb;
+      if (col.startsWith("cell:")) {
+        const hName = col.slice(5);
+        va = (a.cells && a.cells[hName]) ?? "";
+        vb = (b.cells && b.cells[hName]) ?? "";
+      } else {
+        va = a[col];
+        vb = b[col];
+      }
+
+      if (col === "id" || col === "cycleDays" || col === "statusRank" || col === "importance") {
         va = Number(va || 0);
         vb = Number(vb || 0);
         if (va !== vb) return (va - vb) * dir;
         return Number(a.id || 0) - Number(b.id || 0);
       }
-      if (col === "machineUsage") {
+      if (col === "machineUsage" || col === "notified") {
         va = va ? 1 : 0;
         vb = vb ? 1 : 0;
         return (va - vb) * dir;
@@ -1050,44 +1210,35 @@
       else if (r.status === "REPLACEMENT REQUIRED") trClasses.push("overdue");
       else if (r.status === "Pending Notification") trClasses.push("pending");
 
-      const badgeClass = r.isHidden
-        ? "neutral"
-        : (r.status === "REPLACEMENT REQUIRED" ? "danger" : (r.status === "Pending Notification" ? "warn" : "ok"));
-
-      const statusLabel = r.overdueDays > 0 ? `${r.status} (+${r.overdueDays}d)` : r.status;
-      const stagedTag = r._staged ? ` <span class="badge dirty">Unsaved</span>` : "";
-
       let actions = "";
       if (r._staged) {
         actions += `<button class="icon-only" onclick="unstageOperation('${esc(r._opKey)}')" title="Undo Unsaved Change">${ICONS.restore}</button>`;
       } else {
-        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'confirmDone' })" title="Confirm Done (Stage)">${ICONS.check}</button>`;
+        // Button 1: Mark Notified (for Pending Notification / unnotified items)
+        if (!r.isHidden && !r.notified) {
+          actions += `<button class="info icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'markNotified' })" title="Mark as Notified (Stage)">${ICONS.bell}</button>`;
+        }
+        // Button 2: Confirm Done (Replacement completed -> next cycle)
+        actions += `<button class="success icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'confirmDone' })" title="Confirm Done / Next Cycle (Stage)">${ICONS.check}</button>`;
+        // Button 3: Edit
         actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
 
         if (!r.isHidden) {
+          // Button 4: Delete (Soft-delete / Hide)
           actions += `<button class="danger icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'directHide', 'Delete reason:')" title="Delete">${ICONS.trash}</button>`;
+          // Button 5: Request Delete (Only Atira or IT Admin)
           if (canRequestDelete) {
             actions += `<button class="icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'requestDelete', 'Request deletion approval reason:')" title="Request Delete">${ICONS.flag}</button>`;
           }
         } else if (canApproveOrRestore) {
+          // Restore archived/hidden record
           actions += `<button class="primary icon-only" onclick="postImmediateAction('restoreRow', '${esc(r.id)}')" title="Restore Record">${ICONS.restore}</button>`;
         }
       }
 
-      return `
-        <tr class="${trClasses.join(" ")}">
-          <td>${esc(r.id)}${stagedTag}</td>
-          <td class="wrap-cell"><b>${esc(r.name)}</b></td>
-          <td class="wrap-cell">${esc(r.filterOrPhone)}</td>
-          ${isRed ? `<td><span class="badge ${r.machineUsage ? "ok" : "neutral"}">${r.machineUsage ? "TRUE" : "FALSE"}</span></td>` : ""}
-          <td>${esc(r.lastChangedDate)}</td>
-          <td>${esc(r.cycleDays)}</td>
-          <td>${esc(r.nextChangeDate)}</td>
-          <td><span class="badge ${badgeClass}">${esc(statusLabel)}</span></td>
-          <td>${esc(r.approvalStatus || "-")}</td>
-          <td><div class="row-actions">${actions}</div></td>
-        </tr>
-      `;
+      const rowCells = visibleHeaders.map(h => `<td>${renderCellContent(r, h)}</td>`);
+      rowCells.push(`<td><div class="row-actions">${actions}</div></td>`);
+      return `<tr class="${trClasses.join(" ")}">${rowCells.join("")}</tr>`;
     }).join("");
   }
 
@@ -1171,6 +1322,7 @@
   }
 
   function openCreateModal() {
+    populateConfigurableSelects();
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
@@ -1179,17 +1331,24 @@
     document.getElementById("editRecordId").value = "";
     document.getElementById("fName").value = "";
 
-    setSelectWithOther("fRedFilterSelect", "fRedFilterOther", "RO Water Filter");
+    const firstRed = (currentState.dropdownOptions.redFilter && currentState.dropdownOptions.redFilter[0]) || "RO Water Filter";
+    const firstGreen = (currentState.dropdownOptions.greenPlan && currentState.dropdownOptions.greenPlan[0]) || "Standard Filter Service";
+    const defaultCycle = currentState.dropdownOptions.cycles && currentState.dropdownOptions.cycles.includes(180)
+      ? "180"
+      : String((currentState.dropdownOptions.cycles && currentState.dropdownOptions.cycles[0]) || 180);
+
+    setSelectWithOther("fRedFilterSelect", "fRedFilterOther", firstRed);
     document.getElementById("fGreenPhone").value = "";
-    setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", "Standard Filter Service");
+    setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", firstGreen);
     document.getElementById("fUsage").value = "TRUE";
     document.getElementById("fLastDate").value = new Date().toISOString().slice(0, 10);
-    setSelectWithOther("fCycleSelect", "fCycleOther", "180");
+    setSelectWithOther("fCycleSelect", "fCycleOther", defaultCycle);
 
     document.getElementById("editModal").classList.add("show");
   }
 
   function openEditModal(rec) {
+    populateConfigurableSelects();
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
@@ -1202,15 +1361,8 @@
       setSelectWithOther("fRedFilterSelect", "fRedFilterOther", rec.filterOrPhone || "");
       document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
     } else {
-      const raw = String(rec.filterOrPhone || "");
-      const m = raw.match(/^(.*?)\s*\(([^()]+)\)\s*$/);
-      if (m) {
-        document.getElementById("fGreenPhone").value = m[1].trim();
-        setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", m[2].trim());
-      } else {
-        document.getElementById("fGreenPhone").value = raw;
-        setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", "Standard Filter Service");
-      }
+      document.getElementById("fGreenPhone").value = (rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "";
+      setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", "Standard Filter Service");
     }
 
     document.getElementById("fLastDate").value = rec.lastChangedDate || "";
@@ -1231,7 +1383,7 @@
     const cycleVal = Number(readSelectOrOther("fCycleSelect", "fCycleOther") || 180);
 
     if (!name) {
-      showBanner("Customer Name is required.", "err");
+      showBanner("Name is required.", "err");
       return;
     }
 
@@ -1247,11 +1399,8 @@
     } else {
       const phone = document.getElementById("fGreenPhone").value.trim();
       const plan = readSelectOrOther("fGreenPlanSelect", "fGreenPlanOther");
-      payload["Phone Number"] = phone;
+      payload["Phone Number"] = phone || plan;
       payload["Service Plan"] = plan;
-      if (!payload["Phone Number"] && plan) {
-        payload["Phone Number"] = plan;
-      }
     }
 
     closeModal();
@@ -1264,19 +1413,30 @@
     }
   }
 
-  function openAuditModal() {
-    const tbody = document.getElementById("auditTbody");
-    tbody.innerHTML = (currentState.auditLogs || []).map(l => `
+  function renderAuditPage() {
+    const q = (document.getElementById("auditSearchInput").value || "").trim().toLowerCase();
+    const act = document.getElementById("auditActionFilter").value;
+    const logs = (currentState.auditLogs || []).filter(l => {
+      if (act !== "ALL" && l.action !== act) return false;
+      if (!q) return true;
+      return String(l.actor).toLowerCase().includes(q)
+        || String(l.role).toLowerCase().includes(q)
+        || String(l.custId).toLowerCase().includes(q)
+        || String(l.custName).toLowerCase().includes(q)
+        || String(l.reason).toLowerCase().includes(q);
+    });
+
+    document.getElementById("auditCountLabel").textContent = `${logs.length} log(s)`;
+    document.getElementById("auditPageTbody").innerHTML = logs.map(l => `
       <tr>
         <td>${esc(l.time)}</td>
-        <td>${esc(l.role)} (${esc(l.actor)})</td>
+        <td style="text-align:left;">${esc(l.role)} (${esc(l.actor)})</td>
         <td>${esc(l.custId)}</td>
-        <td>${esc(l.custName)}</td>
-        <td><b>${esc(l.action)}</b></td>
-        <td>${esc(l.reason)}</td>
+        <td style="text-align:left;"><b>${esc(l.custName)}</b></td>
+        <td><span class="badge info">${esc(l.action)}</span></td>
+        <td style="text-align:left;">${esc(l.reason)}</td>
       </tr>
-    `).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--muted);">No logs available</td></tr>`;
-    document.getElementById("auditModal").classList.add("show");
+    `).join("") || `<tr><td colspan="6" style="color:var(--muted);">No audit logs found</td></tr>`;
   }
 
   function esc(s) {
