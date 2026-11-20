@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Filter Service & Dispatch Dashboard</title>
+  <link rel="icon" type="image/png" href="./logo.png" />
   <style>
     :root {
       --bg: #f1f5f9;
@@ -130,6 +131,7 @@
     }
     .brand-wrap { display: flex; align-items: center; gap: 12px; justify-self: start; }
     .brand { font-weight: 700; font-size: 16.5px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.015em; }
+    .brand img { width: 24px; height: 24px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
     .brand svg { width: 19px; height: 19px; color: var(--primary); }
     .role-pill {
       display: inline-flex;
@@ -432,7 +434,7 @@
 <header>
   <div class="brand-wrap">
     <div class="brand">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      <img src="./logo.png" alt="Logo" />
       <span>Filter Service Operations</span>
     </div>
     <span id="userBadge" class="role-pill" style="display:none;"></span>
