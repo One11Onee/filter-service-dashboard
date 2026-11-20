@@ -1,29 +1,25 @@
 /**
- * Code.gs - Phase 3 Stable
- * - Dual independent daily emails (RED sheet + GREEN sheet) in English
- * - MS Graph API (shared mailbox) with automatic MailApp fallback
- * - Secret expiration proactive alert (<= 30 days left)
- * - Auto-calculation fallback & RED Machine usage filter
+ * Code.gs - Production Enterprise Edition
+ * - Dual independent daily emails (RED & GREEN)
+ * - MS Graph API (Shared Mailbox) with automatic MailApp fallback
+ * - Proactive Client Secret expiration alert
+ * - Dynamic IT_Config driven names, permissions, and recipients
  */
 
-const MAIL_TEST_MODE = true; // Set to false for production
+const MAIL_TEST_MODE = false; // Set true only when testing without CC
 const SECRET_WARN_DAYS = 30;
 
 function sendDailyFilterEmails() {
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  lock.waitLock(15000);
 
   try {
     const redSs = SpreadsheetApp.getActiveSpreadsheet();
     const redConfig = readConfigMap_(redSs);
 
-    // 1. Check MS Graph Client Secret expiration before sending
     checkSecretExpiration_(redSs, redConfig);
-
-    // 2. Process RED sheet
     processSingleSheetReminder_(redSs, redConfig, "RED");
 
-    // 3. Process GREEN sheet independently
     const greenId = String(redConfig["GREEN_SHEET_ID"] || "").trim();
     if (greenId) {
       const greenSs = SpreadsheetApp.openById(greenId);
@@ -60,11 +56,11 @@ function checkSecretExpiration_(ss, config) {
 
     const body = `
       <html>
-        <body style="font-family: Arial, sans-serif; color: #222;">
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #222;">
           <h3>MS Graph Client Secret Renewal Reminder</h3>
           <p><b>Expiration Date:</b> ${escapeHtml_(expStr)}</p>
           <p><b>Status:</b> ${daysLeft < 0 ? `Expired ${Math.abs(daysLeft)} day(s) ago` : `${daysLeft} day(s) remaining`}</p>
-          <p>Please generate a new client secret in Microsoft Entra ID, update <code>MS_CLIENT_SECRET</code> and <code>MS_SECRET_EXPIRES_AT</code> in GAS Script Properties, and keep MailApp fallback active during rotation.</p>
+          <p>Please generate a new client secret in Microsoft Entra ID and update <code>MS_CLIENT_SECRET</code> and <code>MS_SECRET_EXPIRES_AT</code> in GAS Script Properties.</p>
         </body>
       </html>
     `;
@@ -100,24 +96,20 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
     const r = rows[i];
     const rowNum = i + 2;
 
-    if (sheet.isRowHiddenByUser(rowNum)) continue;
-
     const name = String(getVal_(r, colMap, ["Name"]) || "").trim();
-    const status = String(getVal_(r, colMap, ["Status"]) || "").trim();
+    const rawStatus = String(getVal_(r, colMap, ["Status"]) || "").trim();
     const notifiedVal = getVal_(r, colMap, ["Notification Status"]);
     const notified = (notifiedVal === true || String(notifiedVal).toUpperCase() === "TRUE");
 
-    if (!name || !status) continue;
-    if (status.toUpperCase() === "ARCHIVED") continue;
+    if (!name || !rawStatus) continue;
+    if (rawStatus.toUpperCase() === "ARCHIVED") continue;
 
-    // RED sheet: only include rows where Machine usage is TRUE
     if (sheetCode === "RED") {
       const usageVal = getVal_(r, colMap, ["Machine usage", "Machine Usage"]);
       const inUse = (usageVal === true || String(usageVal).toUpperCase() === "TRUE");
       if (!inUse) continue;
     }
 
-    // Auto-calculate Next Change Date & Status if Last Changed Date + Cycle exist
     const lastChangedDate = parseValidDate_(getVal_(r, colMap, ["Last Changed Date"]));
     const cycleDays = Number(getVal_(r, colMap, ["Change Cycle (Days)"]));
     let nextDateObj = parseValidDate_(getVal_(r, colMap, ["Next Change Date"]));
@@ -126,7 +118,7 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
       nextDateObj = computeNextChangeDate_(lastChangedDate, cycleDays);
     }
 
-    const effectiveStatus = computeEffectiveStatus_(status, nextDateObj, todayStart);
+    const effectiveStatus = computeEffectiveStatus_(rawStatus, nextDateObj, todayStart);
     const isTarget = (effectiveStatus === "Pending Notification" || effectiveStatus === "REPLACEMENT REQUIRED");
 
     if (isTarget && !notified) {
@@ -195,15 +187,15 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
 function buildEnglishReminderHtml_(ctx) {
   const topButtons = `
     <div style="margin-bottom: 14px;">
-      ${ctx.dashboardUrl ? `<a href="${escapeHtml_(ctx.dashboardUrl)}" style="display:inline-block;background:#0d6efd;color:#fff;padding:7px 14px;text-decoration:none;border-radius:4px;font-size:13px;margin-right:8px;">Open Dashboard</a>` : ""}
-      ${ctx.bossViewUrl ? `<a href="${escapeHtml_(ctx.bossViewUrl)}" style="display:inline-block;background:#343a40;color:#fff;padding:7px 14px;text-decoration:none;border-radius:4px;font-size:13px;">Boss Overdue View</a>` : ""}
+      ${ctx.dashboardUrl ? `<a href="${escapeHtml_(ctx.dashboardUrl)}" style="display:inline-block;background:#0d6efd;color:#fff;padding:8px 14px;text-decoration:none;border-radius:6px;font-size:13px;margin-right:8px;">Open Dashboard</a>` : ""}
+      ${ctx.bossViewUrl ? `<a href="${escapeHtml_(ctx.bossViewUrl)}" style="display:inline-block;background:#343a40;color:#fff;padding:8px 14px;text-decoration:none;border-radius:6px;font-size:13px;">Boss Overdue View</a>` : ""}
     </div>
   `;
 
   if (ctx.pendingItems.length === 0) {
     return `
       <html>
-        <body style="font-family: Arial, sans-serif; color: #222;">
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #222;">
           <h2 style="color: #198754; margin-bottom: 8px;">${escapeHtml_(ctx.sheetLabel)} - All Caught Up</h2>
           ${topButtons}
           <p>No active records require replacement notification today.</p>
@@ -241,7 +233,7 @@ function buildEnglishReminderHtml_(ctx) {
 
   return `
     <html>
-      <body style="font-family: Arial, sans-serif; color: #222;">
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #222;">
         <h2 style="margin-bottom: 8px;">${escapeHtml_(ctx.sheetLabel)} Daily Summary (${ctx.pendingItems.length} Pending)</h2>
         ${topButtons}
         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -365,7 +357,6 @@ function sendViaMsGraph_(toList, ccList, subject, htmlBody) {
 function computeNextChangeDate_(lastChangedDate, cycleDays) {
   const d = new Date(lastChangedDate.getFullYear(), lastChangedDate.getMonth(), lastChangedDate.getDate());
   d.setDate(d.getDate() + Number(cycleDays));
-  // Mon=1 .. Sun=7; if Sat(6) or Sun(7), move back to Fri(5)
   const day = d.getDay();
   const isoDay = (day === 0) ? 7 : day;
   if (isoDay > 5) {
