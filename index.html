@@ -308,7 +308,7 @@
     .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
     #searchInput { width: clamp(170px, 18vw, 270px); }
 
-    /* Multi-select Status Dropdown */
+    /* Multi-select Checkbox Dropdowns */
     .multi-select { position: relative; display: inline-block; }
     .multi-select-btn {
       background: var(--card);
@@ -323,7 +323,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      min-width: 175px;
+      min-width: 155px;
       max-width: 260px;
     }
     .multi-select-btn span {
@@ -337,7 +337,7 @@
       top: calc(100% + 5px);
       left: 0;
       z-index: 50;
-      min-width: 245px;
+      min-width: 240px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -548,7 +548,6 @@
     .field { margin-bottom: 12px; }
     .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
     .field input, .field select { width: 100%; height: 36px; font-size: 13.5px; }
-    .other-input { margin-top: 7px; }
     .kbd-hint { font-size: 11.5px; color: var(--muted); opacity: 0.85; }
 
     .bind-section-header {
@@ -756,6 +755,9 @@
 </head>
 <body>
 
+<datalist id="redFilterDatalist"></datalist>
+<datalist id="cycleDatalist"></datalist>
+
 <div id="welcomeOverlay" class="welcome-overlay">
   <div class="welcome-card">
     <img src="./logo.png" alt="Logo" class="welcome-logo" />
@@ -820,7 +822,7 @@
       <span>Sync</span>
     </button>
 
-    <button onclick="logout()" title="Sign Out">
+    <button onclick="logout()" title="Clear Cache & Sign Out">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       <span>Logout</span>
     </button>
@@ -873,46 +875,83 @@
         <div class="controls-left">
           <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" />
 
+          <!-- Multi-Select Status -->
           <div class="multi-select" id="statusMultiSelect">
-            <button type="button" class="multi-select-btn" onclick="toggleStatusDropdown(event)">
+            <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'statusMultiSelect')">
               <span id="statusBtnText">Status: All</span>
               <span>▾</span>
             </button>
             <div class="multi-select-menu" onclick="event.stopPropagation()">
               <label class="multi-option">
-                <input type="checkbox" id="statusSelectAll" onchange="onStatusAllChange(this.checked)" checked />
+                <input type="checkbox" id="statusSelectAll" onchange="onMultiAllChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel, this.checked)" checked />
                 <b>Select All</b>
               </label>
               <div class="multi-divider"></div>
               <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="REPLACEMENT REQUIRED" onchange="onStatusItemChange()" checked />
+                <input type="checkbox" class="status-opt-cb" value="REPLACEMENT REQUIRED" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
                 <span>Replacement Required (Red)</span>
               </label>
               <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="Pending Notification" onchange="onStatusItemChange()" checked />
+                <input type="checkbox" class="status-opt-cb" value="Pending Notification" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
                 <span>Pending Notification (Yellow)</span>
               </label>
               <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="Normal" onchange="onStatusItemChange()" checked />
+                <input type="checkbox" class="status-opt-cb" value="Normal" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
                 <span>Normal (White)</span>
               </label>
               <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="Archived" onchange="onStatusItemChange()" checked />
+                <input type="checkbox" class="status-opt-cb" value="Archived" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
                 <span>Archived / Deleted</span>
               </label>
             </div>
           </div>
 
-          <select id="notifFilter" onchange="renderTable()">
-            <option value="ALL">Notified: All</option>
-            <option value="FALSE">Not Notified (FALSE)</option>
-            <option value="TRUE">Already Notified (TRUE)</option>
-          </select>
-          <select id="usageFilter" onchange="renderTable()" style="display:none;">
-            <option value="ALL">Machine Usage: All</option>
-            <option value="TRUE">Machine Usage: TRUE</option>
-            <option value="FALSE">Machine Usage: FALSE</option>
-          </select>
+          <!-- Multi-Select Notified -->
+          <div class="multi-select" id="notifMultiSelect">
+            <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'notifMultiSelect')">
+              <span id="notifBtnText">Notified: All</span>
+              <span>▾</span>
+            </button>
+            <div class="multi-select-menu" onclick="event.stopPropagation()">
+              <label class="multi-option">
+                <input type="checkbox" id="notifSelectAll" onchange="onMultiAllChange('notif-opt-cb', 'notifSelectAll', updateNotifBtnLabel, this.checked)" checked />
+                <b>Select All</b>
+              </label>
+              <div class="multi-divider"></div>
+              <label class="multi-option">
+                <input type="checkbox" class="notif-opt-cb" value="FALSE" onchange="onMultiItemChange('notif-opt-cb', 'notifSelectAll', updateNotifBtnLabel)" checked />
+                <span>Not Notified (FALSE)</span>
+              </label>
+              <label class="multi-option">
+                <input type="checkbox" class="notif-opt-cb" value="TRUE" onchange="onMultiItemChange('notif-opt-cb', 'notifSelectAll', updateNotifBtnLabel)" checked />
+                <span>Already Notified (TRUE)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Multi-Select Machine Usage (RED) -->
+          <div class="multi-select" id="usageMultiSelect" style="display:none;">
+            <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'usageMultiSelect')">
+              <span id="usageBtnText">Machine Usage: All</span>
+              <span>▾</span>
+            </button>
+            <div class="multi-select-menu" onclick="event.stopPropagation()">
+              <label class="multi-option">
+                <input type="checkbox" id="usageSelectAll" onchange="onMultiAllChange('usage-opt-cb', 'usageSelectAll', updateUsageBtnLabel, this.checked)" checked />
+                <b>Select All</b>
+              </label>
+              <div class="multi-divider"></div>
+              <label class="multi-option">
+                <input type="checkbox" class="usage-opt-cb" value="TRUE" onchange="onMultiItemChange('usage-opt-cb', 'usageSelectAll', updateUsageBtnLabel)" checked />
+                <span>Machine Usage: TRUE</span>
+              </label>
+              <label class="multi-option">
+                <input type="checkbox" class="usage-opt-cb" value="FALSE" onchange="onMultiItemChange('usage-opt-cb', 'usageSelectAll', updateUsageBtnLabel)" checked />
+                <span>Machine Usage: FALSE</span>
+              </label>
+            </div>
+          </div>
+
           <button onclick="resetSortAndFilters()" title="Reset Sort & Filters">Reset</button>
         </div>
         <div class="controls-right">
@@ -1060,8 +1099,7 @@
 
     <div class="field" id="fGreenCycleGroup" style="display:none;">
       <label>Change Cycle (Days) *</label>
-      <select id="fGreenCycleSelect" onchange="toggleOtherInput('fGreenCycleSelect', 'fGreenCycleOther')"></select>
-      <input type="number" id="fGreenCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
+      <input type="number" id="fGreenCycleInput" list="cycleDatalist" min="1" placeholder="Select or type days..." />
     </div>
 
     <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
@@ -1080,6 +1118,9 @@
   const CLIENT_CACHE_PREFIX = "wf_snap_v6_";
 
   const ALL_STATUS_VALUES = ["REPLACEMENT REQUIRED", "Pending Notification", "Normal", "Archived"];
+  const ALL_NOTIF_VALUES = ["FALSE", "TRUE"];
+  const ALL_USAGE_VALUES = ["TRUE", "FALSE"];
+
   const STATUS_SHORT_LABELS = {
     "REPLACEMENT REQUIRED": "Replacement",
     "Pending Notification": "Pending",
@@ -1138,7 +1179,7 @@
   /* ================= Print Status Selector (Ctrl+P) ================= */
 
   function openPrintModal() {
-    const currentSel = getSelectedStatuses();
+    const currentSel = getCheckedValues("print-status-cb");
     const initial = currentSel.length > 0 ? currentSel : ALL_STATUS_VALUES;
     document.querySelectorAll(".print-status-cb").forEach(cb => {
       cb.checked = initial.includes(cb.value);
@@ -1168,13 +1209,13 @@
   }
 
   function executePrintWithSelection() {
-    const chosen = Array.from(document.querySelectorAll(".print-status-cb:checked")).map(cb => cb.value);
+    const chosen = getCheckedValues("print-status-cb");
     if (chosen.length === 0) {
       showIsland("Select at least 1 status to print", "err", false);
       return;
     }
-    savedStatusesBeforePrint = getSelectedStatuses();
-    setSelectedStatuses(chosen);
+    savedStatusesBeforePrint = getCheckedValues("status-opt-cb");
+    setCheckedValues("status-opt-cb", chosen, "statusSelectAll", updateStatusBtnLabel);
     renderTable();
     updatePrintFooter();
     closePrintModal();
@@ -1185,50 +1226,66 @@
 
   window.addEventListener("afterprint", () => {
     if (savedStatusesBeforePrint !== null) {
-      setSelectedStatuses(savedStatusesBeforePrint);
+      setCheckedValues("status-opt-cb", savedStatusesBeforePrint, "statusSelectAll", updateStatusBtnLabel);
       savedStatusesBeforePrint = null;
       renderTable();
     }
   });
 
-  /* ================= Multi-Select Status Filter ================= */
+  /* ================= Generic Multi-Select Helpers ================= */
 
-  function toggleStatusDropdown(ev) {
+  function toggleMultiDropdown(ev, containerId) {
     ev.stopPropagation();
-    const wrap = document.getElementById("statusMultiSelect");
+    document.querySelectorAll(".multi-select.open").forEach(el => {
+      if (el.id !== containerId) el.classList.remove("open");
+    });
+    const wrap = document.getElementById(containerId);
     if (wrap) wrap.classList.toggle("open");
   }
 
   document.addEventListener("click", (ev) => {
-    const wrap = document.getElementById("statusMultiSelect");
-    if (wrap && !wrap.contains(ev.target)) {
-      wrap.classList.remove("open");
-    }
+    document.querySelectorAll(".multi-select.open").forEach(wrap => {
+      if (!wrap.contains(ev.target)) wrap.classList.remove("open");
+    });
   });
 
-  function getSelectedStatuses() {
-    return Array.from(document.querySelectorAll(".status-opt-cb:checked")).map(cb => cb.value);
+  function getCheckedValues(cbClass) {
+    return Array.from(document.querySelectorAll(`.${cbClass}:checked`)).map(cb => cb.value);
   }
 
-  function setSelectedStatuses(values) {
+  function setCheckedValues(cbClass, values, selectAllId, labelFn) {
     const targetSet = new Set(values || []);
-    document.querySelectorAll(".status-opt-cb").forEach(cb => {
+    document.querySelectorAll(`.${cbClass}`).forEach(cb => {
       cb.checked = targetSet.has(cb.value);
     });
-    syncSelectAllCheckbox();
-    updateStatusBtnLabel();
-  }
-
-  function syncSelectAllCheckbox() {
-    const allCbs = Array.from(document.querySelectorAll(".status-opt-cb"));
-    const selectAllCb = document.getElementById("statusSelectAll");
+    const allCbs = Array.from(document.querySelectorAll(`.${cbClass}`));
+    const selectAllCb = document.getElementById(selectAllId);
     if (selectAllCb) {
       selectAllCb.checked = allCbs.length > 0 && allCbs.every(cb => cb.checked);
     }
+    if (labelFn) labelFn();
+  }
+
+  function onMultiAllChange(cbClass, selectAllId, labelFn, checked) {
+    document.querySelectorAll(`.${cbClass}`).forEach(cb => {
+      cb.checked = checked;
+    });
+    if (labelFn) labelFn();
+    renderTable();
+  }
+
+  function onMultiItemChange(cbClass, selectAllId, labelFn) {
+    const allCbs = Array.from(document.querySelectorAll(`.${cbClass}`));
+    const selectAllCb = document.getElementById(selectAllId);
+    if (selectAllCb) {
+      selectAllCb.checked = allCbs.length > 0 && allCbs.every(cb => cb.checked);
+    }
+    if (labelFn) labelFn();
+    renderTable();
   }
 
   function updateStatusBtnLabel() {
-    const selected = getSelectedStatuses();
+    const selected = getCheckedValues("status-opt-cb");
     const btnText = document.getElementById("statusBtnText");
     if (!btnText) return;
     if (selected.length === ALL_STATUS_VALUES.length) {
@@ -1240,18 +1297,30 @@
     }
   }
 
-  function onStatusAllChange(checked) {
-    document.querySelectorAll(".status-opt-cb").forEach(cb => {
-      cb.checked = checked;
-    });
-    updateStatusBtnLabel();
-    renderTable();
+  function updateNotifBtnLabel() {
+    const selected = getCheckedValues("notif-opt-cb");
+    const btnText = document.getElementById("notifBtnText");
+    if (!btnText) return;
+    if (selected.length === ALL_NOTIF_VALUES.length) {
+      btnText.textContent = "Notified: All";
+    } else if (selected.length === 0) {
+      btnText.textContent = "Notified: None";
+    } else {
+      btnText.textContent = "Notified: " + selected.map(v => v === "TRUE" ? "TRUE" : "FALSE").join(", ");
+    }
   }
 
-  function onStatusItemChange() {
-    syncSelectAllCheckbox();
-    updateStatusBtnLabel();
-    renderTable();
+  function updateUsageBtnLabel() {
+    const selected = getCheckedValues("usage-opt-cb");
+    const btnText = document.getElementById("usageBtnText");
+    if (!btnText) return;
+    if (selected.length === ALL_USAGE_VALUES.length) {
+      btnText.textContent = "Machine Usage: All";
+    } else if (selected.length === 0) {
+      btnText.textContent = "Machine Usage: None";
+    } else {
+      btnText.textContent = "Usage: " + selected.join(", ");
+    }
   }
 
   function updatePrintFooter() {
@@ -1320,14 +1389,30 @@
     return "";
   }
 
-  function clearSession() {
+  function clearAllClientCaches() {
     setCookie(COOKIE_KEY, "", -1);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(VIEW_AS_KEY);
+    const lsKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("wf_")) lsKeys.push(k);
+    }
+    lsKeys.forEach(k => localStorage.removeItem(k));
+
+    try {
+      sessionStorage.clear();
+    } catch (_) {}
+
+    if (window.caches && typeof caches.keys === "function") {
+      caches.keys().then(names => {
+        names.forEach(n => caches.delete(n));
+      }).catch(() => {});
+    }
   }
 
   function logout() {
-    clearSession();
+    clearAllClientCaches();
     window.location.href = "/cdn-cgi/access/logout";
   }
 
@@ -1394,6 +1479,10 @@
   async function initApp() {
     applyTheme(localStorage.getItem(THEME_KEY) || "auto");
     updateStatusBtnLabel();
+    updateNotifBtnLabel();
+    updateUsageBtnLabel();
+    syncDatalists();
+
     const email = await resolveZeroTrustEmail();
     if (!email) {
       showAuthBlocked(
@@ -1541,19 +1630,31 @@
     return cycles[0] || 180;
   }
 
-  function buildCycleOptionsHtml(extraCycleVal) {
-    const baseCycles = (currentState.dropdownOptions && currentState.dropdownOptions.cycles) || [90, 180, 270, 360, 540];
-    const set = new Set(baseCycles.map(n => Number(n)).filter(n => !isNaN(n) && n > 0));
-    const extraNum = Number(extraCycleVal);
-    if (!isNaN(extraNum) && extraNum > 0) set.add(extraNum);
-    const sorted = Array.from(set).sort((a, b) => a - b);
-    return sorted.map(n => `<option value="${esc(String(n))}">${esc(String(n))} Days</option>`).join("") +
-      `<option value="__OTHER__">Other (Type custom days...)</option>`;
-  }
+  function syncDatalists() {
+    const redList = (currentState.dropdownOptions && currentState.dropdownOptions.redFilter) || [];
+    const cycles = (currentState.dropdownOptions && currentState.dropdownOptions.cycles) || [90, 180, 270, 360, 540];
+    const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
 
-  function populateConfigurableSelects() {
-    const presetCycle = getPresetDefaultCycle();
-    setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(presetCycle), buildCycleOptionsHtml(presetCycle));
+    const fDl = document.getElementById("redFilterDatalist");
+    if (fDl) {
+      fDl.innerHTML = redList.map(name => {
+        const mapped = filterCycles[name];
+        const hint = (mapped && Number(mapped) > 0) ? `${Number(mapped)} Days` : "";
+        return `<option value="${esc(name)}" label="${esc(hint)}"></option>`;
+      }).join("");
+    }
+
+    const cSet = new Set(cycles.map(n => Number(n)).filter(n => !isNaN(n) && n > 0));
+    Object.values(filterCycles).forEach(v => {
+      const n = Number(v);
+      if (!isNaN(n) && n > 0) cSet.add(n);
+    });
+    const sortedCycles = Array.from(cSet).sort((a, b) => a - b);
+
+    const cDl = document.getElementById("cycleDatalist");
+    if (cDl) {
+      cDl.innerHTML = sortedCycles.map(n => `<option value="${esc(String(n))}" label="${esc(String(n))} Days"></option>`).join("");
+    }
   }
 
   function applyDashboardPayload(data, isFromCache) {
@@ -1587,7 +1688,7 @@
       return Object.assign({}, r, { statusRank: rank });
     });
 
-    populateConfigurableSelects();
+    syncDatalists();
     updatePrintFooter();
 
     const badge = document.getElementById("userBadge");
@@ -1629,7 +1730,7 @@
     document.getElementById("addNewBtnText").textContent = isRed ? "Add New (RED)" : "Add New (GREEN)";
     const canViewAudit = ["IT", "BOSS", "ADMIN_H"].includes(data.effectiveRole);
     document.getElementById("auditNavBtn").style.display = canViewAudit ? "inline-flex" : "none";
-    document.getElementById("usageFilter").style.display = isRed ? "inline-block" : "none";
+    document.getElementById("usageMultiSelect").style.display = isRed ? "inline-block" : "none";
 
     updateKpis(data.summary || {}, currentState.records);
     renderApprovals();
@@ -1662,7 +1763,7 @@
       const data = await jsonpGet(url);
       if (!data || !data.ok) {
         if (data && data.role === "GUEST") {
-          clearSession();
+          clearAllClientCaches();
           showAuthBlocked("Access Denied", `Account "${currentState.email}" is not authorized in IT_Config.`);
           return;
         }
@@ -1722,18 +1823,18 @@
 
   function quickFilterStatus(st) {
     if (st === "ALL") {
-      setSelectedStatuses(ALL_STATUS_VALUES);
+      setCheckedValues("status-opt-cb", ALL_STATUS_VALUES, "statusSelectAll", updateStatusBtnLabel);
     } else {
-      setSelectedStatuses([st]);
+      setCheckedValues("status-opt-cb", [st], "statusSelectAll", updateStatusBtnLabel);
     }
     renderTable();
   }
 
   function resetSortAndFilters() {
     document.getElementById("searchInput").value = "";
-    setSelectedStatuses(ALL_STATUS_VALUES);
-    document.getElementById("notifFilter").value = "ALL";
-    document.getElementById("usageFilter").value = "ALL";
+    setCheckedValues("status-opt-cb", ALL_STATUS_VALUES, "statusSelectAll", updateStatusBtnLabel);
+    setCheckedValues("notif-opt-cb", ALL_NOTIF_VALUES, "notifSelectAll", updateNotifBtnLabel);
+    setCheckedValues("usage-opt-cb", ALL_USAGE_VALUES, "usageSelectAll", updateUsageBtnLabel);
     currentState.sortCol = "id";
     currentState.sortDir = "asc";
     renderTable();
@@ -1937,9 +2038,9 @@
   function renderTable() {
     const visibleHeaders = renderDynamicHeaders();
     const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-    const selectedStatuses = getSelectedStatuses();
-    const ntFilter = document.getElementById("notifFilter").value;
-    const usFilter = document.getElementById("usageFilter").value;
+    const selectedStatuses = getCheckedValues("status-opt-cb");
+    const selectedNotifs = getCheckedValues("notif-opt-cb");
+    const selectedUsages = getCheckedValues("usage-opt-cb");
     const isRed = (currentState.activeSheet === "RED");
     const role = currentState.effectiveRole;
     const canApproveOrRestore = ["IT", "BOSS", "ADMIN_H"].includes(role);
@@ -2077,14 +2178,15 @@
     let filtered = combined.filter(r => {
       const rowStatus = r.isHidden ? "Archived" : r.status;
       if (!selectedStatuses.includes(rowStatus)) return false;
-      if (ntFilter !== "ALL") {
-        const wantNotified = (ntFilter === "TRUE");
-        if (Boolean(r.notified) !== wantNotified) return false;
+
+      const rowNotif = r.notified ? "TRUE" : "FALSE";
+      if (!selectedNotifs.includes(rowNotif)) return false;
+
+      if (isRed) {
+        const rowUsage = r.machineUsage ? "TRUE" : "FALSE";
+        if (!selectedUsages.includes(rowUsage)) return false;
       }
-      if (isRed && usFilter !== "ALL") {
-        const want = (usFilter === "TRUE");
-        if (Boolean(r.machineUsage) !== want) return false;
-      }
+
       if (!q) return true;
       return String(r.id).toLowerCase().includes(q)
         || String(r.name).toLowerCase().includes(q)
@@ -2174,70 +2276,20 @@
     stageOperation(opKey, { id, type, reason });
   }
 
-  function toggleOtherInput(selectId, inputId) {
-    const sel = document.getElementById(selectId);
-    const inp = document.getElementById(inputId);
-    if (!sel || !inp) return;
-    if (sel.value === "__OTHER__") {
-      inp.style.display = "block";
-      inp.focus();
-    } else {
-      inp.style.display = "none";
-      inp.value = "";
-    }
-  }
-
-  function setSelectWithOther(selectId, inputId, val, customCycleHtml = null) {
-    const sel = document.getElementById(selectId);
-    const inp = document.getElementById(inputId);
-    if (customCycleHtml) sel.innerHTML = customCycleHtml;
-    const strVal = String(val ?? "").trim();
-    const matched = Array.from(sel.options).some(opt => opt.value === strVal && opt.value !== "__OTHER__");
-    if (matched) {
-      sel.value = strVal;
-      inp.style.display = "none";
-      inp.value = "";
-    } else if (strVal) {
-      sel.value = "__OTHER__";
-      inp.style.display = "block";
-      inp.value = strVal;
-    } else {
-      sel.selectedIndex = 0;
-      inp.style.display = "none";
-      inp.value = "";
-    }
-  }
-
-  function readSelectOrOther(selectId, inputId) {
-    const sel = document.getElementById(selectId);
-    const inp = document.getElementById(inputId);
-    if (sel.value === "__OTHER__") {
-      return inp.value.trim();
-    }
-    return sel.value;
-  }
+  /* ================= Single-Line Combo Binded Filter Rows (RED) ================= */
 
   function onBindFilterChange(rowId) {
-    const sel = document.getElementById(`bindFilterSel_${rowId}`);
-    const otherInp = document.getElementById(`bindFilterOther_${rowId}`);
-    if (!sel) return;
+    const inp = document.getElementById(`bindFilterInp_${rowId}`);
+    const cycleInp = document.getElementById(`bindCycleInp_${rowId}`);
+    if (!inp || !cycleInp) return;
 
-    if (sel.value === "__OTHER__") {
-      otherInp.style.display = "block";
-      otherInp.focus();
-      return;
-    } else {
-      otherInp.style.display = "none";
-      otherInp.value = "";
-    }
-
+    const val = inp.value.trim();
     const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
-    const mappedCycle = filterCycles[sel.value];
+    const mappedCycle = filterCycles[val];
     if (mappedCycle !== undefined && mappedCycle !== null && Number(mappedCycle) > 0) {
-      setSelectWithOther(`bindCycleSel_${rowId}`, `bindCycleOther_${rowId}`, String(Number(mappedCycle)), buildCycleOptionsHtml(mappedCycle));
-    } else {
-      const preset = getPresetDefaultCycle();
-      setSelectWithOther(`bindCycleSel_${rowId}`, `bindCycleOther_${rowId}`, String(preset), buildCycleOptionsHtml(preset));
+      cycleInp.value = String(Number(mappedCycle));
+    } else if (!cycleInp.value) {
+      cycleInp.value = String(getPresetDefaultCycle());
     }
   }
 
@@ -2263,9 +2315,6 @@
     const firstExistingDateInp = list.querySelector('input[type="date"]');
     const defaultDate = initialDate || (firstExistingDateInp && firstExistingDateInp.value) || new Date().toISOString().slice(0, 10);
 
-    const filterOptionsHtml = redList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
-      `<option value="__OTHER__">Other (Type custom...)</option>`;
-
     const card = document.createElement("div");
     card.className = "filter-bind-card";
     card.id = `bindCard_${rowId}`;
@@ -2281,13 +2330,11 @@
       <div class="bind-grid-2">
         <div class="field" style="margin-bottom:8px;">
           <label>Filter / Service Name</label>
-          <select id="bindFilterSel_${rowId}" onchange="onBindFilterChange('${rowId}')">${filterOptionsHtml}</select>
-          <input type="text" id="bindFilterOther_${rowId}" class="other-input" placeholder="Type custom filter..." style="display:none;" />
+          <input type="text" id="bindFilterInp_${rowId}" list="redFilterDatalist" value="${esc(chosenFilter)}" placeholder="Select or type filter..." oninput="onBindFilterChange('${rowId}')" onchange="onBindFilterChange('${rowId}')" />
         </div>
         <div class="field" style="margin-bottom:8px;">
           <label>Change Cycle (Days)</label>
-          <select id="bindCycleSel_${rowId}" onchange="toggleOtherInput('bindCycleSel_${rowId}', 'bindCycleOther_${rowId}')">${buildCycleOptionsHtml(chosenCycle)}</select>
-          <input type="number" id="bindCycleOther_${rowId}" class="other-input" min="1" placeholder="Custom days..." style="display:none;" />
+          <input type="number" id="bindCycleInp_${rowId}" list="cycleDatalist" min="1" value="${esc(String(chosenCycle))}" placeholder="Days..." />
         </div>
       </div>
       <div class="field" style="margin-bottom:0;">
@@ -2296,9 +2343,6 @@
       </div>
     `;
     list.appendChild(card);
-
-    setSelectWithOther(`bindFilterSel_${rowId}`, `bindFilterOther_${rowId}`, chosenFilter);
-    setSelectWithOther(`bindCycleSel_${rowId}`, `bindCycleOther_${rowId}`, String(chosenCycle), buildCycleOptionsHtml(chosenCycle));
     refreshBindTitles();
   }
 
@@ -2323,12 +2367,13 @@
     const cards = Array.from(document.querySelectorAll("#filterBindList .filter-bind-card"));
     return cards.map(c => {
       const id = c.dataset.bindId;
-      const filterName = readSelectOrOther(`bindFilterSel_${id}`, `bindFilterOther_${id}`);
-      const cycleRaw = Number(readSelectOrOther(`bindCycleSel_${id}`, `bindCycleOther_${id}`));
+      const fInp = document.getElementById(`bindFilterInp_${id}`);
+      const cInp = document.getElementById(`bindCycleInp_${id}`);
       const dateInp = document.getElementById(`bindLastDate_${id}`);
+      const cycleRaw = Number(cInp ? cInp.value : 0);
       return {
         isNewExtra: c.dataset.isNewExtra === "1",
-        filterName: filterName,
+        filterName: fInp ? fInp.value.trim() : "",
         cycleDays: (!isNaN(cycleRaw) && cycleRaw > 0) ? cycleRaw : getPresetDefaultCycle(),
         lastDate: (dateInp && dateInp.value) || todayStr
       };
@@ -2344,7 +2389,7 @@
   }
 
   function openCreateModal() {
-    populateConfigurableSelects();
+    syncDatalists();
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
@@ -2361,7 +2406,7 @@
     } else {
       document.getElementById("fGreenPhone").value = "";
       document.getElementById("fLastDate").value = todayStr;
-      setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(getPresetDefaultCycle()), buildCycleOptionsHtml());
+      document.getElementById("fGreenCycleInput").value = String(getPresetDefaultCycle());
     }
 
     document.getElementById("editModal").classList.add("show");
@@ -2369,7 +2414,7 @@
   }
 
   function openEditModal(rec) {
-    populateConfigurableSelects();
+    syncDatalists();
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
@@ -2385,7 +2430,7 @@
     } else {
       document.getElementById("fGreenPhone").value = (rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "";
       document.getElementById("fLastDate").value = rec.lastChangedDate || "";
-      setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(rec.cycleDays || getPresetDefaultCycle()), buildCycleOptionsHtml(rec.cycleDays));
+      document.getElementById("fGreenCycleInput").value = String(rec.cycleDays || getPresetDefaultCycle());
     }
 
     document.getElementById("editModal").classList.add("show");
@@ -2409,7 +2454,7 @@
     if (!isRed) {
       const lastDate = document.getElementById("fLastDate").value;
       const phone = document.getElementById("fGreenPhone").value.trim();
-      const cycleVal = Number(readSelectOrOther("fGreenCycleSelect", "fGreenCycleOther") || getPresetDefaultCycle());
+      const cycleVal = Number(document.getElementById("fGreenCycleInput").value || getPresetDefaultCycle());
       const payload = {
         "Name": name,
         "Phone Number": phone,
