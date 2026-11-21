@@ -2,6 +2,15 @@
 
 > **Purpose**: This document provides complete architectural, schema, API, and operational context so any developer or AI assistant can immediately maintain or extend this system without re-discovering past decisions.
 > **Security Rule**: Never commit actual secrets, passwords, client secrets, or personal credentials to this repository.
+---
+
+## 0. Repository Structure & File Locations
+- **Repository Root**:
+  - `SYSTEM_CONTEXT.md`: Master handoff context (architecture, schemas, variables, guardrails, preferences).
+  - `README.md`: Concise project overview pointing to `SYSTEM_CONTEXT.md`.
+  - `index.html`: Frontend web dashboard deployed to Cloudflare Pages (`https://itsaso.sqrtone.com`).
+- **`forGAS/` Folder**:
+  - Contains the Google Apps Script source files (`Code.gs`, `webApp.gs`, etc.) maintained in Apps Script and backed up in GitHub under `forGAS/`.
 
 ---
 
@@ -117,3 +126,11 @@ Header-mapped dynamically via `buildHeaderIndexMap_()`, expected columns in `She
 1. **Safe Email Testing**: Set `MAIL_TEST_MODE = true` in `Code.gs` and temporarily set `TO_EMAIL` in `IT_Config` to your test inbox so `CC_EMAILS` are not spammed. Restore both before finishing.
 2. **GAS Rollback**: Open Apps Script -> **Deploy -> Manage deployments -> Edit** -> switch **Version** back to the previous stable version.
 3. **Sheet Recovery**: Use the backup spreadsheet copies (`_Backup_*`) in Google Drive or check `_Audit_Log` to trace recent changes.
+
+---
+
+## 9. Collaboration & Style Preferences (For Any AI Assisting on This Project)
+- **Factuality First**: Stick strictly to provided files, logs, and explicit facts. Never invent unstated roles, backgrounds, or assumptions.
+- **Direct & Concise**: Lead with conclusions and actionable steps. Avoid fluff, lecturing, or long-winded filler. When editing code, provide clear before/after replacement blocks or complete drop-in code.
+- **Visual & UI Taste**: Prefer clean, restrained, Apple/iOS-inspired clarity—aligned layouts, clear hierarchy, readable font/button sizes, and no gaudy full-row fills or excessive emojis.
+- **Scope Discipline**: Favor simple, reliable solutions over over-engineering. Keep desktop layouts intact rather than forcing mobile-specific redesigns unless explicitly asked.
