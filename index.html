@@ -308,7 +308,6 @@
     .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
     #searchInput { width: clamp(170px, 18vw, 270px); }
 
-    /* Multi-select Checkbox Dropdowns */
     .multi-select { position: relative; display: inline-block; }
     .multi-select-btn {
       background: var(--card);
@@ -875,7 +874,6 @@
         <div class="controls-left">
           <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" />
 
-          <!-- Multi-Select Status -->
           <div class="multi-select" id="statusMultiSelect">
             <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'statusMultiSelect')">
               <span id="statusBtnText">Status: All</span>
@@ -906,7 +904,6 @@
             </div>
           </div>
 
-          <!-- Multi-Select Notified -->
           <div class="multi-select" id="notifMultiSelect">
             <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'notifMultiSelect')">
               <span id="notifBtnText">Notified: All</span>
@@ -929,7 +926,6 @@
             </div>
           </div>
 
-          <!-- Multi-Select Machine Usage (RED) -->
           <div class="multi-select" id="usageMultiSelect" style="display:none;">
             <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'usageMultiSelect')">
               <span id="usageBtnText">Machine Usage: All</span>
@@ -1026,7 +1022,7 @@
       <h3>Select Status to Print</h3>
       <button class="icon-only" onclick="closePrintModal()">✕</button>
     </div>
-    <p style="margin:0 0 12px 0;font-size:13px;color:var(--muted);">Choose which status groups to include in landscape print:</p>
+    <p style="margin:0 0 12px 0;font-size:13px;color:var(--muted);">Choose which status groups to include in landscape print (ordered top-to-bottom as checked):</p>
     <div style="border:1px solid var(--border);border-radius:10px;padding:6px;">
       <label class="multi-option">
         <input type="checkbox" id="printSelectAll" onchange="onPrintAllChange(this.checked)" checked />
@@ -1121,6 +1117,13 @@
   const ALL_NOTIF_VALUES = ["FALSE", "TRUE"];
   const ALL_USAGE_VALUES = ["TRUE", "FALSE"];
 
+  const PRINT_STATUS_ORDER = {
+    "REPLACEMENT REQUIRED": 1,
+    "Pending Notification": 2,
+    "Normal": 3,
+    "Archived": 4
+  };
+
   const STATUS_SHORT_LABELS = {
     "REPLACEMENT REQUIRED": "Replacement",
     "Pending Notification": "Pending",
@@ -1139,7 +1142,9 @@
 
   let islandTimer = null;
   let bindRowSeq = 0;
+  let printActiveMode = false;
   let savedStatusesBeforePrint = null;
+  let savedSortBeforePrint = null;
 
   let currentState = {
     email: "",
@@ -1215,6 +1220,9 @@
       return;
     }
     savedStatusesBeforePrint = getCheckedValues("status-opt-cb");
+    savedSortBeforePrint = { col: currentState.sortCol, dir: currentState.sortDir };
+    printActiveMode = true;
+
     setCheckedValues("status-opt-cb", chosen, "statusSelectAll", updateStatusBtnLabel);
     renderTable();
     updatePrintFooter();
@@ -1225,9 +1233,17 @@
   }
 
   window.addEventListener("afterprint", () => {
-    if (savedStatusesBeforePrint !== null) {
-      setCheckedValues("status-opt-cb", savedStatusesBeforePrint, "statusSelectAll", updateStatusBtnLabel);
-      savedStatusesBeforePrint = null;
+    if (printActiveMode) {
+      printActiveMode = false;
+      if (savedStatusesBeforePrint !== null) {
+        setCheckedValues("status-opt-cb", savedStatusesBeforePrint, "statusSelectAll", updateStatusBtnLabel);
+        savedStatusesBeforePrint = null;
+      }
+      if (savedSortBeforePrint !== null) {
+        currentState.sortCol = savedSortBeforePrint.col;
+        currentState.sortDir = savedSortBeforePrint.dir;
+        savedSortBeforePrint = null;
+      }
       renderTable();
     }
   });
@@ -2196,6 +2212,15 @@
     const col = currentState.sortCol;
     const dir = currentState.sortDir === "asc" ? 1 : -1;
     filtered.sort((a, b) => {
+      if (printActiveMode) {
+        const sa = a.isHidden ? "Archived" : a.status;
+        const sb = b.isHidden ? "Archived" : b.status;
+        const pa = PRINT_STATUS_ORDER[sa] ?? 99;
+        const pb = PRINT_STATUS_ORDER[sb] ?? 99;
+        if (pa !== pb) return pa - pb;
+        return Number(a.id || 0) - Number(b.id || 0);
+      }
+
       if (a._staged && a._staged.type === "create") return -1;
       if (b._staged && b._staged.type === "create") return 1;
 
