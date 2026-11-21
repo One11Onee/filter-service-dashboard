@@ -2,6 +2,7 @@
  * webApp.gs - V6 Ultra-Fast & Full Batch-Save Edition
  * - On-demand auditLogs (only fetched when includeLogs=1) for faster main dashboard loads
  * - Full batchSave supporting create, update, markNotified, confirmDone, directHide, requestDelete, approveDelete, rejectDelete, restoreRow
+ * - Configurable RED filter default cycles via OPTIONS_RED_FILTER ("FilterName:Days, ...")
  * - Auto-extracts Spreadsheet ID if a full URL is pasted in IT_Config
  */
 
@@ -39,7 +40,7 @@ function doGet(e) {
       </html>
     `);
   }
-  
+
   if (action === "markNotified") {
     const sheetCode = String(params.sheet || "RED").toUpperCase();
     const targetId = String(params.id || "").trim();
@@ -170,24 +171,55 @@ function buildDropdownOptions_(config) {
     return arr.length > 0 ? arr : fallbackList;
   };
 
-  const cycleStrings = parseOpts("OPTIONS_CYCLES", ["90", "180", "365"]);
+  const rawRedItems = parseOpts("OPTIONS_RED_FILTER", [
+    "Sediment:180",
+    "Pre Carbon / GAC:270",
+    "Post Carbon / Antibacterial:360",
+    "Alkaline / Mineral Stone:540",
+    "Silver Carbon:540",
+    "UF Membrane:540",
+    "Mineral Filter:540",
+    "PP 5M:90",
+    "Carbon Block:180",
+    "PP 1M:180",
+    "UDF:180"
+  ]);
+
+  const redFilter = [];
+  const filterCycles = {};
+
+  for (let i = 0; i < rawRedItems.length; i++) {
+    const token = String(rawRedItems[i] || "").trim();
+    if (!token) continue;
+    const colonIdx = token.lastIndexOf(":");
+    if (colonIdx > 0) {
+      const label = token.slice(0, colonIdx).trim();
+      const daysPart = Number(token.slice(colonIdx + 1).trim());
+      if (label) {
+        if (!filterCycles[label]) redFilter.push(label);
+        if (!isNaN(daysPart) && daysPart > 0) {
+          filterCycles[label] = daysPart;
+        }
+      }
+    } else {
+      if (!filterCycles[token]) redFilter.push(token);
+    }
+  }
+
+  const cycleStrings = parseOpts("OPTIONS_CYCLES", ["90", "180", "270", "360", "540"]);
   const cycles = cycleStrings
     .map(n => Number(n))
     .filter(n => !isNaN(n) && n > 0);
 
   return {
-    redFilter: parseOpts("OPTIONS_RED_FILTER", [
-      "RO Water Filter",
-      "Alkaline Water Filter",
-      "Outdoor Filter",
-      "UV / UF Cartridge Set"
-    ]),
+    redFilter: redFilter.length > 0 ? redFilter : ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter", "UV / UF Cartridge Set"],
+    filterCycles: filterCycles,
     greenPlan: parseOpts("OPTIONS_GREEN_PLAN", [
       "Standard Filter Service",
       "RO Maintenance",
       "Outdoor Filter Flush"
     ]),
-    cycles: cycles.length > 0 ? cycles : [90, 180, 365]
+    cycles: cycles.length > 0 ? cycles : [90, 180, 270, 360, 540]
   };
 }
 
