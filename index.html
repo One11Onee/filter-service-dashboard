@@ -761,7 +761,7 @@
   <div class="welcome-card">
     <img src="./logo.png" alt="Logo" class="welcome-logo" />
     <h2 id="welcomeTitle" class="welcome-title">Welcome</h2>
-    <p id="welcomeSub" class="welcome-sub">Syncing your workspace records...</p>
+    <p id="welcomeSub" class="welcome-sub">Loading your profile &amp; records...</p>
     <div class="ios-spinner"></div>
   </div>
 </div>
@@ -1112,6 +1112,7 @@
   const VIEW_AS_KEY = "wf_view_as";
   const THEME_KEY = "wf_theme_mode";
   const CLIENT_CACHE_PREFIX = "wf_snap_v6_";
+  const SESSION_USER_LABEL_PREFIX = "wf_user_label_v1_";
 
   const ALL_STATUS_VALUES = ["REPLACEMENT REQUIRED", "Pending Notification", "Normal", "Archived"];
   const ALL_NOTIF_VALUES = ["FALSE", "TRUE"];
@@ -1180,6 +1181,18 @@
     sortDir: "asc",
     pendingOps: {}
   };
+
+  function getSessionUserLabelKey(email) {
+    return `${SESSION_USER_LABEL_PREFIX}${String(email || "").trim().toLowerCase()}`;
+  }
+
+  function setWelcomeGreetingName(nameOrEmail) {
+    const title = document.getElementById("welcomeTitle");
+    if (!title) return;
+    const raw = String(nameOrEmail || "").trim();
+    const display = raw.includes("@") ? (raw.split("@")[0] || "Back") : (raw || "Back");
+    title.textContent = `Welcome, ${display}`;
+  }
 
   /* ================= Print Status Selector (Ctrl+P) ================= */
 
@@ -1520,7 +1533,8 @@
     );
 
     if (!hasAnyCache) {
-      showWelcomeScreen(email);
+      const currentUserSavedLabel = localStorage.getItem(getSessionUserLabelKey(email)) || email;
+      showWelcomeScreen(currentUserSavedLabel);
     }
 
     showDashboardImmediate();
@@ -1530,19 +1544,18 @@
 
   function showWelcomeScreen(identifier) {
     const ov = document.getElementById("welcomeOverlay");
-    const title = document.getElementById("welcomeTitle");
-    if (!ov || !title) return;
-    const shortName = String(identifier || "").split("@")[0] || "Back";
-    title.textContent = `Welcome, ${shortName}`;
+    const sub = document.getElementById("welcomeSub");
+    if (!ov) return;
+    setWelcomeGreetingName(identifier);
+    if (sub) sub.textContent = "Loading your profile & records...";
     ov.className = "welcome-overlay show";
   }
 
   function hideWelcomeScreen(displayName) {
     const ov = document.getElementById("welcomeOverlay");
-    const title = document.getElementById("welcomeTitle");
     const sub = document.getElementById("welcomeSub");
     if (!ov || !ov.classList.contains("show")) return;
-    if (displayName && title) title.textContent = `Welcome, ${displayName}`;
+    if (displayName) setWelcomeGreetingName(displayName);
     if (sub) sub.textContent = "Workspace ready";
     setTimeout(() => {
       ov.classList.add("fade-out");
@@ -1704,6 +1717,12 @@
       return Object.assign({}, r, { statusRank: rank });
     });
 
+    if (currentState.email && currentState.roleDisplayName) {
+      try {
+        localStorage.setItem(getSessionUserLabelKey(currentState.email), currentState.roleDisplayName);
+      } catch (_) {}
+    }
+
     syncDatalists();
     updatePrintFooter();
 
@@ -1787,6 +1806,14 @@
         return;
       }
 
+      const resolvedName = data.roleDisplayName || data.effectiveRole || "";
+      if (resolvedName && currentState.email) {
+        try {
+          localStorage.setItem(getSessionUserLabelKey(currentState.email), resolvedName);
+        } catch (_) {}
+        setWelcomeGreetingName(resolvedName);
+      }
+
       try {
         localStorage.setItem(snapKey, JSON.stringify(data));
         localStorage.setItem(getSnapshotCacheKey(data.activeSheet, viewAs), JSON.stringify(data));
@@ -1794,10 +1821,10 @@
 
       if (Object.keys(currentState.pendingOps).length === 0) {
         applyDashboardPayload(data, false);
-        hideWelcomeScreen(data.roleDisplayName || "");
+        hideWelcomeScreen(resolvedName);
         showIsland(`${data.activeSheet} Synced`, "ok", false);
       } else {
-        hideWelcomeScreen(data.roleDisplayName || "");
+        hideWelcomeScreen(resolvedName);
         showIsland("Unsaved changes staged", "syncing", true);
       }
     } catch (err) {
@@ -2013,7 +2040,7 @@
       return `<b>${esc(rec.id)}</b>${stagedTag}`;
     }
     if (headerName === "Name") {
-      const cnt = rec._groupCount || 1;
+      const cnt = rec._visibleGroupCount || 1;
       const pill = cnt > 1 ? `<span class="badge group-pill">${cnt} filters</span>` : "";
       return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:140px;max-width:260px;"><b>${esc(rec.name)}</b>${pill}</div>`, "Name");
     }
@@ -2171,26 +2198,6 @@
 
     const combined = stagedCreates.concat(mergedExisting);
 
-    const nameCounts = {};
-    const nameMinId = {};
-    for (const item of combined) {
-      if (item.isHidden) continue;
-      const key = String(item.name || "").trim().toLowerCase();
-      if (!key) continue;
-      nameCounts[key] = (nameCounts[key] || 0) + 1;
-      const numId = Number(item.id);
-      const sortId = !isNaN(numId) ? numId : Number.MAX_SAFE_INTEGER;
-      if (nameMinId[key] === undefined || sortId < nameMinId[key]) {
-        nameMinId[key] = sortId;
-      }
-    }
-
-    for (const item of combined) {
-      const key = String(item.name || "").trim().toLowerCase();
-      item._groupCount = item.isHidden ? 1 : (nameCounts[key] || 1);
-      item._groupMinId = item.isHidden ? Number.MAX_SAFE_INTEGER : (nameMinId[key] ?? Number.MAX_SAFE_INTEGER);
-    }
-
     let filtered = combined.filter(r => {
       const rowStatus = r.isHidden ? "Archived" : r.status;
       if (!selectedStatuses.includes(rowStatus)) return false;
@@ -2209,6 +2216,26 @@
         || String(r.filterOrPhone).toLowerCase().includes(q);
     });
 
+    // Compute visible group count & min ID strictly on filtered rows so filtered views never show stale counts or split groups
+    const visibleNameCounts = {};
+    const visibleNameMinId = {};
+    for (const item of filtered) {
+      if (item.isHidden) continue;
+      const key = String(item.name || "").trim().toLowerCase();
+      if (!key) continue;
+      visibleNameCounts[key] = (visibleNameCounts[key] || 0) + 1;
+      const numId = Number(item.id);
+      const sortId = !isNaN(numId) ? numId : Number.MAX_SAFE_INTEGER;
+      if (visibleNameMinId[key] === undefined || sortId < visibleNameMinId[key]) {
+        visibleNameMinId[key] = sortId;
+      }
+    }
+    for (const item of filtered) {
+      const key = String(item.name || "").trim().toLowerCase();
+      item._visibleGroupCount = item.isHidden ? 1 : (visibleNameCounts[key] || 1);
+      item._visibleGroupMinId = item.isHidden ? Number.MAX_SAFE_INTEGER : (visibleNameMinId[key] ?? Number.MAX_SAFE_INTEGER);
+    }
+
     const col = currentState.sortCol;
     const dir = currentState.sortDir === "asc" ? 1 : -1;
     filtered.sort((a, b) => {
@@ -2225,7 +2252,7 @@
       if (b._staged && b._staged.type === "create") return 1;
 
       if (col === "id" && dir === 1) {
-        if (a._groupMinId !== b._groupMinId) return a._groupMinId - b._groupMinId;
+        if (a._visibleGroupMinId !== b._visibleGroupMinId) return a._visibleGroupMinId - b._visibleGroupMinId;
         const nKeyA = String(a.name || "").trim().toLowerCase();
         const nKeyB = String(b.name || "").trim().toLowerCase();
         if (nKeyA !== nKeyB) return nKeyA.localeCompare(nKeyB);
