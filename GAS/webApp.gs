@@ -1,12 +1,8 @@
 /**
- * webApp.gs - V3 Instant-Load & Batch-Save Edition
- * - Clean display names (Hafila, Atira, Ms. Lai, Boss, IT Admin) without (Admin A/H/L) suffixes
- * - Default sorting by ID ascending
- * - Supports single actions + batchSave (commit multiple row edits/done/delete in one request)
- * - Soft-delete ("Hide" in backend, "Delete" in UI):
- *     * Only Atira (and IT) has BOTH "Delete" and "Request Delete"
- *     * Hafila / Ms. Lai / Boss / IT have direct "Delete" (Archive & Hide)
- *     * Deletion requests can be approved/rejected by Hafila, Boss, or IT Admin
+ * webApp.gs - V6 Ultra-Fast & Full Batch-Save Edition
+ * - On-demand auditLogs (only fetched when includeLogs=1) for faster main dashboard loads
+ * - Full batchSave supporting create, update, markNotified, confirmDone, directHide, requestDelete, approveDelete, rejectDelete, restoreRow
+ * - Auto-extracts Spreadsheet ID if a full URL is pasted in IT_Config
  */
 
 const ROLE_LEVELS = {
@@ -18,7 +14,7 @@ const ROLE_LEVELS = {
   "GUEST": 0
 };
 
-const CACHE_TTL_SEC = 120;
+const CACHE_TTL_SEC = 180;
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
@@ -31,13 +27,41 @@ function doGet(e) {
     const res = handleConfirmDoneById_(sheetCode, targetId, "Email One-Click", "EMAIL_LINK");
     return HtmlService.createHtmlOutput(`
       <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; padding: 32px; max-width: 520px; margin: 0 auto;">
-          <div style="border: 1px solid #d0d7de; border-radius: 10px; padding: 24px;">
-            <h3 style="margin-top:0; color: ${res.ok ? "#1a7f37" : "#cf222e"};">
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; padding: 32px; max-width: 520px; margin: 0 auto; text-align: center;">
+          <div style="border: 1px solid #d0d7de; border-radius: 12px; padding: 24px;">
+            <h3 style="margin-top:0; color: ${res.ok ? "#16a34a" : "#dc2626"};">
               ${res.ok ? "Updated & Next Cycle Calculated" : "Update Failed"}
             </h3>
             <p style="line-height:1.5;">${escapeHtml_(res.message)}</p>
             ${res.nextDateStr ? `<p style="background:#f6f8fa;padding:10px;border-radius:6px;"><b>Next Change Date:</b> ${escapeHtml_(res.nextDateStr)}</p>` : ""}
+          </div>
+        </body>
+      </html>
+    `);
+  }
+  
+  if (action === "markNotified") {
+    const sheetCode = String(params.sheet || "RED").toUpperCase();
+    const targetId = String(params.id || "").trim();
+    const ss = getTargetSpreadsheet_(sheetCode);
+    const sheet = ss.getSheetByName("Sheet 1");
+    const found = findRowById_(sheet, targetId);
+    if (!found) {
+      return HtmlService.createHtmlOutput(`<p>Record ID=${escapeHtml_(targetId)} not found.</p>`);
+    }
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h || "").trim());
+    const colMap = buildHeaderIndexMap_(headers);
+    if (colMap["Notification Status"] !== undefined) {
+      sheet.getRange(found.rowNum, colMap["Notification Status"] + 1).setValue(true);
+    }
+    SpreadsheetApp.flush();
+    invalidateSheetCache_(sheetCode);
+    return HtmlService.createHtmlOutput(`
+      <html>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:32px;max-width:500px;margin:0 auto;text-align:center;">
+          <div style="border:1px solid #e2e8f0;border-radius:14px;padding:24px;">
+            <h3 style="margin-top:0;color:#0284c7;">Marked as Notified</h3>
+            <p>Customer <b>${escapeHtml_(String(getVal_(found.rowValues, colMap, ["Name"]) || ""))}</b> is now marked as notified.</p>
           </div>
         </body>
       </html>
@@ -58,7 +82,9 @@ function doGet(e) {
       }
 
       const includeHidden = (ROLE_LEVELS[auth.effectiveRole] >= 60);
+      const wantLogs = (String(params.includeLogs || "") === "1");
       const payload = getCachedSheetRecords_(sheetCode, includeHidden);
+      const dropdownOptions = buildDropdownOptions_(auth.config);
 
       return jsonpOrJsonResponse_({
         ok: true,
@@ -70,9 +96,13 @@ function doGet(e) {
         canSwitchView: auth.actualRole === "IT",
         allowedSheets: allowedSheets,
         activeSheet: sheetCode,
+        sheetHeaders: payload.sheetHeaders,
         records: payload.records,
         summary: payload.summary,
-        auditLogs: (auth.effectiveRole === "IT" || auth.effectiveRole === "BOSS") ? getRecentAuditLogs_(sheetCode, 30) : []
+        dropdownOptions: dropdownOptions,
+        auditLogs: (wantLogs && ["IT", "BOSS", "ADMIN_H"].includes(auth.effectiveRole))
+          ? getRecentAuditLogs_(sheetCode, 100)
+          : []
       }, callback);
     } catch (err) {
       return jsonpOrJsonResponse_({ ok: false, error: err.message }, callback);
@@ -104,7 +134,7 @@ function doPost(e) {
 
     const ss = getTargetSpreadsheet_(sheetCode);
     const actorLabel = (auth.actualRole === "IT" && auth.effectiveRole !== "IT")
-      ? `IT (as ${auth.roleDisplayName})`
+      ? `IT Admin → ${auth.roleDisplayName}`
       : auth.roleDisplayName;
 
     let result;
@@ -113,39 +143,9 @@ function doPost(e) {
         assertMinRole_(auth.effectiveRole, 40);
         result = handleBatchSave_(ss, sheetCode, body.operations || [], auth.effectiveRole, auth.actorEmail, actorLabel);
         break;
-      case "createRecord":
-        assertMinRole_(auth.effectiveRole, 40);
-        result = handleCreateRecord_(ss, sheetCode, body.payload || {}, auth.actorEmail, actorLabel);
-        break;
-      case "updateRecord":
-        assertMinRole_(auth.effectiveRole, 40);
-        result = handleUpdateRecord_(ss, sheetCode, body.id, body.payload || {}, auth.actorEmail, actorLabel);
-        break;
       case "confirmDone":
         assertMinRole_(auth.effectiveRole, 40);
         result = handleConfirmDoneById_(sheetCode, body.id, auth.actorEmail, actorLabel);
-        break;
-      case "directHide":
-        assertMinRole_(auth.effectiveRole, 40);
-        result = handleSoftHideById_(ss, sheetCode, body.id, body.reason || "Deleted (Hidden) via Dashboard", "DELETE_HIDE", auth.actorEmail, actorLabel);
-        break;
-      case "requestDelete":
-        if (auth.effectiveRole !== "ADMIN_A" && auth.effectiveRole !== "IT") {
-          throw new Error("Only Atira or IT Admin can submit deletion requests.");
-        }
-        result = handleRequestDelete_(ss, sheetCode, body.id, body.reason || "Deletion approval requested", auth.actorEmail, actorLabel);
-        break;
-      case "approveDelete":
-        assertMinRole_(auth.effectiveRole, 60);
-        result = handleSoftHideById_(ss, sheetCode, body.id, body.reason || "Approved deletion", "APPROVE_DELETE", auth.actorEmail, actorLabel);
-        break;
-      case "rejectDelete":
-        assertMinRole_(auth.effectiveRole, 60);
-        result = handleRejectDelete_(ss, sheetCode, body.id, body.reason || "Rejected deletion", auth.actorEmail, actorLabel);
-        break;
-      case "restoreRow":
-        assertMinRole_(auth.effectiveRole, 60);
-        result = handleRestoreRow_(ss, sheetCode, body.id, body.reason || "Restored record", auth.actorEmail, actorLabel);
         break;
       default:
         return jsonResponse_({ ok: false, error: "Unsupported action: " + action });
@@ -160,7 +160,38 @@ function doPost(e) {
   }
 }
 
-/* ================= Batch Save Engine (1 Request for Multiple Edits) ================= */
+/* ================= Configurable Dropdown Options ================= */
+
+function buildDropdownOptions_(config) {
+  const parseOpts = (key, fallbackList) => {
+    const raw = config && config[key] ? String(config[key]).trim() : "";
+    if (!raw) return fallbackList;
+    const arr = raw.split(",").map(s => s.trim()).filter(Boolean);
+    return arr.length > 0 ? arr : fallbackList;
+  };
+
+  const cycleStrings = parseOpts("OPTIONS_CYCLES", ["90", "180", "365"]);
+  const cycles = cycleStrings
+    .map(n => Number(n))
+    .filter(n => !isNaN(n) && n > 0);
+
+  return {
+    redFilter: parseOpts("OPTIONS_RED_FILTER", [
+      "RO Water Filter",
+      "Alkaline Water Filter",
+      "Outdoor Filter",
+      "UV / UF Cartridge Set"
+    ]),
+    greenPlan: parseOpts("OPTIONS_GREEN_PLAN", [
+      "Standard Filter Service",
+      "RO Maintenance",
+      "Outdoor Filter Flush"
+    ]),
+    cycles: cycles.length > 0 ? cycles : [90, 180, 365]
+  };
+}
+
+/* ================= Unified Batch Save Engine ================= */
 
 function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, actorLabel) {
   if (!Array.isArray(operations) || operations.length === 0) {
@@ -174,23 +205,66 @@ function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, 
 
   const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
   const colMap = buildHeaderIndexMap_(headers);
-  const idColIdx = (colMap["第 1 列"] !== undefined) ? colMap["第 1 列"] : 0;
+  const idColIdx = findIdColumnIndex_(colMap);
 
   const allRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
   const idToIndex = {};
+  let maxId = 0;
+
   for (let i = 0; i < allRows.length; i++) {
     const idKey = String(allRows[i][idColIdx]).trim();
     if (idKey) idToIndex[idKey] = i;
+    const n = Number(allRows[i][idColIdx]);
+    if (!isNaN(n) && n > maxId) maxId = n;
   }
 
   const nowDate = new Date();
   const rowsToHide = [];
+  const rowsToShow = [];
   const formulaRows = new Set();
   const logsToAppend = [];
+  const newRowsToAppend = [];
   let appliedCount = 0;
 
   for (let k = 0; k < operations.length; k++) {
     const op = operations[k];
+    const type = String(op.type || "").trim();
+
+    if (type === "create") {
+      const payload = op.payload || {};
+      maxId += 1;
+      const newId = maxId;
+      const lastChangedDate = parseValidDate_(payload["Last Changed Date"]) || nowDate;
+      const cycleDays = Number(payload["Change Cycle (Days)"] || 180);
+
+      const rowArr = new Array(lastCol).fill("");
+      rowArr[idColIdx] = newId;
+      if (colMap["Name"] !== undefined) rowArr[colMap["Name"]] = String(payload["Name"] || "").trim();
+      if (colMap["Filter / Service Name"] !== undefined) {
+        rowArr[colMap["Filter / Service Name"]] = String(payload["Filter / Service Name"] || "").trim();
+      }
+      if (colMap["Phone Number"] !== undefined) {
+        rowArr[colMap["Phone Number"]] = String(payload["Phone Number"] || "").trim();
+      }
+      if (colMap["Machine usage"] !== undefined || colMap["Machine Usage"] !== undefined) {
+        const uIdx = colMap["Machine usage"] !== undefined ? colMap["Machine usage"] : colMap["Machine Usage"];
+        rowArr[uIdx] = (payload["Machine usage"] === false || String(payload["Machine usage"]).toUpperCase() === "FALSE") ? false : true;
+      }
+      if (colMap["Last Changed Date"] !== undefined) rowArr[colMap["Last Changed Date"]] = lastChangedDate;
+      if (colMap["Change Cycle (Days)"] !== undefined) rowArr[colMap["Change Cycle (Days)"]] = cycleDays;
+      if (colMap["Notification Status"] !== undefined) rowArr[colMap["Notification Status"]] = false;
+
+      newRowsToAppend.push({
+        rowArr: rowArr,
+        newId: newId,
+        custName: rowArr[colMap["Name"]] || "",
+        lastChangedDate: lastChangedDate,
+        cycleDays: cycleDays
+      });
+      appliedCount++;
+      continue;
+    }
+
     const targetId = String(op.id || "").trim();
     const rowIdx = idToIndex[targetId];
     if (rowIdx === undefined) continue;
@@ -198,11 +272,15 @@ function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, 
     const rowNum = rowIdx + 2;
     const rowArr = allRows[rowIdx];
     const custName = String(getVal_(rowArr, colMap, ["Name"]) || "");
-    const type = String(op.type || "").trim();
 
-    if (type === "update") {
+    if (type === "markNotified") {
+      const nIdx = colMap["Notification Status"];
+      if (nIdx !== undefined) rowArr[nIdx] = true;
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "MARK_NOTIFIED", op.reason || "Marked as notified", "Notif:FALSE", "Notif:TRUE", String(rowNum)]);
+      appliedCount++;
+    } else if (type === "update") {
       const payload = op.payload || {};
-      const editable = ["Name", "Filter / Service Name", "Phone Number", "Machine usage", "Last Changed Date", "Change Cycle (Days)"];
+      const editable = ["Name", "Filter / Service Name", "Phone Number", "Machine usage", "Machine Usage", "Last Changed Date", "Change Cycle (Days)"];
       const changed = [];
       for (let f = 0; f < editable.length; f++) {
         const field = editable[f];
@@ -213,7 +291,7 @@ function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, 
             if (d) val = d;
           } else if (field === "Change Cycle (Days)" && val !== "") {
             val = Number(val);
-          } else if (field === "Machine usage") {
+          } else if (field === "Machine usage" || field === "Machine Usage") {
             val = (val === true || String(val).toUpperCase() === "TRUE");
           }
           rowArr[colMap[field]] = val;
@@ -243,6 +321,27 @@ function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, 
       if (colMap["Approval Status"] !== undefined) rowArr[colMap["Approval Status"]] = "PENDING_DELETE";
       logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "REQ_DELETE", op.reason || "Batch Request Delete", "", "Approval:PENDING_DELETE", String(rowNum)]);
       appliedCount++;
+    } else if (type === "approveDelete") {
+      if (ROLE_LEVELS[effectiveRole] < 60) continue;
+      if (colMap["Status"] !== undefined) rowArr[colMap["Status"]] = "Archived";
+      if (colMap["Notification Status"] !== undefined) rowArr[colMap["Notification Status"]] = true;
+      if (colMap["Approval Status"] !== undefined) rowArr[colMap["Approval Status"]] = "APPROVED_ARCHIVED";
+      rowsToHide.push(rowNum);
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "APPROVE_DELETE", op.reason || "Approved deletion", "PENDING_DELETE", "APPROVED_ARCHIVED", String(rowNum)]);
+      appliedCount++;
+    } else if (type === "rejectDelete") {
+      if (ROLE_LEVELS[effectiveRole] < 60) continue;
+      if (colMap["Approval Status"] !== undefined) rowArr[colMap["Approval Status"]] = "REJECTED";
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "REJECT_DELETE", op.reason || "Rejected deletion", "PENDING_DELETE", "REJECTED", String(rowNum)]);
+      appliedCount++;
+    } else if (type === "restoreRow") {
+      if (ROLE_LEVELS[effectiveRole] < 60) continue;
+      if (colMap["Notification Status"] !== undefined) rowArr[colMap["Notification Status"]] = false;
+      if (colMap["Approval Status"] !== undefined) rowArr[colMap["Approval Status"]] = "";
+      rowsToShow.push(rowNum);
+      formulaRows.add(rowNum);
+      logsToAppend.push([nowDate, actorEmail, actorLabel, targetId, custName, "RESTORE", op.reason || "Restored record", "Archived", "Active", String(rowNum)]);
+      appliedCount++;
     }
   }
 
@@ -255,8 +354,22 @@ function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, 
     applyRowFormulasAndFallback_(sheet, rNum, colMap, lastD, cycD);
   });
 
+  if (newRowsToAppend.length > 0) {
+    const startNewRow = sheet.getLastRow() + 1;
+    sheet.getRange(startNewRow, 1, newRowsToAppend.length, lastCol).setValues(newRowsToAppend.map(x => x.rowArr));
+    for (let n = 0; n < newRowsToAppend.length; n++) {
+      const rNum = startNewRow + n;
+      const item = newRowsToAppend[n];
+      applyRowFormulasAndFallback_(sheet, rNum, colMap, item.lastChangedDate, item.cycleDays);
+      logsToAppend.push([nowDate, actorEmail, actorLabel, String(item.newId), item.custName, "BATCH_CREATE", "Batch Save", "", `ID=${item.newId}`, String(rNum)]);
+    }
+  }
+
   for (let h = 0; h < rowsToHide.length; h++) {
     sheet.hideRows(rowsToHide[h]);
+  }
+  for (let s = 0; s < rowsToShow.length; s++) {
+    sheet.showRows(rowsToShow[s]);
   }
 
   const logSheet = ss.getSheetByName("_Audit_Log");
@@ -272,7 +385,7 @@ function handleBatchSave_(ss, sheetCode, operations, effectiveRole, actorEmail, 
 
 function getCachedSheetRecords_(sheetCode, includeHidden) {
   const cache = CacheService.getScriptCache();
-  const cacheKey = `WF_V3_${sheetCode}_${includeHidden ? "ALL" : "ACTIVE"}`;
+  const cacheKey = `WF_V6_${sheetCode}_${includeHidden ? "ALL" : "ACTIVE"}`;
   const cachedStr = cache.get(cacheKey);
   if (cachedStr) {
     try {
@@ -294,12 +407,12 @@ function getCachedSheetRecords_(sheetCode, includeHidden) {
 function invalidateSheetCache_(sheetCode) {
   const cache = CacheService.getScriptCache();
   cache.removeAll([
-    `WF_V3_${sheetCode}_ALL`,
-    `WF_V3_${sheetCode}_ACTIVE`
+    `WF_V6_${sheetCode}_ALL`,
+    `WF_V6_${sheetCode}_ACTIVE`
   ]);
 }
 
-/* ================= Single Actions ================= */
+/* ================= Email One-Click Confirm Done ================= */
 
 function handleConfirmDoneById_(sheetCode, targetId, actorEmail, roleLabel) {
   const ss = getTargetSpreadsheet_(sheetCode);
@@ -350,251 +463,6 @@ function handleConfirmDoneById_(sheetCode, targetId, actorEmail, roleLabel) {
   };
 }
 
-function handleSoftHideById_(ss, sheetCode, targetId, reason, actionType, actorEmail, roleLabel) {
-  const sheet = ss.getSheetByName("Sheet 1");
-  const found = findRowById_(sheet, targetId);
-  if (!found) throw new Error(`Record ID=${targetId} not found`);
-
-  const { rowNum, colMap, rowValues } = found;
-  const custName = String(getVal_(rowValues, colMap, ["Name"]) || "");
-  const prevStatus = String(getVal_(rowValues, colMap, ["Status"]) || "");
-
-  if (colMap["Status"] !== undefined) {
-    sheet.getRange(rowNum, colMap["Status"] + 1).setValue("Archived");
-  }
-  if (colMap["Notification Status"] !== undefined) {
-    sheet.getRange(rowNum, colMap["Notification Status"] + 1).setValue(true);
-  }
-  if (colMap["Approval Status"] !== undefined && actionType === "APPROVE_DELETE") {
-    sheet.getRange(rowNum, colMap["Approval Status"] + 1).setValue("APPROVED_ARCHIVED");
-  }
-
-  sheet.hideRows(rowNum);
-  SpreadsheetApp.flush();
-
-  writeAuditLog_(
-    ss,
-    actorEmail,
-    roleLabel,
-    targetId,
-    custName,
-    actionType,
-    reason,
-    `Status:${prevStatus}|Hidden:false`,
-    `Status:Archived|Hidden:true`,
-    rowNum
-  );
-
-  return { ok: true, id: targetId, message: `Deleted (hidden) "${custName}".` };
-}
-
-function handleRequestDelete_(ss, sheetCode, targetId, reason, actorEmail, roleLabel) {
-  const sheet = ss.getSheetByName("Sheet 1");
-  const found = findRowById_(sheet, targetId);
-  if (!found) throw new Error(`Record ID=${targetId} not found`);
-
-  const { rowNum, colMap, rowValues } = found;
-  const custName = String(getVal_(rowValues, colMap, ["Name"]) || "");
-  if (colMap["Approval Status"] === undefined) {
-    throw new Error("Missing Approval Status column in sheet");
-  }
-
-  sheet.getRange(rowNum, colMap["Approval Status"] + 1).setValue("PENDING_DELETE");
-  SpreadsheetApp.flush();
-
-  writeAuditLog_(
-    ss,
-    actorEmail,
-    roleLabel,
-    targetId,
-    custName,
-    "REQ_DELETE",
-    reason,
-    "Approval:NONE",
-    "Approval:PENDING_DELETE",
-    rowNum
-  );
-
-  return { ok: true, id: targetId, message: `Deletion request sent for "${custName}".` };
-}
-
-function handleRejectDelete_(ss, sheetCode, targetId, reason, actorEmail, roleLabel) {
-  const sheet = ss.getSheetByName("Sheet 1");
-  const found = findRowById_(sheet, targetId);
-  if (!found) throw new Error(`Record ID=${targetId} not found`);
-
-  const { rowNum, colMap, rowValues } = found;
-  const custName = String(getVal_(rowValues, colMap, ["Name"]) || "");
-  if (colMap["Approval Status"] !== undefined) {
-    sheet.getRange(rowNum, colMap["Approval Status"] + 1).setValue("REJECTED");
-  }
-  SpreadsheetApp.flush();
-
-  writeAuditLog_(
-    ss,
-    actorEmail,
-    roleLabel,
-    targetId,
-    custName,
-    "REJECT_DELETE",
-    reason,
-    "Approval:PENDING_DELETE",
-    "Approval:REJECTED",
-    rowNum
-  );
-
-  return { ok: true, id: targetId, message: `Rejected deletion request for "${custName}".` };
-}
-
-function handleRestoreRow_(ss, sheetCode, targetId, reason, actorEmail, roleLabel) {
-  const sheet = ss.getSheetByName("Sheet 1");
-  const found = findRowById_(sheet, targetId);
-  if (!found) throw new Error(`Record ID=${targetId} not found`);
-
-  const { rowNum, colMap, rowValues } = found;
-  const custName = String(getVal_(rowValues, colMap, ["Name"]) || "");
-
-  sheet.showRows(rowNum);
-  const lastDate = parseValidDate_(getVal_(rowValues, colMap, ["Last Changed Date"])) || new Date();
-  const cycleDays = Number(getVal_(rowValues, colMap, ["Change Cycle (Days)"]) || 180);
-
-  if (colMap["Notification Status"] !== undefined) sheet.getRange(rowNum, colMap["Notification Status"] + 1).setValue(false);
-  if (colMap["Approval Status"] !== undefined) sheet.getRange(rowNum, colMap["Approval Status"] + 1).setValue("");
-  applyRowFormulasAndFallback_(sheet, rowNum, colMap, lastDate, cycleDays);
-  SpreadsheetApp.flush();
-
-  writeAuditLog_(
-    ss,
-    actorEmail,
-    roleLabel,
-    targetId,
-    custName,
-    "RESTORE",
-    reason,
-    "Status:Archived|Hidden:true",
-    "Status:Active|Hidden:false",
-    rowNum
-  );
-
-  return { ok: true, id: targetId, message: `Restored "${custName}".` };
-}
-
-function handleUpdateRecord_(ss, sheetCode, targetId, payload, actorEmail, roleLabel) {
-  const sheet = ss.getSheetByName("Sheet 1");
-  const found = findRowById_(sheet, targetId);
-  if (!found) throw new Error(`Record ID=${targetId} not found`);
-
-  const { rowNum, colMap, rowValues } = found;
-  const custName = String(getVal_(rowValues, colMap, ["Name"]) || "");
-  const editable = [
-    "Name",
-    "Filter / Service Name",
-    "Phone Number",
-    "Machine usage",
-    "Last Changed Date",
-    "Change Cycle (Days)",
-    "Notification Status"
-  ];
-
-  const changed = [];
-  for (let i = 0; i < editable.length; i++) {
-    const field = editable[i];
-    if (Object.prototype.hasOwnProperty.call(payload, field) && colMap[field] !== undefined) {
-      let val = payload[field];
-      if (field === "Last Changed Date" && val) {
-        const d = parseValidDate_(val);
-        if (d) val = d;
-      } else if (field === "Change Cycle (Days)" && val !== "") {
-        val = Number(val);
-      } else if (field === "Machine usage" || field === "Notification Status") {
-        val = (val === true || String(val).toUpperCase() === "TRUE");
-      }
-      sheet.getRange(rowNum, colMap[field] + 1).setValue(val);
-      changed.push(`${field}=${String(val)}`);
-    }
-  }
-
-  const updatedRow = sheet.getRange(rowNum, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const lastD = parseValidDate_(getVal_(updatedRow, colMap, ["Last Changed Date"]));
-  const cycD = Number(getVal_(updatedRow, colMap, ["Change Cycle (Days)"]) || 180);
-  if (lastD && !isNaN(cycD) && cycD > 0) {
-    applyRowFormulasAndFallback_(sheet, rowNum, colMap, lastD, cycD);
-  }
-  SpreadsheetApp.flush();
-
-  writeAuditLog_(
-    ss,
-    actorEmail,
-    roleLabel,
-    targetId,
-    custName,
-    "UPDATE",
-    payload.reason || "Dashboard edit",
-    "",
-    changed.join("; "),
-    rowNum
-  );
-
-  return { ok: true, id: targetId, message: `Updated "${custName}".` };
-}
-
-function handleCreateRecord_(ss, sheetCode, payload, actorEmail, roleLabel) {
-  const sheet = ss.getSheetByName("Sheet 1");
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
-  const colMap = buildHeaderIndexMap_(headers);
-
-  let maxId = 0;
-  if (lastRow >= 2 && colMap["第 1 列"] !== undefined) {
-    const idVals = sheet.getRange(2, colMap["第 1 列"] + 1, lastRow - 1, 1).getValues();
-    for (let i = 0; i < idVals.length; i++) {
-      const n = Number(idVals[i][0]);
-      if (!isNaN(n) && n > maxId) maxId = n;
-    }
-  }
-
-  const newId = maxId + 1;
-  const newRowNum = lastRow + 1;
-  const lastChangedDate = parseValidDate_(payload["Last Changed Date"]) || new Date();
-  const cycleDays = Number(payload["Change Cycle (Days)"] || 180);
-
-  const rowArr = new Array(lastCol).fill("");
-  if (colMap["第 1 列"] !== undefined) rowArr[colMap["第 1 列"]] = newId;
-  if (colMap["Name"] !== undefined) rowArr[colMap["Name"]] = String(payload["Name"] || "").trim();
-  if (colMap["Filter / Service Name"] !== undefined) {
-    rowArr[colMap["Filter / Service Name"]] = String(payload["Filter / Service Name"] || "").trim();
-  }
-  if (colMap["Phone Number"] !== undefined) {
-    rowArr[colMap["Phone Number"]] = String(payload["Phone Number"] || "").trim();
-  }
-  if (colMap["Machine usage"] !== undefined) {
-    rowArr[colMap["Machine usage"]] = (payload["Machine usage"] === false || String(payload["Machine usage"]).toUpperCase() === "FALSE") ? false : true;
-  }
-  if (colMap["Last Changed Date"] !== undefined) rowArr[colMap["Last Changed Date"]] = lastChangedDate;
-  if (colMap["Change Cycle (Days)"] !== undefined) rowArr[colMap["Change Cycle (Days)"]] = cycleDays;
-  if (colMap["Notification Status"] !== undefined) rowArr[colMap["Notification Status"]] = false;
-
-  sheet.getRange(newRowNum, 1, 1, lastCol).setValues([rowArr]);
-  applyRowFormulasAndFallback_(sheet, newRowNum, colMap, lastChangedDate, cycleDays);
-  SpreadsheetApp.flush();
-
-  writeAuditLog_(
-    ss,
-    actorEmail,
-    roleLabel,
-    newId,
-    rowArr[colMap["Name"]] || "",
-    "CREATE",
-    payload.reason || "Created record",
-    "",
-    `ID=${newId}|Name=${rowArr[colMap["Name"]] || ""}`,
-    newRowNum
-  );
-
-  return { ok: true, id: newId, rowNum: newRowNum, message: `Created record ID=${newId}.` };
-}
-
 function applyRowFormulasAndFallback_(sheet, rowNum, colMap, lastChangedDate, cycleDays) {
   const colLet = (name) => (colMap[name] !== undefined ? columnToLetter_(colMap[name] + 1) : null);
   const cName = colLet("Name");
@@ -626,7 +494,20 @@ function applyRowFormulasAndFallback_(sheet, rowNum, colMap, lastChangedDate, cy
   }
 }
 
-/* ================= Auth, Clean Display Names & Permissions ================= */
+/* ================= Auth, Config & Data Readers ================= */
+
+function extractSpreadsheetId_(raw) {
+  const s = String(raw || "").trim();
+  const match = s.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : s;
+}
+
+function findIdColumnIndex_(colMap) {
+  for (const k of ["第 1 列", "ID", "No.", ""]) {
+    if (colMap[k] !== undefined) return colMap[k];
+  }
+  return 0;
+}
 
 function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
   const cfEmail = (e && e.headers && (e.headers["Cf-Access-Authenticated-User-Email"] || e.headers["cf-access-authenticated-user-email"])) || "";
@@ -635,7 +516,7 @@ function resolveEffectiveAuth_(emailParam, viewAsParam, e) {
   const redCfg = readConfigMap_(redSs);
 
   let greenCfg = {};
-  const greenId = String(redCfg["GREEN_SHEET_ID"] || "").trim();
+  const greenId = extractSpreadsheetId_(redCfg["GREEN_SHEET_ID"]);
   if (greenId) {
     try {
       greenCfg = readConfigMap_(SpreadsheetApp.openById(greenId));
@@ -697,7 +578,7 @@ function getAllowedSheetsForRole_(effectiveRole, config) {
 function getTargetSpreadsheet_(sheetCode) {
   if (sheetCode === "GREEN") {
     const redCfg = readConfigMap_(SpreadsheetApp.getActiveSpreadsheet());
-    const greenId = String(redCfg["GREEN_SHEET_ID"] || "").trim();
+    const greenId = extractSpreadsheetId_(redCfg["GREEN_SHEET_ID"]);
     if (!greenId) throw new Error("GREEN_SHEET_ID not configured in RED IT_Config");
     return SpreadsheetApp.openById(greenId);
   }
@@ -710,17 +591,24 @@ function readSheetRecords_(ss, sheetCode, includeHidden) {
   const lastCol = sheet.getLastColumn();
   if (lastRow < 2) {
     return {
+      sheetHeaders: [],
       records: [],
       summary: { total: 0, replacementRequired: 0, pendingNotification: 0, pendingApproval: 0, hiddenCount: 0 }
     };
   }
 
-  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
-  const colMap = buildHeaderIndexMap_(headers);
+  const rawHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
+  const colMap = buildHeaderIndexMap_(rawHeaders);
+  const idColIdx = findIdColumnIndex_(colMap);
   const rows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
   const tz = Session.getScriptTimeZone();
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+  const displayHeaders = rawHeaders.map((h, idx) => {
+    if (idx === idColIdx || !h || h === "第 1 列") return "ID";
+    return h;
+  });
 
   const records = [];
   let replacementRequired = 0;
@@ -742,7 +630,7 @@ function readSheetRecords_(ss, sheetCode, includeHidden) {
     if (approvalStatus === "PENDING_DELETE") pendingApproval++;
 
     const machineUsage = (sheetCode === "RED")
-      ? (getVal_(r, colMap, ["Machine usage", "Machine Usage"]) === true || String(getVal_(r, colMap, ["Machine usage", "Machine Usage"])).toUpperCase() === "TRUE")
+      ? (getVal_(r, colMap, ["Machine Usage", "Machine usage"]) === true || String(getVal_(r, colMap, ["Machine Usage", "Machine usage"])).toUpperCase() === "TRUE")
       : true;
 
     const lastDateObj = parseValidDate_(getVal_(r, colMap, ["Last Changed Date"]));
@@ -752,6 +640,7 @@ function readSheetRecords_(ss, sheetCode, includeHidden) {
       nextDateObj = computeNextChangeDate_(lastDateObj, cycleNum);
     }
 
+    const notifDateObj = parseValidDate_(getVal_(r, colMap, ["Notification Date"]));
     const effStatus = computeEffectiveStatus_(rawStatus, nextDateObj, todayStart);
     let overdueDays = 0;
     if (nextDateObj && effStatus === "REPLACEMENT REQUIRED") {
@@ -767,8 +656,20 @@ function readSheetRecords_(ss, sheetCode, includeHidden) {
     if (isHidden && !includeHidden) continue;
 
     const notifVal = getVal_(r, colMap, ["Notification Status"]);
+    const isNotified = (notifVal === true || String(notifVal).toUpperCase() === "TRUE");
+
+    const rawByHeader = {};
+    for (let c = 0; c < displayHeaders.length; c++) {
+      const dh = displayHeaders[c];
+      let cellVal = r[c];
+      if (Object.prototype.toString.call(cellVal) === "[object Date]" && !isNaN(cellVal.getTime())) {
+        cellVal = Utilities.formatDate(cellVal, tz, "yyyy-MM-dd");
+      }
+      rawByHeader[dh] = cellVal;
+    }
+
     records.push({
-      id: getVal_(r, colMap, ["第 1 列", "ID"]),
+      id: r[idColIdx],
       rowNum: rowNum,
       name: name,
       filterOrPhone: String(getVal_(r, colMap, ["Filter / Service Name", "Phone Number"]) || ""),
@@ -776,15 +677,18 @@ function readSheetRecords_(ss, sheetCode, includeHidden) {
       lastChangedDate: lastDateObj ? Utilities.formatDate(lastDateObj, tz, "yyyy-MM-dd") : "",
       cycleDays: cycleNum || "",
       nextChangeDate: nextDateObj ? Utilities.formatDate(nextDateObj, tz, "yyyy-MM-dd") : "",
+      notificationDate: notifDateObj ? Utilities.formatDate(notifDateObj, tz, "yyyy-MM-dd") : "",
       status: effStatus,
       overdueDays: overdueDays,
-      notified: (notifVal === true || String(notifVal).toUpperCase() === "TRUE"),
+      notified: isNotified,
       approvalStatus: approvalStatus,
-      isHidden: isHidden
+      isHidden: isHidden,
+      cells: rawByHeader
     });
   }
 
   return {
+    sheetHeaders: displayHeaders,
     records: records,
     summary: {
       total: records.length,
@@ -827,7 +731,7 @@ function findRowById_(sheet, targetId) {
 
   const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
   const colMap = buildHeaderIndexMap_(headers);
-  const idColIdx = (colMap["第 1 列"] !== undefined) ? colMap["第 1 列"] : 0;
+  const idColIdx = findIdColumnIndex_(colMap);
   const rows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
 
   for (let i = 0; i < rows.length; i++) {
