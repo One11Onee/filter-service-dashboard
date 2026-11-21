@@ -108,12 +108,11 @@
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-size: 14px;
+      font-size: clamp(12.5px, 0.85vw, 14.5px);
       line-height: 1.45;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Sticky Glass Header with 3-column layout so Dynamic Island sits dead-center */
     header {
       position: sticky;
       top: 0;
@@ -122,55 +121,55 @@
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
+      padding: clamp(8px, 0.9vw, 12px) clamp(14px, 1.8vw, 24px);
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 14px;
+      gap: clamp(8px, 1vw, 14px);
       box-shadow: var(--shadow);
     }
-    .brand-wrap { display: flex; align-items: center; gap: 12px; justify-self: start; }
-    .brand { font-weight: 700; font-size: 16.5px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.015em; }
-    .brand img { width: 24px; height: 24px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
-    .brand svg { width: 19px; height: 19px; color: var(--primary); }
+    .brand-wrap { display: flex; align-items: center; gap: 10px; justify-self: start; min-width: 0; }
+    .brand { font-weight: 700; font-size: clamp(14px, 1.1vw, 16.5px); display: flex; align-items: center; gap: 8px; letter-spacing: -0.015em; white-space: nowrap; }
+    .brand img { width: 22px; height: 22px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
     .role-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 999px;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       background: rgba(37, 99, 235, 0.14);
       color: var(--primary);
+      white-space: nowrap;
       transition: transform 0.25s var(--spring);
     }
-    .sync-tag { font-size: 12px; color: var(--muted); }
+    .sync-tag { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 
-    /* iOS Dynamic Island Pill in Center of Header */
     .dynamic-island-slot {
       justify-self: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 36px;
+      min-height: 34px;
+      max-width: 100%;
     }
     .dynamic-island {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 9px;
+      gap: 8px;
       background: var(--island-bg);
       color: var(--island-text);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 13px;
+      padding: 5px 12px;
+      font-size: clamp(11.5px, 0.85vw, 13px);
       font-weight: 500;
       box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       transform: scale(0.94);
       opacity: 0.88;
-      max-width: 440px;
+      max-width: clamp(190px, 24vw, 380px);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -183,9 +182,9 @@
         opacity 0.25s ease;
     }
     .dynamic-island.expanded {
-      transform: scale(1.03);
+      transform: scale(1.02);
       opacity: 1;
-      padding: 8px 20px;
+      padding: 6px 16px;
     }
     .dynamic-island.ok {
       border-color: rgba(34, 197, 94, 0.45);
@@ -199,8 +198,8 @@
       border-color: rgba(59, 130, 246, 0.45);
     }
     .island-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #22c55e;
       flex-shrink: 0;
@@ -218,16 +217,16 @@
       50% { transform: scale(1.3); opacity: 1; }
     }
 
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-self: end; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(5px, 0.5vw, 8px); justify-self: end; }
 
     select, input, button {
-      padding: 6px 12px;
+      padding: 5px clamp(8px, 0.7vw, 12px);
       border-radius: 8px;
       border: 1px solid var(--border);
-      font-size: 13.5px;
+      font-size: clamp(12px, 0.82vw, 13.5px);
       background: var(--card);
       color: var(--text);
-      height: 34px;
+      height: clamp(30px, 2.3vw, 34px);
       transition: all 0.22s var(--ease-ios);
     }
     select:focus, input:focus {
@@ -241,7 +240,8 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
+      white-space: nowrap;
       transition: transform 0.22s var(--spring), background-color 0.18s ease, box-shadow 0.2s ease;
     }
     button:hover { background: var(--table-hover); transform: translateY(-1px); }
@@ -256,22 +256,21 @@
     button.info:hover { background: #0369a1; }
     button.warning { background: #d97706; color: #fff; border-color: #d97706; }
     button.warning:hover { background: #b45309; }
-    button.icon-only { padding: 4px 8px; height: 29px; font-size: 13px; }
-    button.icon-only svg, button svg { width: 15px; height: 15px; flex-shrink: 0; }
+    button.icon-only { padding: 4px 7px; height: 28px; font-size: 12.5px; }
+    button.icon-only svg, button svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* Increased breathing room & generous margins */
-    main { width: 100%; max-width: 100%; margin: 0 auto; padding: 20px 26px; }
+    main { width: 100%; max-width: 100%; margin: 0 auto; padding: clamp(12px, 1.3vw, 20px) clamp(14px, 1.8vw, 26px); }
 
     .grid-kpis {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(6, minmax(115px, 1fr));
+      gap: clamp(8px, 1vw, 16px);
+      margin-bottom: clamp(12px, 1.3vw, 20px);
     }
     .kpi {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 15px 18px;
+      padding: clamp(10px, 1vw, 15px) clamp(10px, 1.1vw, 18px);
       background: var(--kpi-bg);
       box-shadow: var(--shadow);
       cursor: pointer;
@@ -280,15 +279,15 @@
     }
     .kpi:hover { transform: translateY(-3px); border-color: var(--primary); }
     .kpi:active { transform: scale(0.97); }
-    .kpi .label { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-    .kpi .val { font-size: 24px; font-weight: 700; margin-top: 5px; }
+    .kpi .label { font-size: clamp(10px, 0.75vw, 11.5px); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi .val { font-size: clamp(18px, 1.65vw, 24px); font-weight: 700; margin-top: 4px; }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 18px 20px;
-      margin-bottom: 20px;
+      padding: clamp(12px, 1.3vw, 18px) clamp(14px, 1.5vw, 20px);
+      margin-bottom: clamp(12px, 1.3vw, 20px);
       box-shadow: var(--shadow);
       animation: fadeUp 0.35s var(--ease-ios);
     }
@@ -303,23 +302,24 @@
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 10px;
+      margin-bottom: 12px;
     }
-    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    #searchInput { width: clamp(170px, 18vw, 270px); }
 
     .table-wrap {
       width: 100%;
       overflow: auto;
-      max-height: calc(100vh - 255px);
+      max-height: calc(100vh - 245px);
       border: 1px solid var(--border);
       border-radius: 10px;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: clamp(12px, 0.82vw, 13.5px); }
     th, td {
       border-bottom: 1px solid var(--border);
       border-right: 1px solid var(--border);
-      padding: 10px 13px;
+      padding: clamp(7px, 0.65vw, 10px) clamp(8px, 0.8vw, 13px);
       text-align: center;
       vertical-align: middle;
       white-space: nowrap;
@@ -333,14 +333,14 @@
       z-index: 10;
       background: var(--table-head);
       font-weight: 600;
-      font-size: 13px;
+      font-size: clamp(11.5px, 0.8vw, 13px);
       user-select: none;
       cursor: pointer;
       transition: background-color 0.15s ease;
     }
     th:hover { background: var(--table-hover); }
-    th .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
-    th .sort-ind { font-size: 11px; color: var(--primary); }
+    th .th-inner { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; }
+    th .sort-ind { font-size: 10.5px; color: var(--primary); }
     th.no-sort { cursor: default; }
 
     tbody tr { transition: background-color 0.18s ease; }
@@ -370,9 +370,9 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      padding: 3px 10px;
+      padding: 2px 9px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: clamp(11px, 0.76vw, 12px);
       font-weight: 600;
     }
     .badge.danger { background: var(--danger-bg); color: var(--danger-text); }
@@ -381,11 +381,17 @@
     .badge.info { background: var(--info-bg); color: var(--info-text); }
     .badge.neutral { background: var(--hidden-bg); color: var(--muted); }
     .badge.dirty { background: var(--primary); color: #fff; }
+    .badge.group-pill {
+      margin-left: 6px;
+      padding: 1px 7px;
+      font-size: 10.5px;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--primary);
+    }
 
-    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .row-actions { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
     .gate-box { max-width: 480px; margin: 80px auto; text-align: center; padding: 34px; }
 
-    /* First-Visit Fullscreen Welcome Overlay (Skipped when cached) */
     .welcome-overlay {
       position: fixed;
       inset: 0;
@@ -401,9 +407,7 @@
       transform: scale(1);
       transition: opacity 0.45s var(--ease-ios), transform 0.45s var(--spring);
     }
-    .welcome-overlay.show {
-      display: flex;
-    }
+    .welcome-overlay.show { display: flex; }
     .welcome-overlay.fade-out {
       opacity: 0;
       transform: scale(1.04);
@@ -451,12 +455,11 @@
       to { transform: rotate(360deg); }
     }
 
-    /* iOS Spring Modal Animation */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(2, 6, 23, 0.55);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px;
+      display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.26s var(--ease-ios);
@@ -466,8 +469,9 @@
       pointer-events: auto;
     }
     .modal {
-      background: var(--card); border-radius: 16px; padding: 24px 26px;
-      width: 100%; max-width: 490px; border: 1px solid var(--border);
+      background: var(--card); border-radius: 16px; padding: 22px 24px;
+      width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+      border: 1px solid var(--border);
       box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
       transform: scale(0.92) translateY(14px);
       transition: transform 0.36s var(--spring);
@@ -477,27 +481,223 @@
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
     }
-    .modal-header h3 { margin: 0; font-size: 16.5px; }
-    .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
-    .field input, .field select { width: 100%; height: 38px; font-size: 14px; }
-    .other-input { margin-top: 8px; }
-    .kbd-hint { font-size: 12px; color: var(--muted); opacity: 0.85; }
+    .modal-header h3 { margin: 0; font-size: 16px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+    .field input, .field select { width: 100%; height: 36px; font-size: 13.5px; }
+    .other-input { margin-top: 7px; }
+    .kbd-hint { font-size: 11.5px; color: var(--muted); opacity: 0.85; }
 
-    @media (max-width: 1100px) {
+    /* Binded Filter & Cycle Section */
+    .bind-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .bind-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .filter-bind-card {
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 55%, var(--card));
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .filter-bind-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .bind-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .remove-bind-btn {
+      height: 25px;
+      padding: 0 8px;
+      font-size: 11.5px;
+    }
+
+    .print-footer { display: none; }
+
+    /* ================= MULTI-SCREEN RESPONSIVE ADAPTATION ================= */
+    @media (max-width: 1360px) {
+      .sync-tag { display: none; }
+      .dynamic-island { max-width: 220px; }
+      .grid-kpis { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+    }
+
+    @media (max-width: 1050px) {
       header {
         grid-template-columns: 1fr;
         justify-items: center;
       }
       .brand-wrap, .toolbar { justify-self: center; }
+      .dynamic-island { max-width: 340px; }
+      .grid-kpis { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .grid-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .controls-left, .controls-right { width: 100%; }
+      #searchInput { width: 100%; }
+      .bind-grid-2 { grid-template-columns: 1fr; }
+      .kbd-hint { display: none; }
+    }
+
+    /* ================= PRINT STYLESHEET (Ctrl+P) ================= */
+    @media print {
+      @page {
+        size: landscape;
+        margin: 10mm 10mm 14mm 10mm;
+      }
+
+      :root, :root[data-theme="dark"], :root[data-theme="light"] {
+        --bg: #ffffff !important;
+        --card: #ffffff !important;
+        --text: #0f172a !important;
+        --muted: #475569 !important;
+        --border: #cbd5e1 !important;
+        --table-head: #f1f5f9 !important;
+        --table-hover: #ffffff !important;
+        --kpi-bg: #ffffff !important;
+        --primary: #1d4ed8 !important;
+        --danger-bg: #fee2e2 !important;
+        --danger-row: #fef2f2 !important;
+        --danger-text: #991b1b !important;
+        --warn-bg: #fef3c7 !important;
+        --warn-row: #fffbeb !important;
+        --warn-text: #92400e !important;
+        --ok-bg: #dcfce7 !important;
+        --ok-text: #166534 !important;
+        --info-bg: #e0f2fe !important;
+        --info-text: #075985 !important;
+        --hidden-bg: #f8fafc !important;
+        --shadow: none !important;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+      }
+
+      header {
+        position: static !important;
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        border-bottom: 1.5px solid #cbd5e1 !important;
+        padding: 6px 0 10px 0 !important;
+        grid-template-columns: 1fr !important;
+        justify-items: start !important;
+      }
+
+      .toolbar,
+      .dynamic-island-slot,
+      .controls-bar,
+      .welcome-overlay,
+      .modal-backdrop,
+      #approvalCard,
+      #authGateView,
+      #auditPageView {
+        display: none !important;
+      }
+
+      main {
+        padding: 10px 0 0 0 !important;
+      }
+
+      .grid-kpis {
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+      }
+
+      .kpi {
+        box-shadow: none !important;
+        padding: 8px 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        cursor: default !important;
+      }
+
+      .kpi .val {
+        font-size: 16px !important;
+        margin-top: 2px !important;
+      }
+
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 10px !important;
+        margin-bottom: 0 !important;
+        animation: none !important;
+      }
+
+      .table-wrap {
+        max-height: none !important;
+        overflow: visible !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+
+      th {
+        position: static !important;
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        padding: 6px 8px !important;
+        font-size: 10.5px !important;
+      }
+
+      td {
+        padding: 6px 8px !important;
+        font-size: 10.5px !important;
+        white-space: normal !important;
+      }
+
+      th:last-child,
+      td:last-child {
+        display: none !important;
+      }
+
+      .badge {
+        padding: 1px 6px !important;
+        font-size: 10px !important;
+      }
+
+      .print-footer {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff !important;
+        color: #334155 !important;
+        border-top: 1px solid #cbd5e1;
+        padding: 5px 10mm;
+        font-size: 11px;
+        font-weight: 600;
+        justify-content: space-between;
+        align-items: center;
+      }
     }
   </style>
 </head>
 <body>
 
-<!-- Fullscreen Welcome Screen (Only shown on cold start without local cache) -->
 <div id="welcomeOverlay" class="welcome-overlay">
   <div class="welcome-card">
     <img src="./logo.png" alt="Logo" class="welcome-logo" />
@@ -517,7 +717,6 @@
     <span id="syncTag" class="sync-tag"></span>
   </div>
 
-  <!-- Center Dynamic Island Status Pill -->
   <div class="dynamic-island-slot">
     <div id="dynamicIsland" class="dynamic-island">
       <span class="island-dot"></span>
@@ -614,7 +813,7 @@
     <div class="card">
       <div class="controls-bar">
         <div class="controls-left">
-          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" style="width:270px;" />
+          <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" />
           <select id="statusFilter" onchange="renderTable()">
             <option value="ALL">Status: All</option>
             <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
@@ -694,6 +893,11 @@
   </div>
 </main>
 
+<div id="printFooter" class="print-footer">
+  <span id="printByLabel">Printed By: -</span>
+  <span id="printSheetMeta"></span>
+</div>
+
 <!-- Dedicated Add New / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
   <div class="modal">
@@ -708,21 +912,12 @@
       <input type="text" id="fName" placeholder="Enter customer name" required />
     </div>
 
-    <div class="field" id="fRedFilterGroup">
-      <label>Filter / Service Name</label>
-      <select id="fRedFilterSelect" onchange="toggleOtherInput('fRedFilterSelect', 'fRedFilterOther')"></select>
-      <input type="text" id="fRedFilterOther" class="other-input" placeholder="Type custom filter / service name..." style="display:none;" />
-    </div>
-
-    <div class="field" id="fGreenPhoneGroup" style="display:none;">
-      <label>Phone Number</label>
-      <input type="text" id="fGreenPhone" placeholder="e.g. 012-3456789" />
-    </div>
-
-    <div class="field" id="fGreenPlanGroup" style="display:none;">
-      <label>Service / Filter Plan</label>
-      <select id="fGreenPlanSelect" onchange="toggleOtherInput('fGreenPlanSelect', 'fGreenPlanOther')"></select>
-      <input type="text" id="fGreenPlanOther" class="other-input" placeholder="Type custom plan or notes..." style="display:none;" />
+    <div id="fRedBindSection" style="display:none;">
+      <div class="bind-section-header">
+        <span class="bind-section-title">Binded Filters &amp; Change Cycles</span>
+        <button type="button" class="icon-only" onclick="addFilterBindRow()" title="Add Another Filter for This Customer">+ Add Filter</button>
+      </div>
+      <div id="filterBindList"></div>
     </div>
 
     <div class="field" id="fUsageGroup">
@@ -733,15 +928,20 @@
       </select>
     </div>
 
+    <div class="field" id="fGreenPhoneGroup" style="display:none;">
+      <label>Phone Number</label>
+      <input type="text" id="fGreenPhone" placeholder="e.g. 012-3456789" />
+    </div>
+
     <div class="field">
       <label>Last Changed Date *</label>
       <input type="date" id="fLastDate" required />
     </div>
 
-    <div class="field">
+    <div class="field" id="fGreenCycleGroup" style="display:none;">
       <label>Change Cycle (Days) *</label>
-      <select id="fCycleSelect" onchange="toggleOtherInput('fCycleSelect', 'fCycleOther')"></select>
-      <input type="number" id="fCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
+      <select id="fGreenCycleSelect" onchange="toggleOtherInput('fGreenCycleSelect', 'fGreenCycleOther')"></select>
+      <input type="number" id="fGreenCycleOther" class="other-input" min="1" placeholder="Type custom days..." style="display:none;" />
     </div>
 
     <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
@@ -769,6 +969,7 @@
   };
 
   let islandTimer = null;
+  let bindRowSeq = 0;
 
   let currentState = {
     email: "",
@@ -783,14 +984,38 @@
     records: [],
     auditLogs: [],
     dropdownOptions: {
-      redFilter: ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter", "UV / UF Cartridge Set"],
+      redFilter: ["Sediment", "Pre Carbon / GAC", "Post Carbon / Antibacterial", "Alkaline / Mineral Stone", "Silver Carbon", "UF Membrane", "Mineral Filter", "PP 5M", "Carbon Block", "PP 1M", "UDF"],
+      filterCycles: {
+        "Sediment": 180,
+        "Pre Carbon / GAC": 270,
+        "Post Carbon / Antibacterial": 360,
+        "Alkaline / Mineral Stone": 540,
+        "Silver Carbon": 540,
+        "UF Membrane": 540,
+        "Mineral Filter": 540,
+        "PP 5M": 90,
+        "Carbon Block": 180,
+        "PP 1M": 180,
+        "UDF": 180
+      },
       greenPlan: ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"],
-      cycles: [90, 180, 365]
+      cycles: [90, 180, 270, 360, 540]
     },
     sortCol: "id",
     sortDir: "asc",
     pendingOps: {}
   };
+
+  function updatePrintFooter() {
+    const byEl = document.getElementById("printByLabel");
+    const metaEl = document.getElementById("printSheetMeta");
+    const actor = currentState.roleDisplayName || currentState.effectiveRole || "User";
+    const email = currentState.email ? ` (${currentState.email})` : "";
+    if (byEl) byEl.textContent = `Printed By: ${actor}${email}`;
+    if (metaEl) metaEl.textContent = `${currentState.activeSheet || "RED"} · ${new Date().toLocaleString()}`;
+  }
+
+  window.addEventListener("beforeprint", updatePrintFooter);
 
   function showIsland(msg, type = "ok", persist = false) {
     const island = document.getElementById("dynamicIsland");
@@ -945,6 +1170,7 @@
     }
 
     showDashboardImmediate();
+    updatePrintFooter();
     loadData(false);
   }
 
@@ -1036,24 +1262,25 @@
     return `${CLIENT_CACHE_PREFIX}${currentState.email}_${sheet || "DEFAULT"}_${viewAs || "ACTUAL"}`;
   }
 
-  function populateConfigurableSelects() {
-    const opts = currentState.dropdownOptions || {};
-    const redList = opts.redFilter || ["RO Water Filter", "Alkaline Water Filter", "Outdoor Filter", "UV / UF Cartridge Set"];
+  function getPresetDefaultCycle() {
+    const cycles = (currentState.dropdownOptions && currentState.dropdownOptions.cycles) || [90, 180, 270, 360, 540];
+    if (cycles.includes(180)) return 180;
+    return cycles[0] || 180;
+  }
 
-    const greenList = opts.greenPlan || ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"];
-    const cycleList = opts.cycles || [90, 180, 365];
-
-    document.getElementById("fRedFilterSelect").innerHTML =
-      redList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
-      `<option value="__OTHER__">Other (Type custom...)</option>`;
-
-    document.getElementById("fGreenPlanSelect").innerHTML =
-      greenList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
-      `<option value="__OTHER__">Other (Type custom...)</option>`;
-
-    document.getElementById("fCycleSelect").innerHTML =
-      cycleList.map(n => `<option value="${esc(String(n))}">${esc(String(n))} Days</option>`).join("") +
+  function buildCycleOptionsHtml(extraCycleVal) {
+    const baseCycles = (currentState.dropdownOptions && currentState.dropdownOptions.cycles) || [90, 180, 270, 360, 540];
+    const set = new Set(baseCycles.map(n => Number(n)).filter(n => !isNaN(n) && n > 0));
+    const extraNum = Number(extraCycleVal);
+    if (!isNaN(extraNum) && extraNum > 0) set.add(extraNum);
+    const sorted = Array.from(set).sort((a, b) => a - b);
+    return sorted.map(n => `<option value="${esc(String(n))}">${esc(String(n))} Days</option>`).join("") +
       `<option value="__OTHER__">Other (Type custom days...)</option>`;
+  }
+
+  function populateConfigurableSelects() {
+    const presetCycle = getPresetDefaultCycle();
+    setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(presetCycle), buildCycleOptionsHtml(presetCycle));
   }
 
   function applyDashboardPayload(data, isFromCache) {
@@ -1070,7 +1297,14 @@
     if (data.auditLogs && data.auditLogs.length > 0) {
       currentState.auditLogs = data.auditLogs;
     }
-    if (data.dropdownOptions) currentState.dropdownOptions = data.dropdownOptions;
+    if (data.dropdownOptions) {
+      currentState.dropdownOptions = Object.assign({
+        redFilter: [],
+        filterCycles: {},
+        greenPlan: [],
+        cycles: [90, 180, 270, 360, 540]
+      }, data.dropdownOptions);
+    }
 
     currentState.records = (data.records || []).map(r => {
       let rank = 3;
@@ -1081,6 +1315,7 @@
     });
 
     populateConfigurableSelects();
+    updatePrintFooter();
 
     const badge = document.getElementById("userBadge");
     badge.style.display = "inline-flex";
@@ -1237,8 +1472,6 @@
     renderTable();
   }
 
-  /* ================= Global Staging & Save ================= */
-
   function stageOperation(opKey, opObj) {
     currentState.pendingOps[opKey] = Object.assign({ key: opKey }, opObj);
     updateBatchBar();
@@ -1386,10 +1619,12 @@
       return `<b>${esc(rec.id)}</b>${stagedTag}`;
     }
     if (headerName === "Name") {
-      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:170px;max-width:280px;"><b>${esc(rec.name)}</b></div>`, "Name");
+      const cnt = rec._groupCount || 1;
+      const pill = cnt > 1 ? `<span class="badge group-pill">${cnt} filters</span>` : "";
+      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:140px;max-width:260px;"><b>${esc(rec.name)}</b>${pill}</div>`, "Name");
     }
     if (headerName === "Filter / Service Name" || headerName === "Phone Number") {
-      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:150px;max-width:260px;">${esc(rec.filterOrPhone)}</div>`, headerName);
+      return wrapDiff(`<div style="text-align:left;white-space:normal;min-width:130px;max-width:240px;">${esc(rec.filterOrPhone)}</div>`, headerName);
     }
     if (headerName === "Machine Usage" || headerName === "Machine usage") {
       return wrapDiff(`<span class="badge ${rec.machineUsage ? "ok" : "neutral"}">${rec.machineUsage ? "TRUE" : "FALSE"}</span>`, "Machine Usage");
@@ -1438,7 +1673,7 @@
       .map((op, idx) => {
         const extra = isRed
           ? (op.payload["Filter / Service Name"] || "")
-          : (op.payload["Phone Number"] || op.payload["Service Plan"] || "");
+          : (op.payload["Phone Number"] || "");
         return {
           _opKey: op.key,
           _staged: op,
@@ -1448,7 +1683,7 @@
           filterOrPhone: extra,
           machineUsage: op.payload["Machine usage"] !== false,
           lastChangedDate: op.payload["Last Changed Date"] || "",
-          cycleDays: op.payload["Change Cycle (Days)"] || 180,
+          cycleDays: op.payload["Change Cycle (Days)"] || getPresetDefaultCycle(),
           nextChangeDate: "Auto on Save",
           notificationDate: "-",
           status: "Normal",
@@ -1464,7 +1699,7 @@
             "Phone Number": op.payload["Phone Number"] || "",
             "Machine Usage": op.payload["Machine usage"] !== false,
             "Last Changed Date": op.payload["Last Changed Date"] || "",
-            "Change Cycle (Days)": op.payload["Change Cycle (Days)"] || 180,
+            "Change Cycle (Days)": op.payload["Change Cycle (Days)"] || getPresetDefaultCycle(),
             "Status": "Normal",
             "Notification Status": false
           }
@@ -1542,6 +1777,26 @@
 
     const combined = stagedCreates.concat(mergedExisting);
 
+    const nameCounts = {};
+    const nameMinId = {};
+    for (const item of combined) {
+      if (item.isHidden) continue;
+      const key = String(item.name || "").trim().toLowerCase();
+      if (!key) continue;
+      nameCounts[key] = (nameCounts[key] || 0) + 1;
+      const numId = Number(item.id);
+      const sortId = !isNaN(numId) ? numId : Number.MAX_SAFE_INTEGER;
+      if (nameMinId[key] === undefined || sortId < nameMinId[key]) {
+        nameMinId[key] = sortId;
+      }
+    }
+
+    for (const item of combined) {
+      const key = String(item.name || "").trim().toLowerCase();
+      item._groupCount = item.isHidden ? 1 : (nameCounts[key] || 1);
+      item._groupMinId = item.isHidden ? Number.MAX_SAFE_INTEGER : (nameMinId[key] ?? Number.MAX_SAFE_INTEGER);
+    }
+
     let filtered = combined.filter(r => {
       if (stFilter !== "ALL" && r.status !== stFilter) return false;
       if (ntFilter !== "ALL") {
@@ -1563,6 +1818,14 @@
     filtered.sort((a, b) => {
       if (a._staged && a._staged.type === "create") return -1;
       if (b._staged && b._staged.type === "create") return 1;
+
+      if (col === "id" && dir === 1) {
+        if (a._groupMinId !== b._groupMinId) return a._groupMinId - b._groupMinId;
+        const nKeyA = String(a.name || "").trim().toLowerCase();
+        const nKeyB = String(b.name || "").trim().toLowerCase();
+        if (nKeyA !== nKeyB) return nKeyA.localeCompare(nKeyB);
+        return Number(a.id || 0) - Number(b.id || 0);
+      }
 
       let va, vb;
       if (col.startsWith("cell:")) {
@@ -1646,9 +1909,10 @@
     }
   }
 
-  function setSelectWithOther(selectId, inputId, val) {
+  function setSelectWithOther(selectId, inputId, val, customCycleHtml = null) {
     const sel = document.getElementById(selectId);
     const inp = document.getElementById(inputId);
+    if (customCycleHtml) sel.innerHTML = customCycleHtml;
     const strVal = String(val ?? "").trim();
     const matched = Array.from(sel.options).some(opt => opt.value === strVal && opt.value !== "__OTHER__");
     if (matched) {
@@ -1675,11 +1939,121 @@
     return sel.value;
   }
 
+  function onBindFilterChange(rowId) {
+    const sel = document.getElementById(`bindFilterSel_${rowId}`);
+    const otherInp = document.getElementById(`bindFilterOther_${rowId}`);
+    const cycleSel = document.getElementById(`bindCycleSel_${rowId}`);
+    const cycleOther = document.getElementById(`bindCycleOther_${rowId}`);
+    if (!sel || !cycleSel) return;
+
+    if (sel.value === "__OTHER__") {
+      otherInp.style.display = "block";
+      otherInp.focus();
+      return;
+    } else {
+      otherInp.style.display = "none";
+      otherInp.value = "";
+    }
+
+    const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
+    const mappedCycle = filterCycles[sel.value];
+    if (mappedCycle !== undefined && mappedCycle !== null && Number(mappedCycle) > 0) {
+      setSelectWithOther(`bindCycleSel_${rowId}`, `bindCycleOther_${rowId}`, String(Number(mappedCycle)), buildCycleOptionsHtml(mappedCycle));
+    } else {
+      const preset = getPresetDefaultCycle();
+      setSelectWithOther(`bindCycleSel_${rowId}`, `bindCycleOther_${rowId}`, String(preset), buildCycleOptionsHtml(preset));
+    }
+  }
+
+  function addFilterBindRow(initialFilter = "", initialCycle = null, isNewExtra = false) {
+    bindRowSeq += 1;
+    const rowId = bindRowSeq;
+    const list = document.getElementById("filterBindList");
+    const redList = (currentState.dropdownOptions && currentState.dropdownOptions.redFilter) || [];
+    const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
+
+    let chosenFilter = initialFilter;
+    if (!chosenFilter && redList.length > 0) {
+      chosenFilter = redList[0];
+    }
+
+    let chosenCycle = initialCycle;
+    if (chosenCycle === null || chosenCycle === undefined || chosenCycle === "") {
+      chosenCycle = (filterCycles[chosenFilter] && Number(filterCycles[chosenFilter]) > 0)
+        ? Number(filterCycles[chosenFilter])
+        : getPresetDefaultCycle();
+    }
+
+    const filterOptionsHtml = redList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
+      `<option value="__OTHER__">Other (Type custom...)</option>`;
+
+    const card = document.createElement("div");
+    card.className = "filter-bind-card";
+    card.id = `bindCard_${rowId}`;
+    card.dataset.bindId = String(rowId);
+    card.dataset.isNewExtra = isNewExtra ? "1" : "0";
+
+    const canRemove = list.children.length > 0;
+    card.innerHTML = `
+      <div class="filter-bind-top">
+        <span>${isNewExtra ? "Additional Filter (New Row)" : `Filter #${list.children.length + 1}`}</span>
+        ${canRemove ? `<button type="button" class="remove-bind-btn" onclick="removeFilterBindRow('${rowId}')">Remove</button>` : ""}
+      </div>
+      <div class="bind-grid-2">
+        <div class="field" style="margin-bottom:0;">
+          <label>Filter / Service Name</label>
+          <select id="bindFilterSel_${rowId}" onchange="onBindFilterChange('${rowId}')">${filterOptionsHtml}</select>
+          <input type="text" id="bindFilterOther_${rowId}" class="other-input" placeholder="Type custom filter..." style="display:none;" />
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Change Cycle (Days)</label>
+          <select id="bindCycleSel_${rowId}" onchange="toggleOtherInput('bindCycleSel_${rowId}', 'bindCycleOther_${rowId}')">${buildCycleOptionsHtml(chosenCycle)}</select>
+          <input type="number" id="bindCycleOther_${rowId}" class="other-input" min="1" placeholder="Custom days..." style="display:none;" />
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+
+    setSelectWithOther(`bindFilterSel_${rowId}`, `bindFilterOther_${rowId}`, chosenFilter);
+    setSelectWithOther(`bindCycleSel_${rowId}`, `bindCycleOther_${rowId}`, String(chosenCycle), buildCycleOptionsHtml(chosenCycle));
+    refreshBindTitles();
+  }
+
+  function removeFilterBindRow(rowId) {
+    const card = document.getElementById(`bindCard_${rowId}`);
+    if (card) card.remove();
+    refreshBindTitles();
+  }
+
+  function refreshBindTitles() {
+    const cards = Array.from(document.querySelectorAll("#filterBindList .filter-bind-card"));
+    cards.forEach((c, idx) => {
+      const labelEl = c.querySelector(".filter-bind-top span");
+      if (!labelEl) return;
+      if (c.dataset.isNewExtra === "1") labelEl.textContent = `Additional Filter (New Row #${idx + 1})`;
+      else labelEl.textContent = `Filter #${idx + 1}`;
+    });
+  }
+
+  function readBindRows() {
+    const cards = Array.from(document.querySelectorAll("#filterBindList .filter-bind-card"));
+    return cards.map(c => {
+      const id = c.dataset.bindId;
+      const filterName = readSelectOrOther(`bindFilterSel_${id}`, `bindFilterOther_${id}`);
+      const cycleRaw = Number(readSelectOrOther(`bindCycleSel_${id}`, `bindCycleOther_${id}`));
+      return {
+        isNewExtra: c.dataset.isNewExtra === "1",
+        filterName: filterName,
+        cycleDays: (!isNaN(cycleRaw) && cycleRaw > 0) ? cycleRaw : getPresetDefaultCycle()
+      };
+    });
+  }
+
   function configureModalForSheet(isRed) {
-    document.getElementById("fRedFilterGroup").style.display = isRed ? "block" : "none";
+    document.getElementById("fRedBindSection").style.display = isRed ? "block" : "none";
     document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
     document.getElementById("fGreenPhoneGroup").style.display = isRed ? "none" : "block";
-    document.getElementById("fGreenPlanGroup").style.display = isRed ? "none" : "block";
+    document.getElementById("fGreenCycleGroup").style.display = isRed ? "none" : "block";
   }
 
   function openCreateModal() {
@@ -1691,19 +2065,16 @@
     document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
     document.getElementById("editRecordId").value = "";
     document.getElementById("fName").value = "";
-
-    const firstRed = (currentState.dropdownOptions.redFilter && currentState.dropdownOptions.redFilter[0]) || "RO Water Filter";
-    const firstGreen = (currentState.dropdownOptions.greenPlan && currentState.dropdownOptions.greenPlan[0]) || "Standard Filter Service";
-    const defaultCycle = currentState.dropdownOptions.cycles && currentState.dropdownOptions.cycles.includes(180)
-      ? "180"
-      : String((currentState.dropdownOptions.cycles && currentState.dropdownOptions.cycles[0]) || 180);
-
-    setSelectWithOther("fRedFilterSelect", "fRedFilterOther", firstRed);
-    document.getElementById("fGreenPhone").value = "";
-    setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", firstGreen);
-    document.getElementById("fUsage").value = "TRUE";
     document.getElementById("fLastDate").value = new Date().toISOString().slice(0, 10);
-    setSelectWithOther("fCycleSelect", "fCycleOther", defaultCycle);
+
+    if (isRed) {
+      document.getElementById("fUsage").value = "TRUE";
+      document.getElementById("filterBindList").innerHTML = "";
+      addFilterBindRow("", null, false);
+    } else {
+      document.getElementById("fGreenPhone").value = "";
+      setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(getPresetDefaultCycle()), buildCycleOptionsHtml());
+    }
 
     document.getElementById("editModal").classList.add("show");
     setTimeout(() => document.getElementById("fName").focus(), 50);
@@ -1718,17 +2089,16 @@
     document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
     document.getElementById("editRecordId").value = rec.id;
     document.getElementById("fName").value = rec.name || "";
+    document.getElementById("fLastDate").value = rec.lastChangedDate || "";
 
     if (isRed) {
-      setSelectWithOther("fRedFilterSelect", "fRedFilterOther", rec.filterOrPhone || "");
       document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
+      document.getElementById("filterBindList").innerHTML = "";
+      addFilterBindRow(rec.filterOrPhone || "", rec.cycleDays || getPresetDefaultCycle(), false);
     } else {
       document.getElementById("fGreenPhone").value = (rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "";
-      setSelectWithOther("fGreenPlanSelect", "fGreenPlanOther", "Standard Filter Service");
+      setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(rec.cycleDays || getPresetDefaultCycle()), buildCycleOptionsHtml(rec.cycleDays));
     }
-
-    document.getElementById("fLastDate").value = rec.lastChangedDate || "";
-    setSelectWithOther("fCycleSelect", "fCycleOther", String(rec.cycleDays || 180));
 
     document.getElementById("editModal").classList.add("show");
     setTimeout(() => document.getElementById("fName").focus(), 50);
@@ -1743,52 +2113,115 @@
     const isRed = (currentState.activeSheet === "RED");
     const name = document.getElementById("fName").value.trim();
     const lastDate = document.getElementById("fLastDate").value;
-    const cycleVal = Number(readSelectOrOther("fCycleSelect", "fCycleOther") || 180);
 
     if (!name) {
       showIsland("Name is required", "err", false);
       return;
     }
 
-    const payload = {
-      "Name": name,
-      "Last Changed Date": lastDate,
-      "Change Cycle (Days)": cycleVal > 0 ? cycleVal : 180
-    };
-
-    if (isRed) {
-      payload["Filter / Service Name"] = readSelectOrOther("fRedFilterSelect", "fRedFilterOther");
-      payload["Machine usage"] = (document.getElementById("fUsage").value === "TRUE");
-    } else {
+    if (!isRed) {
       const phone = document.getElementById("fGreenPhone").value.trim();
-      const plan = readSelectOrOther("fGreenPlanSelect", "fGreenPlanOther");
-      payload["Phone Number"] = phone || plan;
-      payload["Service Plan"] = plan;
+      const cycleVal = Number(readSelectOrOther("fGreenCycleSelect", "fGreenCycleOther") || getPresetDefaultCycle());
+      const payload = {
+        "Name": name,
+        "Phone Number": phone,
+        "Last Changed Date": lastDate,
+        "Change Cycle (Days)": cycleVal > 0 ? cycleVal : getPresetDefaultCycle()
+      };
+      closeModal();
+
+      if (id) {
+        const orig = currentState.records.find(r => String(r.id) === String(id));
+        if (orig) {
+          const sameName = String(payload["Name"]).trim() === String(orig.name || "").trim();
+          const samePhone = String(payload["Phone Number"]).trim() === String(orig.filterOrPhone || "").trim();
+          const sameDate = String(payload["Last Changed Date"]).trim() === String(orig.lastChangedDate || "").trim();
+          const sameCycle = Number(payload["Change Cycle (Days)"]) === Number(orig.cycleDays);
+          if (sameName && samePhone && sameDate && sameCycle) {
+            showIsland("No changes made", "ok", false);
+            return;
+          }
+        }
+        stageOperation(`row_${id}`, { id, type: "update", payload });
+      } else {
+        const newKey = `new_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        stageOperation(newKey, { id: null, type: "create", payload });
+      }
+      return;
     }
 
+    const bindRows = readBindRows();
+    if (bindRows.length === 0) {
+      showIsland("At least one filter is required", "err", false);
+      return;
+    }
+
+    const usageBool = (document.getElementById("fUsage").value === "TRUE");
     closeModal();
 
     if (id) {
-      // Prevent false-positive "Unsaved" if nothing actually changed
+      const firstRow = bindRows[0];
+      const payload = {
+        "Name": name,
+        "Filter / Service Name": firstRow.filterName,
+        "Change Cycle (Days)": firstRow.cycleDays,
+        "Machine usage": usageBool,
+        "Last Changed Date": lastDate
+      };
+
       const orig = currentState.records.find(r => String(r.id) === String(id));
+      let hasAnyStaged = false;
+
       if (orig) {
         const sameName = String(payload["Name"]).trim() === String(orig.name || "").trim();
-        const sameDate = String(payload["Last Changed Date"]).trim() === String(orig.lastChangedDate || "").trim();
+        const sameFilter = String(payload["Filter / Service Name"]).trim() === String(orig.filterOrPhone || "").trim();
         const sameCycle = Number(payload["Change Cycle (Days)"]) === Number(orig.cycleDays);
-        const sameExtra = isRed
-          ? String(payload["Filter / Service Name"]).trim() === String(orig.filterOrPhone || "").trim()
-          : String(payload["Phone Number"]).trim() === String(orig.filterOrPhone || "").trim();
-        const sameUsage = !isRed || (Boolean(payload["Machine usage"]) === Boolean(orig.machineUsage));
-
-        if (sameName && sameDate && sameCycle && sameExtra && sameUsage) {
-          showIsland("No changes made", "ok", false);
-          return;
+        const sameUsage = Boolean(payload["Machine usage"]) === Boolean(orig.machineUsage);
+        const sameDate = String(payload["Last Changed Date"]).trim() === String(orig.lastChangedDate || "").trim();
+        if (!(sameName && sameFilter && sameCycle && sameUsage && sameDate)) {
+          stageOperation(`row_${id}`, { id, type: "update", payload });
+          hasAnyStaged = true;
         }
+      } else {
+        stageOperation(`row_${id}`, { id, type: "update", payload });
+        hasAnyStaged = true;
       }
-      stageOperation(`row_${id}`, { id, type: "update", payload });
+
+      for (let i = 1; i < bindRows.length; i++) {
+        const extra = bindRows[i];
+        const newKey = `new_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`;
+        stageOperation(newKey, {
+          id: null,
+          type: "create",
+          payload: {
+            "Name": name,
+            "Filter / Service Name": extra.filterName,
+            "Change Cycle (Days)": extra.cycleDays,
+            "Machine usage": usageBool,
+            "Last Changed Date": lastDate
+          }
+        });
+        hasAnyStaged = true;
+      }
+
+      if (!hasAnyStaged) {
+        showIsland("No changes made", "ok", false);
+      }
     } else {
-      const newKey = `new_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      stageOperation(newKey, { id: null, type: "create", payload });
+      bindRows.forEach((bItem, idx) => {
+        const newKey = `new_${Date.now()}_${idx}_${Math.floor(Math.random() * 1000)}`;
+        stageOperation(newKey, {
+          id: null,
+          type: "create",
+          payload: {
+            "Name": name,
+            "Filter / Service Name": bItem.filterName,
+            "Change Cycle (Days)": bItem.cycleDays,
+            "Machine usage": usageBool,
+            "Last Changed Date": lastDate
+          }
+        });
+      });
     }
   }
 
