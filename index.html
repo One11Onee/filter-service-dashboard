@@ -308,6 +308,67 @@
     .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
     #searchInput { width: clamp(170px, 18vw, 270px); }
 
+    /* Multi-select Status Dropdown */
+    .multi-select { position: relative; display: inline-block; }
+    .multi-select-btn {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      height: clamp(30px, 2.3vw, 34px);
+      padding: 5px 11px;
+      font-size: clamp(12px, 0.82vw, 13.5px);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 175px;
+      max-width: 260px;
+    }
+    .multi-select-btn span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .multi-select-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      z-index: 50;
+      min-width: 245px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+      padding: 6px;
+    }
+    .multi-select.open .multi-select-menu { display: block; }
+    .multi-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      user-select: none;
+    }
+    .multi-option:hover { background: var(--table-hover); }
+    .multi-option input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .multi-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 2px;
+    }
+
     .table-wrap {
       width: 100%;
       overflow: auto;
@@ -470,7 +531,7 @@
     }
     .modal {
       background: var(--card); border-radius: 16px; padding: 22px 24px;
-      width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+      width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto;
       border: 1px solid var(--border);
       box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
       transform: scale(0.92) translateY(14px);
@@ -490,7 +551,6 @@
     .other-input { margin-top: 7px; }
     .kbd-hint { font-size: 11.5px; color: var(--muted); opacity: 0.85; }
 
-    /* Binded Filter & Cycle Section */
     .bind-section-header {
       display: flex;
       align-items: center;
@@ -533,7 +593,6 @@
 
     .print-footer { display: none; }
 
-    /* ================= MULTI-SCREEN RESPONSIVE ADAPTATION ================= */
     @media (max-width: 1360px) {
       .sync-tag { display: none; }
       .dynamic-island { max-width: 220px; }
@@ -553,12 +612,11 @@
     @media (max-width: 640px) {
       .grid-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
       .controls-left, .controls-right { width: 100%; }
-      #searchInput { width: 100%; }
+      #searchInput, .multi-select, .multi-select-btn { width: 100%; max-width: none; }
       .bind-grid-2 { grid-template-columns: 1fr; }
       .kbd-hint { display: none; }
     }
 
-    /* ================= PRINT STYLESHEET (Ctrl+P) ================= */
     @media print {
       @page {
         size: landscape;
@@ -814,13 +872,37 @@
       <div class="controls-bar">
         <div class="controls-left">
           <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" />
-          <select id="statusFilter" onchange="renderTable()">
-            <option value="ALL">Status: All</option>
-            <option value="REPLACEMENT REQUIRED">Replacement Required (Red)</option>
-            <option value="Pending Notification">Pending Notification (Yellow)</option>
-            <option value="Normal">Normal (White)</option>
-            <option value="Archived">Archived / Deleted</option>
-          </select>
+
+          <div class="multi-select" id="statusMultiSelect">
+            <button type="button" class="multi-select-btn" onclick="toggleStatusDropdown(event)">
+              <span id="statusBtnText">Status: All</span>
+              <span>▾</span>
+            </button>
+            <div class="multi-select-menu" onclick="event.stopPropagation()">
+              <label class="multi-option">
+                <input type="checkbox" id="statusSelectAll" onchange="onStatusAllChange(this.checked)" checked />
+                <b>Select All</b>
+              </label>
+              <div class="multi-divider"></div>
+              <label class="multi-option">
+                <input type="checkbox" class="status-opt-cb" value="REPLACEMENT REQUIRED" onchange="onStatusItemChange()" checked />
+                <span>Replacement Required (Red)</span>
+              </label>
+              <label class="multi-option">
+                <input type="checkbox" class="status-opt-cb" value="Pending Notification" onchange="onStatusItemChange()" checked />
+                <span>Pending Notification (Yellow)</span>
+              </label>
+              <label class="multi-option">
+                <input type="checkbox" class="status-opt-cb" value="Normal" onchange="onStatusItemChange()" checked />
+                <span>Normal (White)</span>
+              </label>
+              <label class="multi-option">
+                <input type="checkbox" class="status-opt-cb" value="Archived" onchange="onStatusItemChange()" checked />
+                <span>Archived / Deleted</span>
+              </label>
+            </div>
+          </div>
+
           <select id="notifFilter" onchange="renderTable()">
             <option value="ALL">Notified: All</option>
             <option value="FALSE">Not Notified (FALSE)</option>
@@ -834,7 +916,7 @@
           <button onclick="resetSortAndFilters()" title="Reset Sort & Filters">Reset</button>
         </div>
         <div class="controls-right">
-          <span class="kbd-hint">Press <b>Enter</b> to Add New</span>
+          <span class="kbd-hint">Press <b>Enter</b> to Add New · <b>Ctrl+P</b> to Print</span>
           <span id="rowCountLabel" style="color:var(--muted);font-size:13px;">0 rows</span>
         </div>
       </div>
@@ -898,6 +980,44 @@
   <span id="printSheetMeta"></span>
 </div>
 
+<!-- Print Status Selector Modal (Triggered on Ctrl+P) -->
+<div id="printSelectModal" class="modal-backdrop">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Select Status to Print</h3>
+      <button class="icon-only" onclick="closePrintModal()">✕</button>
+    </div>
+    <p style="margin:0 0 12px 0;font-size:13px;color:var(--muted);">Choose which status groups to include in landscape print:</p>
+    <div style="border:1px solid var(--border);border-radius:10px;padding:6px;">
+      <label class="multi-option">
+        <input type="checkbox" id="printSelectAll" onchange="onPrintAllChange(this.checked)" checked />
+        <b>Select All</b>
+      </label>
+      <div class="multi-divider"></div>
+      <label class="multi-option">
+        <input type="checkbox" class="print-status-cb" value="REPLACEMENT REQUIRED" onchange="onPrintItemChange()" checked />
+        <span>Replacement Required (Red)</span>
+      </label>
+      <label class="multi-option">
+        <input type="checkbox" class="print-status-cb" value="Pending Notification" onchange="onPrintItemChange()" checked />
+        <span>Pending Notification (Yellow)</span>
+      </label>
+      <label class="multi-option">
+        <input type="checkbox" class="print-status-cb" value="Normal" onchange="onPrintItemChange()" checked />
+        <span>Normal (White)</span>
+      </label>
+      <label class="multi-option">
+        <input type="checkbox" class="print-status-cb" value="Archived" onchange="onPrintItemChange()" checked />
+        <span>Archived / Deleted</span>
+      </label>
+    </div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:18px;">
+      <button onclick="closePrintModal()">Cancel</button>
+      <button class="primary" onclick="executePrintWithSelection()">Print Preview</button>
+    </div>
+  </div>
+</div>
+
 <!-- Dedicated Add New / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
   <div class="modal">
@@ -914,7 +1034,7 @@
 
     <div id="fRedBindSection" style="display:none;">
       <div class="bind-section-header">
-        <span class="bind-section-title">Binded Filters &amp; Change Cycles</span>
+        <span class="bind-section-title">Binded Filters, Cycles &amp; Last Changed Dates</span>
         <button type="button" class="icon-only" onclick="addFilterBindRow()" title="Add Another Filter for This Customer">+ Add Filter</button>
       </div>
       <div id="filterBindList"></div>
@@ -933,7 +1053,7 @@
       <input type="text" id="fGreenPhone" placeholder="e.g. 012-3456789" />
     </div>
 
-    <div class="field">
+    <div class="field" id="fGreenDateGroup" style="display:none;">
       <label>Last Changed Date *</label>
       <input type="date" id="fLastDate" required />
     </div>
@@ -959,6 +1079,14 @@
   const THEME_KEY = "wf_theme_mode";
   const CLIENT_CACHE_PREFIX = "wf_snap_v6_";
 
+  const ALL_STATUS_VALUES = ["REPLACEMENT REQUIRED", "Pending Notification", "Normal", "Archived"];
+  const STATUS_SHORT_LABELS = {
+    "REPLACEMENT REQUIRED": "Replacement",
+    "Pending Notification": "Pending",
+    "Normal": "Normal",
+    "Archived": "Archived"
+  };
+
   const ICONS = {
     bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
     check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -970,6 +1098,7 @@
 
   let islandTimer = null;
   let bindRowSeq = 0;
+  let savedStatusesBeforePrint = null;
 
   let currentState = {
     email: "",
@@ -1005,6 +1134,125 @@
     sortDir: "asc",
     pendingOps: {}
   };
+
+  /* ================= Print Status Selector (Ctrl+P) ================= */
+
+  function openPrintModal() {
+    const currentSel = getSelectedStatuses();
+    const initial = currentSel.length > 0 ? currentSel : ALL_STATUS_VALUES;
+    document.querySelectorAll(".print-status-cb").forEach(cb => {
+      cb.checked = initial.includes(cb.value);
+    });
+    syncPrintSelectAll();
+    document.getElementById("printSelectModal").classList.add("show");
+  }
+
+  function closePrintModal() {
+    document.getElementById("printSelectModal").classList.remove("show");
+  }
+
+  function syncPrintSelectAll() {
+    const cbs = Array.from(document.querySelectorAll(".print-status-cb"));
+    const allCb = document.getElementById("printSelectAll");
+    if (allCb) allCb.checked = cbs.length > 0 && cbs.every(cb => cb.checked);
+  }
+
+  function onPrintAllChange(checked) {
+    document.querySelectorAll(".print-status-cb").forEach(cb => {
+      cb.checked = checked;
+    });
+  }
+
+  function onPrintItemChange() {
+    syncPrintSelectAll();
+  }
+
+  function executePrintWithSelection() {
+    const chosen = Array.from(document.querySelectorAll(".print-status-cb:checked")).map(cb => cb.value);
+    if (chosen.length === 0) {
+      showIsland("Select at least 1 status to print", "err", false);
+      return;
+    }
+    savedStatusesBeforePrint = getSelectedStatuses();
+    setSelectedStatuses(chosen);
+    renderTable();
+    updatePrintFooter();
+    closePrintModal();
+    setTimeout(() => {
+      window.print();
+    }, 80);
+  }
+
+  window.addEventListener("afterprint", () => {
+    if (savedStatusesBeforePrint !== null) {
+      setSelectedStatuses(savedStatusesBeforePrint);
+      savedStatusesBeforePrint = null;
+      renderTable();
+    }
+  });
+
+  /* ================= Multi-Select Status Filter ================= */
+
+  function toggleStatusDropdown(ev) {
+    ev.stopPropagation();
+    const wrap = document.getElementById("statusMultiSelect");
+    if (wrap) wrap.classList.toggle("open");
+  }
+
+  document.addEventListener("click", (ev) => {
+    const wrap = document.getElementById("statusMultiSelect");
+    if (wrap && !wrap.contains(ev.target)) {
+      wrap.classList.remove("open");
+    }
+  });
+
+  function getSelectedStatuses() {
+    return Array.from(document.querySelectorAll(".status-opt-cb:checked")).map(cb => cb.value);
+  }
+
+  function setSelectedStatuses(values) {
+    const targetSet = new Set(values || []);
+    document.querySelectorAll(".status-opt-cb").forEach(cb => {
+      cb.checked = targetSet.has(cb.value);
+    });
+    syncSelectAllCheckbox();
+    updateStatusBtnLabel();
+  }
+
+  function syncSelectAllCheckbox() {
+    const allCbs = Array.from(document.querySelectorAll(".status-opt-cb"));
+    const selectAllCb = document.getElementById("statusSelectAll");
+    if (selectAllCb) {
+      selectAllCb.checked = allCbs.length > 0 && allCbs.every(cb => cb.checked);
+    }
+  }
+
+  function updateStatusBtnLabel() {
+    const selected = getSelectedStatuses();
+    const btnText = document.getElementById("statusBtnText");
+    if (!btnText) return;
+    if (selected.length === ALL_STATUS_VALUES.length) {
+      btnText.textContent = "Status: All";
+    } else if (selected.length === 0) {
+      btnText.textContent = "Status: None";
+    } else {
+      btnText.textContent = "Status: " + selected.map(s => STATUS_SHORT_LABELS[s] || s).join(", ");
+    }
+  }
+
+  function onStatusAllChange(checked) {
+    document.querySelectorAll(".status-opt-cb").forEach(cb => {
+      cb.checked = checked;
+    });
+    updateStatusBtnLabel();
+    renderTable();
+  }
+
+  function onStatusItemChange() {
+    syncSelectAllCheckbox();
+    updateStatusBtnLabel();
+    renderTable();
+  }
 
   function updatePrintFooter() {
     const byEl = document.getElementById("printByLabel");
@@ -1145,6 +1393,7 @@
 
   async function initApp() {
     applyTheme(localStorage.getItem(THEME_KEY) || "auto");
+    updateStatusBtnLabel();
     const email = await resolveZeroTrustEmail();
     if (!email) {
       showAuthBlocked(
@@ -1199,13 +1448,37 @@
   }
 
   document.addEventListener("keydown", (ev) => {
-    const modalOpen = document.getElementById("editModal").classList.contains("show");
-    if (ev.key === "Escape" && modalOpen) {
-      ev.preventDefault();
-      closeModal();
-      return;
+    const printOpen = document.getElementById("printSelectModal").classList.contains("show");
+    if ((ev.ctrlKey || ev.metaKey) && String(ev.key || "").toLowerCase() === "p") {
+      const isDashVisible = document.getElementById("dashboardView").style.display === "block";
+      const modalOpen = document.getElementById("editModal").classList.contains("show");
+      if (isDashVisible && !modalOpen && !printOpen) {
+        ev.preventDefault();
+        openPrintModal();
+        return;
+      }
     }
+
+    const modalOpen = document.getElementById("editModal").classList.contains("show");
+    if (ev.key === "Escape") {
+      if (printOpen) {
+        ev.preventDefault();
+        closePrintModal();
+        return;
+      }
+      if (modalOpen) {
+        ev.preventDefault();
+        closeModal();
+        return;
+      }
+    }
+
     if (ev.key === "Enter") {
+      if (printOpen) {
+        ev.preventDefault();
+        executePrintWithSelection();
+        return;
+      }
       if (modalOpen) {
         ev.preventDefault();
         submitModal();
@@ -1448,13 +1721,17 @@
   }
 
   function quickFilterStatus(st) {
-    document.getElementById("statusFilter").value = st;
+    if (st === "ALL") {
+      setSelectedStatuses(ALL_STATUS_VALUES);
+    } else {
+      setSelectedStatuses([st]);
+    }
     renderTable();
   }
 
   function resetSortAndFilters() {
     document.getElementById("searchInput").value = "";
-    document.getElementById("statusFilter").value = "ALL";
+    setSelectedStatuses(ALL_STATUS_VALUES);
     document.getElementById("notifFilter").value = "ALL";
     document.getElementById("usageFilter").value = "ALL";
     currentState.sortCol = "id";
@@ -1660,7 +1937,7 @@
   function renderTable() {
     const visibleHeaders = renderDynamicHeaders();
     const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-    const stFilter = document.getElementById("statusFilter").value;
+    const selectedStatuses = getSelectedStatuses();
     const ntFilter = document.getElementById("notifFilter").value;
     const usFilter = document.getElementById("usageFilter").value;
     const isRed = (currentState.activeSheet === "RED");
@@ -1798,7 +2075,8 @@
     }
 
     let filtered = combined.filter(r => {
-      if (stFilter !== "ALL" && r.status !== stFilter) return false;
+      const rowStatus = r.isHidden ? "Archived" : r.status;
+      if (!selectedStatuses.includes(rowStatus)) return false;
       if (ntFilter !== "ALL") {
         const wantNotified = (ntFilter === "TRUE");
         if (Boolean(r.notified) !== wantNotified) return false;
@@ -1942,9 +2220,7 @@
   function onBindFilterChange(rowId) {
     const sel = document.getElementById(`bindFilterSel_${rowId}`);
     const otherInp = document.getElementById(`bindFilterOther_${rowId}`);
-    const cycleSel = document.getElementById(`bindCycleSel_${rowId}`);
-    const cycleOther = document.getElementById(`bindCycleOther_${rowId}`);
-    if (!sel || !cycleSel) return;
+    if (!sel) return;
 
     if (sel.value === "__OTHER__") {
       otherInp.style.display = "block";
@@ -1965,7 +2241,7 @@
     }
   }
 
-  function addFilterBindRow(initialFilter = "", initialCycle = null, isNewExtra = false) {
+  function addFilterBindRow(initialFilter = "", initialCycle = null, initialDate = "", isNewExtra = false) {
     bindRowSeq += 1;
     const rowId = bindRowSeq;
     const list = document.getElementById("filterBindList");
@@ -1984,6 +2260,9 @@
         : getPresetDefaultCycle();
     }
 
+    const firstExistingDateInp = list.querySelector('input[type="date"]');
+    const defaultDate = initialDate || (firstExistingDateInp && firstExistingDateInp.value) || new Date().toISOString().slice(0, 10);
+
     const filterOptionsHtml = redList.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("") +
       `<option value="__OTHER__">Other (Type custom...)</option>`;
 
@@ -2000,16 +2279,20 @@
         ${canRemove ? `<button type="button" class="remove-bind-btn" onclick="removeFilterBindRow('${rowId}')">Remove</button>` : ""}
       </div>
       <div class="bind-grid-2">
-        <div class="field" style="margin-bottom:0;">
+        <div class="field" style="margin-bottom:8px;">
           <label>Filter / Service Name</label>
           <select id="bindFilterSel_${rowId}" onchange="onBindFilterChange('${rowId}')">${filterOptionsHtml}</select>
           <input type="text" id="bindFilterOther_${rowId}" class="other-input" placeholder="Type custom filter..." style="display:none;" />
         </div>
-        <div class="field" style="margin-bottom:0;">
+        <div class="field" style="margin-bottom:8px;">
           <label>Change Cycle (Days)</label>
           <select id="bindCycleSel_${rowId}" onchange="toggleOtherInput('bindCycleSel_${rowId}', 'bindCycleOther_${rowId}')">${buildCycleOptionsHtml(chosenCycle)}</select>
           <input type="number" id="bindCycleOther_${rowId}" class="other-input" min="1" placeholder="Custom days..." style="display:none;" />
         </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Last Changed Date *</label>
+        <input type="date" id="bindLastDate_${rowId}" value="${esc(defaultDate)}" required />
       </div>
     `;
     list.appendChild(card);
@@ -2036,15 +2319,18 @@
   }
 
   function readBindRows() {
+    const todayStr = new Date().toISOString().slice(0, 10);
     const cards = Array.from(document.querySelectorAll("#filterBindList .filter-bind-card"));
     return cards.map(c => {
       const id = c.dataset.bindId;
       const filterName = readSelectOrOther(`bindFilterSel_${id}`, `bindFilterOther_${id}`);
       const cycleRaw = Number(readSelectOrOther(`bindCycleSel_${id}`, `bindCycleOther_${id}`));
+      const dateInp = document.getElementById(`bindLastDate_${id}`);
       return {
         isNewExtra: c.dataset.isNewExtra === "1",
         filterName: filterName,
-        cycleDays: (!isNaN(cycleRaw) && cycleRaw > 0) ? cycleRaw : getPresetDefaultCycle()
+        cycleDays: (!isNaN(cycleRaw) && cycleRaw > 0) ? cycleRaw : getPresetDefaultCycle(),
+        lastDate: (dateInp && dateInp.value) || todayStr
       };
     });
   }
@@ -2053,6 +2339,7 @@
     document.getElementById("fRedBindSection").style.display = isRed ? "block" : "none";
     document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
     document.getElementById("fGreenPhoneGroup").style.display = isRed ? "none" : "block";
+    document.getElementById("fGreenDateGroup").style.display = isRed ? "none" : "block";
     document.getElementById("fGreenCycleGroup").style.display = isRed ? "none" : "block";
   }
 
@@ -2061,18 +2348,19 @@
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
+    const todayStr = new Date().toISOString().slice(0, 10);
     document.getElementById("modalTitle").textContent = isRed ? "Add New — RED (Water Filter)" : "Add New — GREEN (Itsaso Filter)";
     document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
     document.getElementById("editRecordId").value = "";
     document.getElementById("fName").value = "";
-    document.getElementById("fLastDate").value = new Date().toISOString().slice(0, 10);
 
     if (isRed) {
       document.getElementById("fUsage").value = "TRUE";
       document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow("", null, false);
+      addFilterBindRow("", null, todayStr, false);
     } else {
       document.getElementById("fGreenPhone").value = "";
+      document.getElementById("fLastDate").value = todayStr;
       setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(getPresetDefaultCycle()), buildCycleOptionsHtml());
     }
 
@@ -2089,14 +2377,14 @@
     document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
     document.getElementById("editRecordId").value = rec.id;
     document.getElementById("fName").value = rec.name || "";
-    document.getElementById("fLastDate").value = rec.lastChangedDate || "";
 
     if (isRed) {
       document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
       document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow(rec.filterOrPhone || "", rec.cycleDays || getPresetDefaultCycle(), false);
+      addFilterBindRow(rec.filterOrPhone || "", rec.cycleDays || getPresetDefaultCycle(), rec.lastChangedDate || "", false);
     } else {
       document.getElementById("fGreenPhone").value = (rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "";
+      document.getElementById("fLastDate").value = rec.lastChangedDate || "";
       setSelectWithOther("fGreenCycleSelect", "fGreenCycleOther", String(rec.cycleDays || getPresetDefaultCycle()), buildCycleOptionsHtml(rec.cycleDays));
     }
 
@@ -2112,7 +2400,6 @@
     const id = document.getElementById("editRecordId").value;
     const isRed = (currentState.activeSheet === "RED");
     const name = document.getElementById("fName").value.trim();
-    const lastDate = document.getElementById("fLastDate").value;
 
     if (!name) {
       showIsland("Name is required", "err", false);
@@ -2120,6 +2407,7 @@
     }
 
     if (!isRed) {
+      const lastDate = document.getElementById("fLastDate").value;
       const phone = document.getElementById("fGreenPhone").value.trim();
       const cycleVal = Number(readSelectOrOther("fGreenCycleSelect", "fGreenCycleOther") || getPresetDefaultCycle());
       const payload = {
@@ -2166,7 +2454,7 @@
         "Filter / Service Name": firstRow.filterName,
         "Change Cycle (Days)": firstRow.cycleDays,
         "Machine usage": usageBool,
-        "Last Changed Date": lastDate
+        "Last Changed Date": firstRow.lastDate
       };
 
       const orig = currentState.records.find(r => String(r.id) === String(id));
@@ -2198,7 +2486,7 @@
             "Filter / Service Name": extra.filterName,
             "Change Cycle (Days)": extra.cycleDays,
             "Machine usage": usageBool,
-            "Last Changed Date": lastDate
+            "Last Changed Date": extra.lastDate
           }
         });
         hasAnyStaged = true;
@@ -2218,7 +2506,7 @@
             "Filter / Service Name": bItem.filterName,
             "Change Cycle (Days)": bItem.cycleDays,
             "Machine usage": usageBool,
-            "Last Changed Date": lastDate
+            "Last Changed Date": bItem.lastDate
           }
         });
       });
