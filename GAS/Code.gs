@@ -1,13 +1,22 @@
 /**
- * Code.gs - Production Enterprise Edition
- * - Dual independent daily emails (RED & GREEN)
- * - MS Graph API (Shared Mailbox) with automatic MailApp fallback
- * - Proactive Client Secret expiration alert
- * - Dynamic IT_Config driven names, permissions, and recipients
+ * Code.gs - Apple-Aligned Desktop Edition + Compatible CodePoint Emoji + Test Mode Enabled
  */
 
-const MAIL_TEST_MODE = false; // Set true only when testing without CC
+const MAIL_TEST_MODE = false; // Enabled for testing; set to false for production
 const SECRET_WARN_DAYS = 30;
+const FALLBACK_MAX_BYTES = 175000; // Only used when falling back to MailApp
+
+const GAS_PROJECT_SETTINGS_URL = "https://script.google.com/u/0/home/projects/1QZGZuhuGlPVixUbUVIqqWWuo9SOr3RQitvzCZ_Hl9ETPvfgniErJj_6m/settings";
+const ENTRA_CREDENTIALS_URL = "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/f8800eba-1305-4266-90eb-3f20101cbadf/objectId/c3423aba-88e2-4baa-a2a7-37f1037e7860/isMSAApp~/false/defaultBlade/Overview/appSignInAudience/AzureADMyOrg/servicePrincipalCreated~/true";
+
+const EMOJI = {
+  redDrop: String.fromCodePoint(0x1F4A7),               // 💧
+  chart: String.fromCodePoint(0x1F4CA),                 // 📊
+  warn: String.fromCodePoint(0x26A0, 0xFE0F),           // ⚠️ (high compatibility across Gmail/Outlook/Apple)
+  key: String.fromCodePoint(0x1F511),                   // 🔑
+  bell: String.fromCodePoint(0x1F514),                  // 🔔
+  check: String.fromCodePoint(0x2713)                   // ✓
+};
 
 function sendDailyFilterEmails() {
   const lock = LockService.getScriptLock();
@@ -20,7 +29,7 @@ function sendDailyFilterEmails() {
     checkSecretExpiration_(redSs, redConfig);
     processSingleSheetReminder_(redSs, redConfig, "RED");
 
-    const greenId = String(redConfig["GREEN_SHEET_ID"] || "").trim();
+    const greenId = extractSpreadsheetId_(redConfig["GREEN_SHEET_ID"]);
     if (greenId) {
       const greenSs = SpreadsheetApp.openById(greenId);
       const greenConfig = readConfigMap_(greenSs);
@@ -49,22 +58,51 @@ function checkSecretExpiration_(ss, config) {
     const itRecipients = splitEmails_(config["ROLE_IT"] || config["TO_EMAIL"]);
     if (itRecipients.length === 0) return;
 
+    const ccList = MAIL_TEST_MODE ? [] : ["lai@sqrtone.com"];
     const expStr = Utilities.formatDate(expDate, tz, "yyyy-MM-dd");
+    const twoYearsLater = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+    const suggestedExpiryStr = Utilities.formatDate(twoYearsLater, tz, "yyyy-MM-dd");
+
     const subject = daysLeft < 0
-      ? `URGENT: MS Graph Client Secret EXPIRED (${expStr})`
-      : `Action Required: MS Graph Client Secret expires in ${daysLeft} day(s) (${expStr})`;
+      ? `${EMOJI.warn} MS Graph Client Secret EXPIRED (${expStr})`
+      : `${EMOJI.key} MS Graph Client Secret Expires in ${daysLeft}d (${expStr})`;
 
     const body = `
-      <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #222;">
-          <h3>MS Graph Client Secret Renewal Reminder</h3>
-          <p><b>Expiration Date:</b> ${escapeHtml_(expStr)}</p>
-          <p><b>Status:</b> ${daysLeft < 0 ? `Expired ${Math.abs(daysLeft)} day(s) ago` : `${daysLeft} day(s) remaining`}</p>
-          <p>Please generate a new client secret in Microsoft Entra ID and update <code>MS_CLIENT_SECRET</code> and <code>MS_SECRET_EXPIRES_AT</code> in GAS Script Properties.</p>
-        </body>
-      </html>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Arial,sans-serif;background:#f2f2f7;padding:12px;color:#1c1c1e;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;padding:22px 24px;border:1px solid #e5e5ea;">
+          <tr>
+            <td>
+              <div style="font-size:12px;font-weight:700;color:#ff9500;text-transform:uppercase;letter-spacing:0.06em;">${EMOJI.key} Entra ID &amp; Apps Script</div>
+              <h2 style="margin:6px 0 14px 0;font-size:21px;font-weight:700;color:#1c1c1e;">MS Graph Client Secret Renewal</h2>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f7;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:14.5px;">
+                <tr>
+                  <td style="padding:5px 0;"><b>Current Expiry:</b> ${escapeHtml_(expStr)}</td>
+                  <td align="right" style="padding:5px 0;"><b>Status:</b> ${daysLeft < 0 ? `Expired ${Math.abs(daysLeft)}d ago` : `${daysLeft}d remaining`}</td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding:8px 0 2px 0;">
+                    <b>2-Year Expiry Date (Copy):</b>
+                    <code style="background:#ffffff;padding:4px 10px;border-radius:7px;border:1px solid #d1d1d6;font-weight:700;font-size:14px;margin-left:6px;">${escapeHtml_(suggestedExpiryStr)}</code>
+                  </td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td valign="middle" style="font-size:14px;color:#3a3a3c;line-height:1.55;">
+                    Generate a new secret in Entra ID, then update <b>MS_CLIENT_SECRET</b> and <b>MS_SECRET_EXPIRES_AT</b> in GAS Script Properties.
+                  </td>
+                  <td valign="middle" align="right" style="white-space:nowrap;padding-left:16px;">
+                    <a href="${escapeHtml_(ENTRA_CREDENTIALS_URL)}" style="display:inline-block;background:#007aff;color:#ffffff;padding:10px 16px;text-decoration:none;border-radius:9px;font-size:13.5px;font-weight:600;margin-right:8px;">${EMOJI.key} Entra ID Credentials</a>
+                    <a href="${escapeHtml_(GAS_PROJECT_SETTINGS_URL)}" style="display:inline-block;background:#f2f2f7;color:#1c1c1e;border:1px solid #c7c7cc;padding:10px 16px;text-decoration:none;border-radius:9px;font-size:13.5px;font-weight:600;">GAS Script Properties</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
     `;
-    dispatchEmailWithFallback_(ss, itRecipients, [], subject, body, "SECRET_ALERT");
+    dispatchEmailWithFallback_(ss, itRecipients, ccList, subject, body, "SECRET_ALERT");
   }
 }
 
@@ -91,6 +129,9 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
   const webAppUrl = ScriptApp.getService().getUrl();
 
   const pendingItems = [];
+  let overdueCount = 0;
+  let dueSoonCount = 0;
+  let maxOverdueDays = 0;
 
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
@@ -105,7 +146,7 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
     if (rawStatus.toUpperCase() === "ARCHIVED") continue;
 
     if (sheetCode === "RED") {
-      const usageVal = getVal_(r, colMap, ["Machine usage", "Machine Usage"]);
+      const usageVal = getVal_(r, colMap, ["Machine Usage", "Machine usage"]);
       const inUse = (usageVal === true || String(usageVal).toUpperCase() === "TRUE");
       if (!inUse) continue;
     }
@@ -122,21 +163,26 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
     const isTarget = (effectiveStatus === "Pending Notification" || effectiveStatus === "REPLACEMENT REQUIRED");
 
     if (isTarget && !notified) {
-      const idVal = getVal_(r, colMap, ["第 1 列", "ID", "No."]);
+      const idVal = getVal_(r, colMap, ["第 1 列", "ID", "No.", ""]);
       const extraInfo = String(getVal_(r, colMap, ["Filter / Service Name", "Phone Number"]) || "").trim();
 
       let dueStr = "-";
       let sortTs = Number.MAX_SAFE_INTEGER;
       let overdueDays = 0;
+      const isUrgent = (effectiveStatus === "REPLACEMENT REQUIRED");
 
       if (nextDateObj) {
-        dueStr = Utilities.formatDate(nextDateObj, tz, "dd/MM/yy");
+        dueStr = Utilities.formatDate(nextDateObj, tz, "dd MMM yy");
         const dueStart = new Date(nextDateObj.getFullYear(), nextDateObj.getMonth(), nextDateObj.getDate()).getTime();
         sortTs = dueStart;
-        if (effectiveStatus === "REPLACEMENT REQUIRED" && todayStart > dueStart) {
+        if (isUrgent && todayStart > dueStart) {
           overdueDays = Math.floor((todayStart - dueStart) / 86400000);
+          if (overdueDays > maxOverdueDays) maxOverdueDays = overdueDays;
         }
       }
+
+      if (isUrgent) overdueCount++;
+      else dueSoonCount++;
 
       pendingItems.push({
         id: (idVal !== "" && idVal !== null) ? idVal : (rowNum - 1),
@@ -146,7 +192,7 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
         sortTs: sortTs,
         status: effectiveStatus,
         overdueDays: overdueDays,
-        isUrgent: (effectiveStatus === "REPLACEMENT REQUIRED")
+        isUrgent: isUrgent
       });
     }
   }
@@ -157,22 +203,41 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
     return a.sortTs - b.sortTs;
   });
 
-  const extraColHeader = (sheetCode === "RED") ? "Filter / Service" : "Phone Number";
-  const dashboardUrl = String(config["DASHBOARD_URL"] || webAppUrl || "").trim();
-  const bossViewUrl = String(config["BOSS_VIEW_URL"] || dashboardUrl).trim();
+  const dashboardUrl = String(config["DASHBOARD_URL"] || "https://itsaso.sqrtone.com").trim();
+  const dateStamp = Utilities.formatDate(now, tz, "dd MMM yyyy");
+  const titleEmoji = (sheetCode === "RED") ? EMOJI.redDrop : EMOJI.chart;
 
   const subject = (pendingItems.length === 0)
-    ? `[${sheetLabel}] Daily Summary: No Pending Replacements`
-    : `[${sheetLabel}] Daily Summary: ${pendingItems.length} Pending`;
+    ? `${titleEmoji} ${sheetLabel} · All Clear (${dateStamp})`
+    : `${titleEmoji} ${sheetLabel} · ${overdueCount} Overdue, ${dueSoonCount} Due Soon (${dateStamp})`;
 
-  const htmlBody = buildEnglishReminderHtml_({
+  const fullHtml = buildAppleAlignedReminderHtml_({
     sheetCode: sheetCode,
     sheetLabel: sheetLabel,
-    extraColHeader: extraColHeader,
+    titleEmoji: titleEmoji,
+    dateStamp: dateStamp,
     pendingItems: pendingItems,
+    overdueCount: overdueCount,
+    dueSoonCount: dueSoonCount,
+    maxOverdueDays: maxOverdueDays,
     dashboardUrl: dashboardUrl,
-    bossViewUrl: bossViewUrl,
-    webAppUrl: webAppUrl
+    webAppUrl: webAppUrl,
+    maxItemsPerCol: null
+  });
+
+  const compactFallbackHtml = buildAppleAlignedReminderHtml_({
+    sheetCode: sheetCode,
+    sheetLabel: sheetLabel,
+    titleEmoji: titleEmoji,
+    dateStamp: dateStamp,
+    pendingItems: pendingItems,
+    overdueCount: overdueCount,
+    dueSoonCount: dueSoonCount,
+    maxOverdueDays: maxOverdueDays,
+    dashboardUrl: dashboardUrl,
+    webAppUrl: webAppUrl,
+    maxItemsPerCol: 25,
+    truncatedNote: "Compact fallback view: showing top 25 per column. Open Dashboard for full list."
   });
 
   const toList = splitEmails_(config["TO_EMAIL"]);
@@ -181,85 +246,151 @@ function processSingleSheetReminder_(ss, config, fallbackCode) {
     throw new Error(`No TO_EMAIL configured in IT_Config for ${sheetCode}`);
   }
 
-  dispatchEmailWithFallback_(ss, toList, ccList, subject, htmlBody, sheetCode);
+  dispatchEmailWithFallback_(ss, toList, ccList, subject, fullHtml, sheetCode, compactFallbackHtml);
 }
 
-function buildEnglishReminderHtml_(ctx) {
-  const topButtons = `
-    <div style="margin-bottom: 14px;">
-      ${ctx.dashboardUrl ? `<a href="${escapeHtml_(ctx.dashboardUrl)}" style="display:inline-block;background:#0d6efd;color:#fff;padding:8px 14px;text-decoration:none;border-radius:6px;font-size:13px;margin-right:8px;">Open Dashboard</a>` : ""}
-      ${ctx.bossViewUrl ? `<a href="${escapeHtml_(ctx.bossViewUrl)}" style="display:inline-block;background:#343a40;color:#fff;padding:8px 14px;text-decoration:none;border-radius:6px;font-size:13px;">Boss Overdue View</a>` : ""}
-    </div>
-  `;
+function buildAppleAlignedReminderHtml_(ctx) {
+  const dashBtn = ctx.dashboardUrl
+    ? `<a href="${escapeHtml_(ctx.dashboardUrl)}" style="display:inline-block;background:#007aff;color:#ffffff;padding:8px 18px;text-decoration:none;border-radius:999px;font-size:13.5px;font-weight:600;">Open Dashboard</a>`
+    : "";
 
   if (ctx.pendingItems.length === 0) {
     return `
-      <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #222;">
-          <h2 style="color: #198754; margin-bottom: 8px;">${escapeHtml_(ctx.sheetLabel)} - All Caught Up</h2>
-          ${topButtons}
-          <p>No active records require replacement notification today.</p>
-        </body>
-      </html>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Arial,sans-serif;background:#f2f2f7;padding:12px;color:#1c1c1e;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;padding:20px 22px;border:1px solid #e5e5ea;">
+          <tr>
+            <td>
+              <div style="font-size:18px;font-weight:700;margin-bottom:6px;">${escapeHtml_(ctx.titleEmoji)} ${escapeHtml_(ctx.sheetLabel)} · All Clear</div>
+              <div style="font-size:14px;color:#6e6e73;margin-bottom:14px;">${escapeHtml_(ctx.dateStamp)} · No pending filter reminders today.</div>
+              ${dashBtn}
+            </td>
+          </tr>
+        </table>
+      </div>
     `;
   }
 
-  let rowsHtml = "";
-  for (let i = 0; i < ctx.pendingItems.length; i++) {
-    const item = ctx.pendingItems[i];
-    const rowBg = item.isUrgent ? "background-color: #f8d7da;" : "background-color: #fff3cd;";
-    const badgeColor = item.isUrgent ? "#842029" : "#664d03";
-    const statusText = item.overdueDays > 0
-      ? `${item.status} (${item.overdueDays}d overdue)`
-      : item.status;
+  const overdueAll = ctx.pendingItems.filter(x => x.isUrgent);
+  const dueSoonAll = ctx.pendingItems.filter(x => !x.isUrgent);
+  const overdueList = ctx.maxItemsPerCol ? overdueAll.slice(0, ctx.maxItemsPerCol) : overdueAll;
+  const dueSoonList = ctx.maxItemsPerCol ? dueSoonAll.slice(0, ctx.maxItemsPerCol) : dueSoonAll;
 
-    const confirmUrl = ctx.webAppUrl
-      ? `${ctx.webAppUrl}?action=confirmDone&sheet=${encodeURIComponent(ctx.sheetCode)}&id=${encodeURIComponent(item.id)}`
-      : "#";
+  const renderColumnRows = (list, isRed) => {
+    if (!list || list.length === 0) {
+      return `
+        <tr>
+          <td style="font-size:13.5px;color:#8e8e93;padding:14px;text-align:center;border:1px dashed #e5e5ea;border-radius:11px;">
+            No items
+          </td>
+        </tr>
+      `;
+    }
 
-    rowsHtml += `
-      <tr style="${rowBg}">
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${escapeHtml_(String(item.id))}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;"><b>${escapeHtml_(item.name)}</b></td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml_(item.extraInfo)}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${escapeHtml_(item.dueStr)}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; color: ${badgeColor}; font-weight: bold;">${escapeHtml_(statusText)}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-          <a href="${confirmUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:5px 10px;text-decoration:none;border-radius:4px;font-size:12px;">Confirm Done</a>
-        </td>
-      </tr>
-    `;
-  }
+    const accent = isRed ? "#ff3b30" : "#ff9500";
+    const bg = isRed ? "#fff5f5" : "#fffbeb";
+    const border = isRed ? "#ffd6d6" : "#fde68a";
+    const tagColor = isRed ? "#d70015" : "#b25000";
+
+    return list.map(item => {
+      const tagText = isRed
+        ? (item.overdueDays > 0 ? `${item.overdueDays}d overdue` : "Overdue")
+        : "Due Soon";
+
+      const notifiedUrl = ctx.webAppUrl
+        ? `${ctx.webAppUrl}?action=markNotified&sheet=${encodeURIComponent(ctx.sheetCode)}&id=${encodeURIComponent(item.id)}`
+        : "#";
+      const doneUrl = ctx.webAppUrl
+        ? `${ctx.webAppUrl}?action=confirmDone&sheet=${encodeURIComponent(ctx.sheetCode)}&id=${encodeURIComponent(item.id)}`
+        : "#";
+
+      return `
+        <tr>
+          <td style="padding-bottom:7px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:${bg};border:1px solid ${border};border-left:4px solid ${accent};border-radius:10px;padding:8px 11px;">
+              <tr>
+                <td width="46" valign="middle" style="font-size:12.5px;font-weight:700;color:#6e6e73;font-variant-numeric:tabular-nums;">
+                  #${escapeHtml_(String(item.id))}
+                </td>
+                <td valign="middle" style="line-height:1.35;">
+                  <div style="font-size:13.5px;font-weight:700;color:#1c1c1e;">${escapeHtml_(item.name)}</div>
+                  <div style="font-size:12px;color:#6e6e73;margin-top:2px;">
+                    ${item.extraInfo ? `${escapeHtml_(item.extraInfo)} · ` : ""}Due: <b style="color:#1c1c1e;">${escapeHtml_(item.dueStr)}</b> · <span style="color:${tagColor};font-weight:700;">${escapeHtml_(tagText)}</span>
+                  </div>
+                </td>
+                <td width="86" valign="middle" align="right" style="white-space:nowrap;">
+                  <a href="${notifiedUrl}" title="Mark as Notified" aria-label="Mark as Notified" style="display:inline-block;background:#ffffff;color:#007aff;border:1px solid #c7c7cc;padding:6px 10px;text-decoration:none;border-radius:8px;font-size:14px;line-height:1;margin-right:5px;">${EMOJI.bell}</a>
+                  <a href="${doneUrl}" title="Confirm Done (Next Cycle)" aria-label="Confirm Done" style="display:inline-block;background:#34c759;color:#ffffff;padding:6px 11px;text-decoration:none;border-radius:8px;font-size:14px;line-height:1;font-weight:700;">${EMOJI.check}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  };
+
+  const noteHtml = ctx.truncatedNote
+    ? `<div style="font-size:12px;color:#8e8e93;margin-top:10px;text-align:center;">${escapeHtml_(ctx.truncatedNote)}</div>`
+    : "";
 
   return `
-    <html>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #222;">
-        <h2 style="margin-bottom: 8px;">${escapeHtml_(ctx.sheetLabel)} Daily Summary (${ctx.pendingItems.length} Pending)</h2>
-        ${topButtons}
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-          <thead>
-            <tr style="background-color: #f1f3f5;">
-              <th style="padding: 8px; border: 1px solid #ddd; width: 48px;">ID</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Customer</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">${escapeHtml_(ctx.extraColHeader)}</th>
-              <th style="padding: 8px; border: 1px solid #ddd; width: 90px;">Next Date</th>
-              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Status</th>
-              <th style="padding: 8px; border: 1px solid #ddd; width: 105px;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
-        <p style="margin-top: 12px; font-size: 12px; color: #6c757d;">
-          Clicking "Confirm Done" sets Last Changed Date to today and automatically calculates the next cycle.
-        </p>
-      </body>
-    </html>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Arial,sans-serif;background:#f2f2f7;padding:12px;color:#1c1c1e;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;padding:18px 20px;border:1px solid #e5e5ea;">
+        <tr>
+          <td>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+              <tr>
+                <td valign="middle">
+                  <span style="font-size:18.5px;font-weight:700;color:#1c1c1e;">${escapeHtml_(ctx.titleEmoji)} ${escapeHtml_(ctx.sheetLabel)}</span>
+                  <span style="font-size:13px;color:#6e6e73;margin-left:10px;">${escapeHtml_(ctx.dateStamp)} · Max Overdue: <b>${ctx.maxOverdueDays}d</b></span>
+                </td>
+                <td valign="middle" align="right">
+                  ${dashBtn}
+                </td>
+              </tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">
+              <tr>
+                <td width="50%" valign="top" style="padding-right:8px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding-bottom:8px;">
+                        <div style="font-size:13.5px;font-weight:700;color:#d70015;background:#fff5f5;border:1px solid #ffd6d6;border-radius:10px;padding:7px 12px;">
+                          Overdue (${overdueAll.length})
+                        </div>
+                      </td>
+                    </tr>
+                    ${renderColumnRows(overdueList, true)}
+                  </table>
+                </td>
+                <td width="50%" valign="top" style="padding-left:8px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding-bottom:8px;">
+                        <div style="font-size:13.5px;font-weight:700;color:#b25000;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:7px 12px;">
+                          Due Soon (${dueSoonAll.length})
+                        </div>
+                      </td>
+                    </tr>
+                    ${renderColumnRows(dueSoonList, false)}
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid #e5e5ea;font-size:12.5px;color:#6e6e73;text-align:center;">
+              ${EMOJI.bell} Mark as Notified · ${EMOJI.check} Confirm Done (Reset to today &amp; roll next cycle)
+            </div>
+            ${noteHtml}
+          </td>
+        </tr>
+      </table>
+    </div>
   `;
 }
 
-function dispatchEmailWithFallback_(ss, toList, ccList, subject, htmlBody, tag) {
+function dispatchEmailWithFallback_(ss, toList, ccList, subject, htmlBody, tag, compactFallbackHtml) {
   const config = readConfigMap_(ss);
   const enableGraph = String(config["ENABLE_MS_GRAPH"] || "TRUE").trim().toUpperCase() === "TRUE";
 
@@ -285,12 +416,17 @@ function dispatchEmailWithFallback_(ss, toList, ccList, subject, htmlBody, tag) 
     }
   }
 
+  let fallbackBody = compactFallbackHtml || htmlBody;
+  if (Utilities.newBlob(fallbackBody).getBytes().length > FALLBACK_MAX_BYTES && compactFallbackHtml) {
+    fallbackBody = compactFallbackHtml;
+  }
+
   const mimeSubject = "=?UTF-8?B?" + Utilities.base64Encode(subject, Utilities.Charset.UTF_8) + "?=";
   MailApp.sendEmail({
     to: toList.join(","),
     cc: ccList.join(","),
     subject: mimeSubject,
-    htmlBody: htmlBody
+    htmlBody: fallbackBody
   });
   Logger.log(`[${tag}] Sent via MailApp fallback to ${toList.join(", ")}`);
 }
@@ -323,6 +459,19 @@ function sendViaMsGraph_(toList, ccList, subject, htmlBody) {
   }
 
   const accessToken = JSON.parse(tokenResp.getContentText()).access_token;
+
+  // Lightweight E5 developer activity heartbeat (low-frequency read-only Graph calls)
+  try {
+    UrlFetchApp.fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(senderEmail)}?$select=id,displayName`, {
+      headers: { Authorization: "Bearer " + accessToken },
+      muteHttpExceptions: true
+    });
+    UrlFetchApp.fetch("https://graph.microsoft.com/v1.0/organization?$select=id,displayName", {
+      headers: { Authorization: "Bearer " + accessToken },
+      muteHttpExceptions: true
+    });
+  } catch (_) {}
+
   const sendUrl = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(senderEmail)}/sendMail`;
 
   const payload = {
@@ -353,6 +502,12 @@ function sendViaMsGraph_(toList, ccList, subject, htmlBody) {
 }
 
 /* ================= Shared Helpers ================= */
+
+function extractSpreadsheetId_(raw) {
+  const s = String(raw || "").trim();
+  const match = s.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : s;
+}
 
 function computeNextChangeDate_(lastChangedDate, cycleDays) {
   const d = new Date(lastChangedDate.getFullYear(), lastChangedDate.getMonth(), lastChangedDate.getDate());
