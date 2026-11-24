@@ -368,6 +368,97 @@
       margin: 4px 2px;
     }
 
+    /* Reusable Real Combobox Component */
+    .combo-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .combo-input {
+      width: 100%;
+      height: 36px;
+      padding-right: 34px !important;
+      font-size: 13.5px;
+    }
+    .combo-toggle {
+      position: absolute;
+      right: 2px;
+      top: 2px;
+      bottom: 2px;
+      width: 30px;
+      height: auto !important;
+      padding: 0 !important;
+      border: none !important;
+      background: transparent !important;
+      color: var(--muted);
+      border-radius: 6px;
+      transform: none !important;
+    }
+    .combo-toggle:hover {
+      background: var(--table-hover) !important;
+      color: var(--text);
+      transform: none !important;
+    }
+    .combo-toggle svg {
+      width: 14px;
+      height: 14px;
+      transition: transform 0.2s ease;
+    }
+    .combo-wrap.open .combo-toggle svg {
+      transform: rotate(180deg);
+    }
+    .combo-menu {
+      display: none;
+      position: fixed;
+      z-index: 120;
+      max-height: 260px;
+      overflow-y: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 16px 36px rgba(2, 6, 23, 0.28);
+      padding: 5px;
+    }
+    .combo-menu.show {
+      display: block;
+    }
+    .combo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      user-select: none;
+    }
+    .combo-item:hover {
+      background: var(--table-hover);
+    }
+    .combo-item.selected {
+      background: color-mix(in srgb, var(--primary) 15%, transparent);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .combo-item-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .combo-item.selected .combo-item-sub {
+      color: var(--primary);
+      opacity: 0.9;
+    }
+    .combo-empty {
+      padding: 8px 10px;
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: center;
+    }
+
     .table-wrap {
       width: 100%;
       overflow: auto;
@@ -668,6 +759,7 @@
       .controls-bar,
       .welcome-overlay,
       .modal-backdrop,
+      .combo-menu,
       #approvalCard,
       #authGateView,
       #auditPageView {
@@ -753,9 +845,6 @@
   </style>
 </head>
 <body>
-
-<datalist id="redFilterDatalist"></datalist>
-<datalist id="cycleDatalist"></datalist>
 
 <div id="welcomeOverlay" class="welcome-overlay">
   <div class="welcome-card">
@@ -1015,6 +1104,9 @@
   <span id="printSheetMeta"></span>
 </div>
 
+<!-- Single Shared Floating Combobox Menu -->
+<div id="globalComboMenu" class="combo-menu" role="listbox"></div>
+
 <!-- Print Status Selector Modal (Triggered on Ctrl+P) -->
 <div id="printSelectModal" class="modal-backdrop">
   <div class="modal" style="max-width:420px;">
@@ -1055,7 +1147,7 @@
 
 <!-- Dedicated Add New / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
-  <div class="modal">
+  <div class="modal" id="editModalBox">
     <div class="modal-header">
       <h3 id="modalTitle">Add New Record</h3>
       <button class="icon-only" onclick="closeModal()">✕</button>
@@ -1095,7 +1187,7 @@
 
     <div class="field" id="fGreenCycleGroup" style="display:none;">
       <label>Change Cycle (Days) *</label>
-      <input type="number" id="fGreenCycleInput" list="cycleDatalist" min="1" placeholder="Select or type days..." />
+      <div id="fGreenCycleComboHost"></div>
     </div>
 
     <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
@@ -1143,6 +1235,7 @@
 
   let islandTimer = null;
   let bindRowSeq = 0;
+  let activeComboId = null;
   let printActiveMode = false;
   let savedStatusesBeforePrint = null;
   let savedSortBeforePrint = null;
@@ -1182,6 +1275,197 @@
     pendingOps: {}
   };
 
+  /* ================= Reusable Combobox Component ================= */
+
+  function getComboOptions(source) {
+    const opts = currentState.dropdownOptions || {};
+    if (source === "redFilter") {
+      const redList = opts.redFilter || [];
+      const filterCycles = opts.filterCycles || {};
+      return redList.map(name => {
+        const mapped = Number(filterCycles[name]);
+        return {
+          value: String(name),
+          label: String(name),
+          sub: (!isNaN(mapped) && mapped > 0) ? `${mapped} Days` : ""
+        };
+      });
+    }
+    if (source === "cycle") {
+      const base = opts.cycles || [90, 180, 270, 360, 540];
+      const filterCycles = opts.filterCycles || {};
+      const cSet = new Set(base.map(n => Number(n)).filter(n => !isNaN(n) && n > 0));
+      Object.values(filterCycles).forEach(v => {
+        const n = Number(v);
+        if (!isNaN(n) && n > 0) cSet.add(n);
+      });
+      return Array.from(cSet)
+        .sort((a, b) => a - b)
+        .map(n => ({
+          value: String(n),
+          label: `${n} Days`,
+          sub: ""
+        }));
+    }
+    return [];
+  }
+
+  function buildComboBoxHtml({ id, value = "", placeholder = "", type = "text", source = "redFilter", onSelect = "", rowId = "" }) {
+    const minAttr = (type === "number") ? ` min="1"` : "";
+    return `
+      <div class="combo-wrap" id="comboWrap_${esc(id)}" data-input-id="${esc(id)}" data-source="${esc(source)}" data-on-select="${esc(onSelect)}" data-row-id="${esc(rowId)}">
+        <input
+          type="${esc(type)}"
+          id="${esc(id)}"
+          class="combo-input"
+          value="${esc(value)}"
+          placeholder="${esc(placeholder)}"${minAttr}
+          autocomplete="off"
+          onfocus="openComboMenu('${esc(id)}', true)"
+          oninput="onComboInput('${esc(id)}')"
+        />
+        <button
+          type="button"
+          class="combo-toggle"
+          tabindex="-1"
+          aria-label="Toggle options"
+          onmousedown="event.preventDefault()"
+          onclick="toggleComboMenu(event, '${esc(id)}')"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+    `;
+  }
+
+  function openComboMenu(inputId, showAll = true) {
+    const wrap = document.getElementById(`comboWrap_${inputId}`);
+    const inp = document.getElementById(inputId);
+    const menu = document.getElementById("globalComboMenu");
+    if (!wrap || !inp || !menu) return;
+
+    document.querySelectorAll(".combo-wrap.open").forEach(el => {
+      if (el !== wrap) el.classList.remove("open");
+    });
+
+    activeComboId = inputId;
+    wrap.classList.add("open");
+
+    const source = wrap.dataset.source || "";
+    const allOptions = getComboOptions(source);
+    const currentVal = String(inp.value || "").trim();
+    const q = showAll ? "" : currentVal.toLowerCase();
+
+    const filtered = q
+      ? allOptions.filter(o => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q))
+      : allOptions;
+
+    if (filtered.length > 0) {
+      menu.innerHTML = filtered.map(o => {
+        const isSel = currentVal.toLowerCase() === o.value.toLowerCase();
+        const subHtml = o.sub ? `<span class="combo-item-sub">${esc(o.sub)}</span>` : "";
+        return `
+          <div class="combo-item${isSel ? " selected" : ""}" role="option" data-val="${esc(o.value)}" onmousedown="event.preventDefault(); selectComboOption(this)">
+            <span>${esc(o.label)}</span>
+            ${subHtml}
+          </div>
+        `;
+      }).join("");
+    } else {
+      menu.innerHTML = `<div class="combo-empty">Custom value: "${esc(currentVal)}"</div>`;
+    }
+
+    menu.classList.add("show");
+    positionComboMenu(wrap, menu);
+  }
+
+  function positionComboMenu(wrap, menu) {
+    const rect = wrap.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const menuMaxH = 260;
+
+    menu.style.width = `${rect.width}px`;
+    menu.style.left = `${rect.left}px`;
+
+    if (spaceBelow < 180 && spaceAbove > spaceBelow) {
+      menu.style.top = "auto";
+      menu.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+      menu.style.maxHeight = `${Math.min(menuMaxH, spaceAbove - 16)}px`;
+    } else {
+      menu.style.bottom = "auto";
+      menu.style.top = `${rect.bottom + 4}px`;
+      menu.style.maxHeight = `${Math.min(menuMaxH, Math.max(120, spaceBelow - 16))}px`;
+    }
+  }
+
+  function toggleComboMenu(ev, inputId) {
+    ev.stopPropagation();
+    const menu = document.getElementById("globalComboMenu");
+    if (activeComboId === inputId && menu && menu.classList.contains("show")) {
+      closeComboMenu();
+      return;
+    }
+    const inp = document.getElementById(inputId);
+    if (inp) inp.focus();
+    openComboMenu(inputId, true);
+  }
+
+  function closeComboMenu() {
+    const menu = document.getElementById("globalComboMenu");
+    if (menu) menu.classList.remove("show");
+    document.querySelectorAll(".combo-wrap.open").forEach(el => el.classList.remove("open"));
+    activeComboId = null;
+  }
+
+  function onComboInput(inputId) {
+    openComboMenu(inputId, false);
+    const wrap = document.getElementById(`comboWrap_${inputId}`);
+    if (wrap && wrap.dataset.onSelect === "onBindFilterChange") {
+      onBindFilterChange(wrap.dataset.rowId);
+    }
+  }
+
+  function selectComboOption(itemEl) {
+    if (!activeComboId || !itemEl) return;
+    const inputId = activeComboId;
+    const wrap = document.getElementById(`comboWrap_${inputId}`);
+    const inp = document.getElementById(inputId);
+    if (inp) {
+      inp.value = itemEl.dataset.val || "";
+    }
+    closeComboMenu();
+    if (wrap && wrap.dataset.onSelect === "onBindFilterChange") {
+      onBindFilterChange(wrap.dataset.rowId);
+    }
+  }
+
+  function repositionActiveCombo() {
+    if (!activeComboId) return;
+    const wrap = document.getElementById(`comboWrap_${activeComboId}`);
+    const menu = document.getElementById("globalComboMenu");
+    if (wrap && menu && menu.classList.contains("show")) {
+      positionComboMenu(wrap, menu);
+    }
+  }
+
+  window.addEventListener("resize", repositionActiveCombo);
+  window.addEventListener("scroll", repositionActiveCombo, true);
+
+  document.addEventListener("click", (ev) => {
+    document.querySelectorAll(".multi-select.open").forEach(wrap => {
+      if (!wrap.contains(ev.target)) wrap.classList.remove("open");
+    });
+
+    if (activeComboId) {
+      const wrap = document.getElementById(`comboWrap_${activeComboId}`);
+      const menu = document.getElementById("globalComboMenu");
+      if (wrap && !wrap.contains(ev.target) && menu && !menu.contains(ev.target)) {
+        closeComboMenu();
+      }
+    }
+  });
+
   function getSessionUserLabelKey(email) {
     return `${SESSION_USER_LABEL_PREFIX}${String(email || "").trim().toLowerCase()}`;
   }
@@ -1197,6 +1481,7 @@
   /* ================= Print Status Selector (Ctrl+P) ================= */
 
   function openPrintModal() {
+    closeComboMenu();
     const currentSel = getCheckedValues("print-status-cb");
     const initial = currentSel.length > 0 ? currentSel : ALL_STATUS_VALUES;
     document.querySelectorAll(".print-status-cb").forEach(cb => {
@@ -1271,12 +1556,6 @@
     const wrap = document.getElementById(containerId);
     if (wrap) wrap.classList.toggle("open");
   }
-
-  document.addEventListener("click", (ev) => {
-    document.querySelectorAll(".multi-select.open").forEach(wrap => {
-      if (!wrap.contains(ev.target)) wrap.classList.remove("open");
-    });
-  });
 
   function getCheckedValues(cbClass) {
     return Array.from(document.querySelectorAll(`.${cbClass}:checked`)).map(cb => cb.value);
@@ -1505,12 +1784,24 @@
     return "";
   }
 
+  function mountGreenCycleCombo(initialVal = "") {
+    const host = document.getElementById("fGreenCycleComboHost");
+    if (!host) return;
+    host.innerHTML = buildComboBoxHtml({
+      id: "fGreenCycleInput",
+      value: initialVal,
+      placeholder: "Select or type days...",
+      type: "number",
+      source: "cycle"
+    });
+  }
+
   async function initApp() {
     applyTheme(localStorage.getItem(THEME_KEY) || "auto");
     updateStatusBtnLabel();
     updateNotifBtnLabel();
     updateUsageBtnLabel();
-    syncDatalists();
+    mountGreenCycleCombo(String(getPresetDefaultCycle()));
 
     const email = await resolveZeroTrustEmail();
     if (!email) {
@@ -1579,6 +1870,11 @@
 
     const modalOpen = document.getElementById("editModal").classList.contains("show");
     if (ev.key === "Escape") {
+      if (activeComboId) {
+        ev.preventDefault();
+        closeComboMenu();
+        return;
+      }
       if (printOpen) {
         ev.preventDefault();
         closePrintModal();
@@ -1659,33 +1955,6 @@
     return cycles[0] || 180;
   }
 
-  function syncDatalists() {
-    const redList = (currentState.dropdownOptions && currentState.dropdownOptions.redFilter) || [];
-    const cycles = (currentState.dropdownOptions && currentState.dropdownOptions.cycles) || [90, 180, 270, 360, 540];
-    const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
-
-    const fDl = document.getElementById("redFilterDatalist");
-    if (fDl) {
-      fDl.innerHTML = redList.map(name => {
-        const mapped = filterCycles[name];
-        const hint = (mapped && Number(mapped) > 0) ? `${Number(mapped)} Days` : "";
-        return `<option value="${esc(name)}" label="${esc(hint)}"></option>`;
-      }).join("");
-    }
-
-    const cSet = new Set(cycles.map(n => Number(n)).filter(n => !isNaN(n) && n > 0));
-    Object.values(filterCycles).forEach(v => {
-      const n = Number(v);
-      if (!isNaN(n) && n > 0) cSet.add(n);
-    });
-    const sortedCycles = Array.from(cSet).sort((a, b) => a - b);
-
-    const cDl = document.getElementById("cycleDatalist");
-    if (cDl) {
-      cDl.innerHTML = sortedCycles.map(n => `<option value="${esc(String(n))}" label="${esc(String(n))} Days"></option>`).join("");
-    }
-  }
-
   function applyDashboardPayload(data, isFromCache) {
     currentState.actualRole = data.actualRole;
     currentState.effectiveRole = data.effectiveRole;
@@ -1723,7 +1992,6 @@
       } catch (_) {}
     }
 
-    syncDatalists();
     updatePrintFooter();
 
     const badge = document.getElementById("userBadge");
@@ -2216,7 +2484,6 @@
         || String(r.filterOrPhone).toLowerCase().includes(q);
     });
 
-    // Compute visible group count & min ID strictly on filtered rows so filtered views never show stale counts or split groups
     const visibleNameCounts = {};
     const visibleNameMinId = {};
     for (const item of filtered) {
@@ -2328,7 +2595,7 @@
     stageOperation(opKey, { id, type, reason });
   }
 
-  /* ================= Single-Line Combo Binded Filter Rows (RED) ================= */
+  /* ================= Unified Binded Filter Rows (RED) ================= */
 
   function onBindFilterChange(rowId) {
     const inp = document.getElementById(`bindFilterInp_${rowId}`);
@@ -2345,21 +2612,16 @@
     }
   }
 
-  function addFilterBindRow(initialFilter = "", initialCycle = null, initialDate = "", isNewExtra = false) {
+  function addFilterBindRow(opts = {}) {
     bindRowSeq += 1;
-    const rowId = bindRowSeq;
+    const rowId = String(bindRowSeq);
     const list = document.getElementById("filterBindList");
-    const redList = (currentState.dropdownOptions && currentState.dropdownOptions.redFilter) || [];
     const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
 
-    let chosenFilter = initialFilter;
-    if (chosenFilter === "__EMPTY__") {
-      chosenFilter = "";
-    } else if (!chosenFilter && redList.length > 0) {
-      chosenFilter = redList[0];
-    }
+    // Always default to blank ("") for new rows — never auto-fill the first filter option
+    const chosenFilter = String(opts.filter || "");
 
-    let chosenCycle = initialCycle;
+    let chosenCycle = opts.cycle;
     if (chosenCycle === null || chosenCycle === undefined || chosenCycle === "") {
       chosenCycle = (chosenFilter && filterCycles[chosenFilter] && Number(filterCycles[chosenFilter]) > 0)
         ? Number(filterCycles[chosenFilter])
@@ -2367,28 +2629,51 @@
     }
 
     const firstExistingDateInp = list.querySelector('input[type="date"]');
-    const defaultDate = initialDate || (firstExistingDateInp && firstExistingDateInp.value) || new Date().toISOString().slice(0, 10);
+    const defaultDate = opts.date || (firstExistingDateInp && firstExistingDateInp.value) || new Date().toISOString().slice(0, 10);
+
+    const isEditing = Boolean(document.getElementById("editRecordId").value);
+    const isNewExtra = (opts.isNewExtra !== undefined && opts.isNewExtra !== null)
+      ? Boolean(opts.isNewExtra)
+      : (isEditing && list.children.length > 0);
 
     const card = document.createElement("div");
     card.className = "filter-bind-card";
     card.id = `bindCard_${rowId}`;
-    card.dataset.bindId = String(rowId);
+    card.dataset.bindId = rowId;
     card.dataset.isNewExtra = isNewExtra ? "1" : "0";
 
     const canRemove = list.children.length > 0;
+    const filterComboHtml = buildComboBoxHtml({
+      id: `bindFilterInp_${rowId}`,
+      value: chosenFilter,
+      placeholder: "Select or type filter...",
+      type: "text",
+      source: "redFilter",
+      onSelect: "onBindFilterChange",
+      rowId: rowId
+    });
+    const cycleComboHtml = buildComboBoxHtml({
+      id: `bindCycleInp_${rowId}`,
+      value: String(chosenCycle),
+      placeholder: "Days...",
+      type: "number",
+      source: "cycle",
+      rowId: rowId
+    });
+
     card.innerHTML = `
       <div class="filter-bind-top">
-        <span>${isNewExtra ? "Additional Filter (New Row)" : `Filter #${list.children.length + 1}`}</span>
+        <span></span>
         ${canRemove ? `<button type="button" class="remove-bind-btn" onclick="removeFilterBindRow('${rowId}')">Remove</button>` : ""}
       </div>
       <div class="bind-grid-2">
         <div class="field" style="margin-bottom:8px;">
-          <label>Filter / Service Name</label>
-          <input type="text" id="bindFilterInp_${rowId}" list="redFilterDatalist" value="${esc(chosenFilter)}" placeholder="Select or type filter..." oninput="onBindFilterChange('${rowId}')" onchange="onBindFilterChange('${rowId}')" />
+          <label>Filter / Service Name *</label>
+          ${filterComboHtml}
         </div>
         <div class="field" style="margin-bottom:8px;">
           <label>Change Cycle (Days)</label>
-          <input type="number" id="bindCycleInp_${rowId}" list="cycleDatalist" min="1" value="${esc(String(chosenCycle))}" placeholder="Days..." />
+          ${cycleComboHtml}
         </div>
       </div>
       <div class="field" style="margin-bottom:0;">
@@ -2401,6 +2686,7 @@
   }
 
   function removeFilterBindRow(rowId) {
+    closeComboMenu();
     const card = document.getElementById(`bindCard_${rowId}`);
     if (card) card.remove();
     refreshBindTitles();
@@ -2426,6 +2712,7 @@
       const dateInp = document.getElementById(`bindLastDate_${id}`);
       const cycleRaw = Number(cInp ? cInp.value : 0);
       return {
+        bindId: id,
         isNewExtra: c.dataset.isNewExtra === "1",
         filterName: fInp ? fInp.value.trim() : "",
         cycleDays: (!isNaN(cycleRaw) && cycleRaw > 0) ? cycleRaw : getPresetDefaultCycle(),
@@ -2443,7 +2730,7 @@
   }
 
   function openCreateModal() {
-    syncDatalists();
+    closeComboMenu();
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
@@ -2456,11 +2743,11 @@
     if (isRed) {
       document.getElementById("fUsage").value = "TRUE";
       document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow("__EMPTY__", null, todayStr, false);
+      addFilterBindRow({ date: todayStr });
     } else {
       document.getElementById("fGreenPhone").value = "";
       document.getElementById("fLastDate").value = todayStr;
-      document.getElementById("fGreenCycleInput").value = String(getPresetDefaultCycle());
+      mountGreenCycleCombo(String(getPresetDefaultCycle()));
     }
 
     document.getElementById("editModal").classList.add("show");
@@ -2468,7 +2755,7 @@
   }
 
   function openEditModal(rec) {
-    syncDatalists();
+    closeComboMenu();
     const isRed = (currentState.activeSheet === "RED");
     configureModalForSheet(isRed);
 
@@ -2480,11 +2767,16 @@
     if (isRed) {
       document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
       document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow(rec.filterOrPhone || "", rec.cycleDays || getPresetDefaultCycle(), rec.lastChangedDate || "", false);
+      addFilterBindRow({
+        filter: rec.filterOrPhone || "",
+        cycle: rec.cycleDays || getPresetDefaultCycle(),
+        date: rec.lastChangedDate || "",
+        isNewExtra: false
+      });
     } else {
       document.getElementById("fGreenPhone").value = (rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "";
       document.getElementById("fLastDate").value = rec.lastChangedDate || "";
-      document.getElementById("fGreenCycleInput").value = String(rec.cycleDays || getPresetDefaultCycle());
+      mountGreenCycleCombo(String(rec.cycleDays || getPresetDefaultCycle()));
     }
 
     document.getElementById("editModal").classList.add("show");
@@ -2492,23 +2784,27 @@
   }
 
   function closeModal() {
+    closeComboMenu();
     document.getElementById("editModal").classList.remove("show");
   }
 
   function submitModal() {
+    closeComboMenu();
     const id = document.getElementById("editRecordId").value;
     const isRed = (currentState.activeSheet === "RED");
     const name = document.getElementById("fName").value.trim();
 
     if (!name) {
       showIsland("Name is required", "err", false);
+      document.getElementById("fName").focus();
       return;
     }
 
     if (!isRed) {
       const lastDate = document.getElementById("fLastDate").value;
       const phone = document.getElementById("fGreenPhone").value.trim();
-      const cycleVal = Number(document.getElementById("fGreenCycleInput").value || getPresetDefaultCycle());
+      const cycleInp = document.getElementById("fGreenCycleInput");
+      const cycleVal = Number((cycleInp && cycleInp.value) || getPresetDefaultCycle());
       const payload = {
         "Name": name,
         "Phone Number": phone,
@@ -2540,6 +2836,17 @@
     const bindRows = readBindRows();
     if (bindRows.length === 0) {
       showIsland("At least one filter is required", "err", false);
+      return;
+    }
+
+    const emptyRow = bindRows.find(r => !r.filterName);
+    if (emptyRow) {
+      showIsland("Please select or type a Filter / Service Name", "err", false);
+      const targetInp = document.getElementById(`bindFilterInp_${emptyRow.bindId}`);
+      if (targetInp) {
+        targetInp.focus();
+        openComboMenu(`bindFilterInp_${emptyRow.bindId}`, true);
+      }
       return;
     }
 
