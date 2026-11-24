@@ -2353,13 +2353,15 @@
     const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
 
     let chosenFilter = initialFilter;
-    if (!chosenFilter && redList.length > 0) {
+    if (chosenFilter === "__EMPTY__") {
+      chosenFilter = "";
+    } else if (!chosenFilter && redList.length > 0) {
       chosenFilter = redList[0];
     }
 
     let chosenCycle = initialCycle;
     if (chosenCycle === null || chosenCycle === undefined || chosenCycle === "") {
-      chosenCycle = (filterCycles[chosenFilter] && Number(filterCycles[chosenFilter]) > 0)
+      chosenCycle = (chosenFilter && filterCycles[chosenFilter] && Number(filterCycles[chosenFilter]) > 0)
         ? Number(filterCycles[chosenFilter])
         : getPresetDefaultCycle();
     }
@@ -2454,7 +2456,7 @@
     if (isRed) {
       document.getElementById("fUsage").value = "TRUE";
       document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow("", null, todayStr, false);
+      addFilterBindRow("__EMPTY__", null, todayStr, false);
     } else {
       document.getElementById("fGreenPhone").value = "";
       document.getElementById("fLastDate").value = todayStr;
