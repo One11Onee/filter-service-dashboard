@@ -219,7 +219,7 @@
 
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(5px, 0.5vw, 8px); justify-self: end; }
 
-    select, input, button {
+    input, button {
       padding: 5px clamp(8px, 0.7vw, 12px);
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -229,7 +229,7 @@
       height: clamp(30px, 2.3vw, 34px);
       transition: all 0.22s var(--ease-ios);
     }
-    select:focus, input:focus {
+    input:focus, .combo-display-btn:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
@@ -246,6 +246,7 @@
     }
     button:hover { background: var(--table-hover); transform: translateY(-1px); }
     button:active { transform: scale(0.95); }
+    button:disabled { opacity: 0.65; cursor: not-allowed; transform: none !important; }
     button.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
     button.primary:hover { background: var(--primary-hover); }
     button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
@@ -308,6 +309,7 @@
     .controls-left, .controls-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
     #searchInput { width: clamp(170px, 18vw, 270px); }
 
+    /* ================= REUSABLE COMPONENT 1: MULTI-CHECK DROPDOWN ================= */
     .multi-select { position: relative; display: inline-block; }
     .multi-select-btn {
       background: var(--card);
@@ -325,7 +327,7 @@
       min-width: 155px;
       max-width: 260px;
     }
-    .multi-select-btn span {
+    .multi-select-btn span:first-child {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -340,7 +342,7 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
       padding: 6px;
     }
     .multi-select.open .multi-select-menu { display: block; }
@@ -368,7 +370,9 @@
       margin: 4px 2px;
     }
 
-    /* Reusable Real Combobox Component */
+    /* ================= REUSABLE COMPONENT 2: UNIFIED DROPDOWN / COMBOBOX ================= */
+    .combo-host { display: inline-flex; align-items: center; }
+    .combo-host.full { display: block; width: 100%; }
     .combo-wrap {
       position: relative;
       display: flex;
@@ -380,6 +384,46 @@
       height: 36px;
       padding-right: 34px !important;
       font-size: 13.5px;
+    }
+    .combo-display-btn {
+      width: 100%;
+      height: 36px;
+      padding: 5px 10px 5px 12px;
+      justify-content: space-between;
+      text-align: left;
+      font-size: 13.5px;
+      font-weight: 500;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transform: none !important;
+    }
+    .combo-display-btn:hover {
+      background: var(--table-hover);
+      transform: none !important;
+    }
+    .combo-wrap.compact .combo-input,
+    .combo-wrap.compact .combo-display-btn {
+      height: clamp(30px, 2.3vw, 34px);
+      font-size: clamp(12px, 0.82vw, 13.5px);
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+    .combo-display-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .combo-chevron {
+      width: 14px;
+      height: 14px;
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .combo-wrap.open .combo-chevron {
+      transform: rotate(180deg);
     }
     .combo-toggle {
       position: absolute;
@@ -399,14 +443,6 @@
       background: var(--table-hover) !important;
       color: var(--text);
       transform: none !important;
-    }
-    .combo-toggle svg {
-      width: 14px;
-      height: 14px;
-      transition: transform 0.2s ease;
-    }
-    .combo-wrap.open .combo-toggle svg {
-      transform: rotate(180deg);
     }
     .combo-menu {
       display: none;
@@ -637,7 +673,7 @@
     .modal-header h3 { margin: 0; font-size: 16px; }
     .field { margin-bottom: 12px; }
     .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
-    .field input, .field select { width: 100%; height: 36px; font-size: 13.5px; }
+    .field input { width: 100%; height: 36px; font-size: 13.5px; }
     .kbd-hint { font-size: 11.5px; color: var(--muted); opacity: 0.85; }
 
     .bind-section-header {
@@ -766,9 +802,7 @@
         display: none !important;
       }
 
-      main {
-        padding: 10px 0 0 0 !important;
-      }
+      main { padding: 10px 0 0 0 !important; }
 
       .grid-kpis {
         grid-template-columns: repeat(6, 1fr) !important;
@@ -783,10 +817,7 @@
         cursor: default !important;
       }
 
-      .kpi .val {
-        font-size: 16px !important;
-        margin-top: 2px !important;
-      }
+      .kpi .val { font-size: 16px !important; margin-top: 2px !important; }
 
       .card {
         box-shadow: none !important;
@@ -816,15 +847,9 @@
         white-space: normal !important;
       }
 
-      th:last-child,
-      td:last-child {
-        display: none !important;
-      }
+      th:last-child, td:last-child { display: none !important; }
 
-      .badge {
-        padding: 1px 6px !important;
-        font-size: 10px !important;
-      }
+      .badge { padding: 1px 6px !important; font-size: 10px !important; }
 
       .print-footer {
         display: flex !important;
@@ -873,15 +898,8 @@
   </div>
 
   <div class="toolbar" id="appToolbar" style="display:none;">
-    <select id="sheetSelect" onchange="loadData(false)"></select>
-
-    <select id="viewAsSelect" style="display:none;" onchange="onViewAsChange()">
-      <option value="">View As: IT Admin</option>
-      <option value="BOSS">View As: Boss</option>
-      <option value="ADMIN_H">View As: Hafila</option>
-      <option value="ADMIN_A">View As: Atira</option>
-      <option value="ADMIN_L">View As: Ms. Lai</option>
-    </select>
+    <div id="sheetSelectHost" class="combo-host" style="min-width:190px;"></div>
+    <div id="viewAsSelectHost" class="combo-host" style="display:none;min-width:155px;"></div>
 
     <button id="batchSaveBtn" class="warning" style="display:none;" onclick="commitBatchChanges()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -900,7 +918,7 @@
       <span id="themeText">Auto</span>
     </button>
 
-    <button class="primary" onclick="openCreateModal()" title="Shortcut: Press Enter">
+    <button class="primary" onclick="openRecordModal(null)" title="Shortcut: Press Enter">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span id="addNewBtnText">Add New</span>
     </button>
@@ -962,81 +980,9 @@
       <div class="controls-bar">
         <div class="controls-left">
           <input type="text" id="searchInput" placeholder="Search customer, ID, or details..." oninput="renderTable()" />
-
-          <div class="multi-select" id="statusMultiSelect">
-            <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'statusMultiSelect')">
-              <span id="statusBtnText">Status: All</span>
-              <span>▾</span>
-            </button>
-            <div class="multi-select-menu" onclick="event.stopPropagation()">
-              <label class="multi-option">
-                <input type="checkbox" id="statusSelectAll" onchange="onMultiAllChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel, this.checked)" checked />
-                <b>Select All</b>
-              </label>
-              <div class="multi-divider"></div>
-              <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="REPLACEMENT REQUIRED" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
-                <span>Replacement Required (Red)</span>
-              </label>
-              <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="Pending Notification" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
-                <span>Pending Notification (Yellow)</span>
-              </label>
-              <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="Normal" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
-                <span>Normal (White)</span>
-              </label>
-              <label class="multi-option">
-                <input type="checkbox" class="status-opt-cb" value="Archived" onchange="onMultiItemChange('status-opt-cb', 'statusSelectAll', updateStatusBtnLabel)" checked />
-                <span>Archived / Deleted</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="multi-select" id="notifMultiSelect">
-            <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'notifMultiSelect')">
-              <span id="notifBtnText">Notified: All</span>
-              <span>▾</span>
-            </button>
-            <div class="multi-select-menu" onclick="event.stopPropagation()">
-              <label class="multi-option">
-                <input type="checkbox" id="notifSelectAll" onchange="onMultiAllChange('notif-opt-cb', 'notifSelectAll', updateNotifBtnLabel, this.checked)" checked />
-                <b>Select All</b>
-              </label>
-              <div class="multi-divider"></div>
-              <label class="multi-option">
-                <input type="checkbox" class="notif-opt-cb" value="FALSE" onchange="onMultiItemChange('notif-opt-cb', 'notifSelectAll', updateNotifBtnLabel)" checked />
-                <span>Not Notified (FALSE)</span>
-              </label>
-              <label class="multi-option">
-                <input type="checkbox" class="notif-opt-cb" value="TRUE" onchange="onMultiItemChange('notif-opt-cb', 'notifSelectAll', updateNotifBtnLabel)" checked />
-                <span>Already Notified (TRUE)</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="multi-select" id="usageMultiSelect" style="display:none;">
-            <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, 'usageMultiSelect')">
-              <span id="usageBtnText">Machine Usage: All</span>
-              <span>▾</span>
-            </button>
-            <div class="multi-select-menu" onclick="event.stopPropagation()">
-              <label class="multi-option">
-                <input type="checkbox" id="usageSelectAll" onchange="onMultiAllChange('usage-opt-cb', 'usageSelectAll', updateUsageBtnLabel, this.checked)" checked />
-                <b>Select All</b>
-              </label>
-              <div class="multi-divider"></div>
-              <label class="multi-option">
-                <input type="checkbox" class="usage-opt-cb" value="TRUE" onchange="onMultiItemChange('usage-opt-cb', 'usageSelectAll', updateUsageBtnLabel)" checked />
-                <span>Machine Usage: TRUE</span>
-              </label>
-              <label class="multi-option">
-                <input type="checkbox" class="usage-opt-cb" value="FALSE" onchange="onMultiItemChange('usage-opt-cb', 'usageSelectAll', updateUsageBtnLabel)" checked />
-                <span>Machine Usage: FALSE</span>
-              </label>
-            </div>
-          </div>
-
+          <div class="multi-select" id="statusMultiSelect"></div>
+          <div class="multi-select" id="notifMultiSelect"></div>
+          <div class="multi-select" id="usageMultiSelect" style="display:none;"></div>
           <button onclick="resetSortAndFilters()" title="Reset Sort & Filters">Reset</button>
         </div>
         <div class="controls-right">
@@ -1064,17 +1010,7 @@
         </div>
         <div class="controls-right">
           <input type="text" id="auditSearchInput" placeholder="Search actor, customer, ID, reason..." oninput="renderAuditPage()" style="width:260px;" />
-          <select id="auditActionFilter" onchange="renderAuditPage()">
-            <option value="ALL">All Actions</option>
-            <option value="MARK_NOTIFIED">MARK_NOTIFIED</option>
-            <option value="CONFIRM_DONE">CONFIRM_DONE</option>
-            <option value="BATCH_UPDATE">BATCH_UPDATE</option>
-            <option value="BATCH_CREATE">BATCH_CREATE</option>
-            <option value="REQ_DELETE">REQ_DELETE</option>
-            <option value="APPROVE_DELETE">APPROVE_DELETE</option>
-            <option value="DELETE_HIDE">DELETE_HIDE</option>
-            <option value="RESTORE">RESTORE</option>
-          </select>
+          <div id="auditActionFilterHost" class="combo-host" style="min-width:170px;"></div>
           <button onclick="fetchAuditLogsNow()">Refresh Logs</button>
           <span id="auditCountLabel" style="color:var(--muted);font-size:13px;">0 logs</span>
         </div>
@@ -1104,7 +1040,7 @@
   <span id="printSheetMeta"></span>
 </div>
 
-<!-- Single Shared Floating Combobox Menu -->
+<!-- Single Shared Floating Dropdown Menu -->
 <div id="globalComboMenu" class="combo-menu" role="listbox"></div>
 
 <!-- Print Status Selector Modal (Triggered on Ctrl+P) -->
@@ -1115,29 +1051,7 @@
       <button class="icon-only" onclick="closePrintModal()">✕</button>
     </div>
     <p style="margin:0 0 12px 0;font-size:13px;color:var(--muted);">Choose which status groups to include in landscape print (ordered top-to-bottom as checked):</p>
-    <div style="border:1px solid var(--border);border-radius:10px;padding:6px;">
-      <label class="multi-option">
-        <input type="checkbox" id="printSelectAll" onchange="onPrintAllChange(this.checked)" checked />
-        <b>Select All</b>
-      </label>
-      <div class="multi-divider"></div>
-      <label class="multi-option">
-        <input type="checkbox" class="print-status-cb" value="REPLACEMENT REQUIRED" onchange="onPrintItemChange()" checked />
-        <span>Replacement Required (Red)</span>
-      </label>
-      <label class="multi-option">
-        <input type="checkbox" class="print-status-cb" value="Pending Notification" onchange="onPrintItemChange()" checked />
-        <span>Pending Notification (Yellow)</span>
-      </label>
-      <label class="multi-option">
-        <input type="checkbox" class="print-status-cb" value="Normal" onchange="onPrintItemChange()" checked />
-        <span>Normal (White)</span>
-      </label>
-      <label class="multi-option">
-        <input type="checkbox" class="print-status-cb" value="Archived" onchange="onPrintItemChange()" checked />
-        <span>Archived / Deleted</span>
-      </label>
-    </div>
+    <div id="printChecklistHost" style="border:1px solid var(--border);border-radius:10px;padding:6px;"></div>
     <div style="display:flex;justify-content:center;gap:12px;margin-top:18px;">
       <button onclick="closePrintModal()">Cancel</button>
       <button class="primary" onclick="executePrintWithSelection()">Print Preview</button>
@@ -1147,7 +1061,7 @@
 
 <!-- Dedicated Add New / Edit Modal -->
 <div id="editModal" class="modal-backdrop">
-  <div class="modal" id="editModalBox">
+  <div class="modal">
     <div class="modal-header">
       <h3 id="modalTitle">Add New Record</h3>
       <button class="icon-only" onclick="closeModal()">✕</button>
@@ -1169,10 +1083,7 @@
 
     <div class="field" id="fUsageGroup">
       <label>Machine Usage</label>
-      <select id="fUsage">
-        <option value="TRUE">TRUE</option>
-        <option value="FALSE">FALSE</option>
-      </select>
+      <div id="fUsageHost" class="combo-host full"></div>
     </div>
 
     <div class="field" id="fGreenPhoneGroup" style="display:none;">
@@ -1187,7 +1098,7 @@
 
     <div class="field" id="fGreenCycleGroup" style="display:none;">
       <label>Change Cycle (Days) *</label>
-      <div id="fGreenCycleComboHost"></div>
+      <div id="fGreenCycleHost" class="combo-host full"></div>
     </div>
 
     <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
@@ -1206,23 +1117,7 @@
   const CLIENT_CACHE_PREFIX = "wf_snap_v6_";
   const SESSION_USER_LABEL_PREFIX = "wf_user_label_v1_";
 
-  const ALL_STATUS_VALUES = ["REPLACEMENT REQUIRED", "Pending Notification", "Normal", "Archived"];
-  const ALL_NOTIF_VALUES = ["FALSE", "TRUE"];
-  const ALL_USAGE_VALUES = ["TRUE", "FALSE"];
-
-  const PRINT_STATUS_ORDER = {
-    "REPLACEMENT REQUIRED": 1,
-    "Pending Notification": 2,
-    "Normal": 3,
-    "Archived": 4
-  };
-
-  const STATUS_SHORT_LABELS = {
-    "REPLACEMENT REQUIRED": "Replacement",
-    "Pending Notification": "Pending",
-    "Normal": "Normal",
-    "Archived": "Archived"
-  };
+  const CHEVRON_SVG = `<svg class="combo-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>`;
 
   const ICONS = {
     bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
@@ -1232,6 +1127,63 @@
     flag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
     restore: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`
   };
+
+  /* ================= SINGLE SOURCE OF TRUTH: OPTIONS & CONFIG ================= */
+
+  const STATUS_OPTIONS = [
+    { value: "REPLACEMENT REQUIRED", label: "Replacement Required (Red)", short: "Replacement", printOrder: 1 },
+    { value: "Pending Notification", label: "Pending Notification (Yellow)", short: "Pending", printOrder: 2 },
+    { value: "Normal", label: "Normal (White)", short: "Normal", printOrder: 3 },
+    { value: "Archived", label: "Archived / Deleted", short: "Archived", printOrder: 4 }
+  ];
+
+  const MULTI_CONFIGS = {
+    status: {
+      containerId: "statusMultiSelect",
+      prefix: "Status",
+      options: STATUS_OPTIONS,
+      triggerRender: true
+    },
+    notif: {
+      containerId: "notifMultiSelect",
+      prefix: "Notified",
+      options: [
+        { value: "FALSE", label: "Not Notified (FALSE)", short: "FALSE" },
+        { value: "TRUE", label: "Already Notified (TRUE)", short: "TRUE" }
+      ],
+      triggerRender: true
+    },
+    usage: {
+      containerId: "usageMultiSelect",
+      prefix: "Machine Usage",
+      shortPrefix: "Usage",
+      options: [
+        { value: "TRUE", label: "Machine Usage: TRUE", short: "TRUE" },
+        { value: "FALSE", label: "Machine Usage: FALSE", short: "FALSE" }
+      ],
+      triggerRender: true
+    },
+    printStatus: {
+      containerId: "printChecklistHost",
+      options: STATUS_OPTIONS,
+      triggerRender: false
+    }
+  };
+
+  const AUDIT_ACTION_OPTIONS = [
+    { value: "ALL", label: "All Actions" },
+    { value: "MARK_NOTIFIED", label: "MARK_NOTIFIED" },
+    { value: "CONFIRM_DONE", label: "CONFIRM_DONE" },
+    { value: "BATCH_UPDATE", label: "BATCH_UPDATE" },
+    { value: "BATCH_CREATE", label: "BATCH_CREATE" },
+    { value: "REQ_DELETE", label: "REQ_DELETE" },
+    { value: "APPROVE_DELETE", label: "APPROVE_DELETE" },
+    { value: "DELETE_HIDE", label: "DELETE_HIDE" },
+    { value: "RESTORE", label: "RESTORE" }
+  ];
+
+  const PRINT_STATUS_ORDER = Object.fromEntries(STATUS_OPTIONS.map(o => [o.value, o.printOrder]));
+  const SHEET_NAME_MAP = { "RED": "RED: Water Filter Service", "GREEN": "GREEN: Itsaso Filter" };
 
   let islandTimer = null;
   let bindRowSeq = 0;
@@ -1267,7 +1219,6 @@
         "PP 1M": 180,
         "UDF": 180
       },
-      greenPlan: ["Standard Filter Service", "RO Maintenance", "Outdoor Filter Flush"],
       cycles: [90, 180, 270, 360, 540]
     },
     sortCol: "id",
@@ -1275,74 +1226,133 @@
     pendingOps: {}
   };
 
-  /* ================= Reusable Combobox Component ================= */
+  /* ================= REUSABLE ENGINE 1: UNIFIED APP DROPDOWN ================= */
 
-  function getComboOptions(source) {
-    const opts = currentState.dropdownOptions || {};
-    if (source === "redFilter") {
-      const redList = opts.redFilter || [];
-      const filterCycles = opts.filterCycles || {};
-      return redList.map(name => {
-        const mapped = Number(filterCycles[name]);
-        return {
-          value: String(name),
-          label: String(name),
-          sub: (!isNaN(mapped) && mapped > 0) ? `${mapped} Days` : ""
-        };
+  const DROPDOWN_SOURCES = {
+    redFilter: () => {
+      const opts = currentState.dropdownOptions || {};
+      const list = opts.redFilter || [];
+      const cycles = opts.filterCycles || {};
+      return list.map(name => {
+        const mapped = Number(cycles[name]);
+        return { value: String(name), label: String(name), sub: (!isNaN(mapped) && mapped > 0) ? `${mapped} Days` : "" };
       });
-    }
-    if (source === "cycle") {
-      const base = opts.cycles || [90, 180, 270, 360, 540];
-      const filterCycles = opts.filterCycles || {};
-      const cSet = new Set(base.map(n => Number(n)).filter(n => !isNaN(n) && n > 0));
-      Object.values(filterCycles).forEach(v => {
+    },
+    cycle: () => {
+      const opts = currentState.dropdownOptions || {};
+      const cSet = new Set((opts.cycles || [90, 180, 270, 360, 540]).map(Number).filter(n => !isNaN(n) && n > 0));
+      Object.values(opts.filterCycles || {}).forEach(v => {
         const n = Number(v);
         if (!isNaN(n) && n > 0) cSet.add(n);
       });
-      return Array.from(cSet)
-        .sort((a, b) => a - b)
-        .map(n => ({
-          value: String(n),
-          label: `${n} Days`,
-          sub: ""
-        }));
-    }
-    return [];
+      return Array.from(cSet).sort((a, b) => a - b).map(n => ({ value: String(n), label: `${n} Days`, sub: "" }));
+    },
+    machineUsage: () => [
+      { value: "TRUE", label: "TRUE" },
+      { value: "FALSE", label: "FALSE" }
+    ],
+    sheet: () => (currentState.allowedSheets || ["RED"]).map(code => ({
+      value: code,
+      label: SHEET_NAME_MAP[code] || code
+    })),
+    viewAs: () => {
+      const labels = currentState.roleLabels || {};
+      return [
+        { value: "", label: `View As: ${labels.IT || "IT Admin"}` },
+        { value: "BOSS", label: `View As: ${labels.BOSS || "Boss"}` },
+        { value: "ADMIN_H", label: `View As: ${labels.ADMIN_H || "Hafila"}` },
+        { value: "ADMIN_A", label: `View As: ${labels.ADMIN_A || "Atira"}` },
+        { value: "ADMIN_L", label: `View As: ${labels.ADMIN_L || "Ms. Lai"}` }
+      ];
+    },
+    auditAction: () => AUDIT_ACTION_OPTIONS
+  };
+
+  const DROPDOWN_HANDLERS = {
+    onBindFilterChange: (rowId) => onBindFilterChange(rowId),
+    onSheetChange: () => loadData(false),
+    onViewAsChange: () => onViewAsChange(),
+    onAuditFilterChange: () => renderAuditPage()
+  };
+
+  function getDropdownOptions(source) {
+    const fn = DROPDOWN_SOURCES[source];
+    return fn ? fn() : [];
   }
 
-  function buildComboBoxHtml({ id, value = "", placeholder = "", type = "text", source = "redFilter", onSelect = "", rowId = "" }) {
-    const minAttr = (type === "number") ? ` min="1"` : "";
+  function resolveDropdownLabel(source, value) {
+    const options = getDropdownOptions(source);
+    const hit = options.find(o => String(o.value) === String(value));
+    if (hit) return hit.label;
+    return value ? String(value) : (options[0] ? options[0].label : "");
+  }
+
+  function buildDropdownHtml({ id, value = "", placeholder = "", type = "text", source, editable = false, compact = false, disabled = false, onChange = "", rowId = "" }) {
+    const cls = `combo-wrap${compact ? " compact" : ""}`;
+    const dataAttrs = `data-input-id="${esc(id)}" data-source="${esc(source)}" data-editable="${editable ? "1" : "0"}" data-on-change="${esc(onChange)}" data-row-id="${esc(rowId)}"`;
+
+    if (editable) {
+      const minAttr = (type === "number") ? ` min="1"` : "";
+      return `
+        <div class="${cls}" id="comboWrap_${esc(id)}" ${dataAttrs}>
+          <input
+            type="${esc(type)}"
+            id="${esc(id)}"
+            class="combo-input"
+            value="${esc(value)}"
+            placeholder="${esc(placeholder)}"${minAttr}
+            autocomplete="off"
+            onfocus="openDropdownMenu('${esc(id)}', true)"
+            oninput="onDropdownInput('${esc(id)}')"
+          />
+          <button type="button" class="combo-toggle" tabindex="-1" aria-label="Toggle options" onmousedown="event.preventDefault()" onclick="toggleDropdownMenu(event, '${esc(id)}')">
+            ${CHEVRON_SVG}
+          </button>
+        </div>
+      `;
+    }
+
+    const displayLabel = resolveDropdownLabel(source, value) || placeholder;
+    const disAttr = disabled ? " disabled" : "";
     return `
-      <div class="combo-wrap" id="comboWrap_${esc(id)}" data-input-id="${esc(id)}" data-source="${esc(source)}" data-on-select="${esc(onSelect)}" data-row-id="${esc(rowId)}">
-        <input
-          type="${esc(type)}"
-          id="${esc(id)}"
-          class="combo-input"
-          value="${esc(value)}"
-          placeholder="${esc(placeholder)}"${minAttr}
-          autocomplete="off"
-          onfocus="openComboMenu('${esc(id)}', true)"
-          oninput="onComboInput('${esc(id)}')"
-        />
-        <button
-          type="button"
-          class="combo-toggle"
-          tabindex="-1"
-          aria-label="Toggle options"
-          onmousedown="event.preventDefault()"
-          onclick="toggleComboMenu(event, '${esc(id)}')"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="${cls}" id="comboWrap_${esc(id)}" ${dataAttrs}>
+        <input type="hidden" id="${esc(id)}" value="${esc(value)}" />
+        <button type="button" class="combo-display-btn" id="comboDisplay_${esc(id)}"${disAttr} onclick="toggleDropdownMenu(event, '${esc(id)}')">
+          <span class="combo-display-label">${esc(displayLabel)}</span>
+          ${CHEVRON_SVG}
         </button>
       </div>
     `;
   }
 
-  function openComboMenu(inputId, showAll = true) {
+  function mountDropdown(hostId, cfg) {
+    const host = document.getElementById(hostId);
+    if (host) host.innerHTML = buildDropdownHtml(cfg);
+  }
+
+  function getDropdownValue(id) {
+    const el = document.getElementById(id);
+    return el ? String(el.value ?? "") : "";
+  }
+
+  function setDropdownValue(id, value) {
+    const el = document.getElementById(id);
+    const wrap = document.getElementById(`comboWrap_${id}`);
+    if (el) el.value = String(value ?? "");
+    if (wrap && wrap.dataset.editable !== "1") {
+      const lbl = document.querySelector(`#comboDisplay_${id} .combo-display-label`);
+      if (lbl) lbl.textContent = resolveDropdownLabel(wrap.dataset.source, value);
+    }
+  }
+
+  function openDropdownMenu(inputId, showAll = true) {
     const wrap = document.getElementById(`comboWrap_${inputId}`);
     const inp = document.getElementById(inputId);
     const menu = document.getElementById("globalComboMenu");
     if (!wrap || !inp || !menu) return;
+
+    const btn = document.getElementById(`comboDisplay_${inputId}`);
+    if (btn && btn.disabled) return;
 
     document.querySelectorAll(".combo-wrap.open").forEach(el => {
       if (el !== wrap) el.classList.remove("open");
@@ -1352,9 +1362,10 @@
     wrap.classList.add("open");
 
     const source = wrap.dataset.source || "";
-    const allOptions = getComboOptions(source);
-    const currentVal = String(inp.value || "").trim();
-    const q = showAll ? "" : currentVal.toLowerCase();
+    const editable = wrap.dataset.editable === "1";
+    const allOptions = getDropdownOptions(source);
+    const currentVal = String(inp.value ?? "").trim();
+    const q = (!editable || showAll) ? "" : currentVal.toLowerCase();
 
     const filtered = q
       ? allOptions.filter(o => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q))
@@ -1362,10 +1373,10 @@
 
     if (filtered.length > 0) {
       menu.innerHTML = filtered.map(o => {
-        const isSel = currentVal.toLowerCase() === o.value.toLowerCase();
+        const isSel = currentVal.toLowerCase() === String(o.value).toLowerCase();
         const subHtml = o.sub ? `<span class="combo-item-sub">${esc(o.sub)}</span>` : "";
         return `
-          <div class="combo-item${isSel ? " selected" : ""}" role="option" data-val="${esc(o.value)}" onmousedown="event.preventDefault(); selectComboOption(this)">
+          <div class="combo-item${isSel ? " selected" : ""}" role="option" data-val="${esc(o.value)}" onmousedown="event.preventDefault(); selectDropdownOption(this)">
             <span>${esc(o.label)}</span>
             ${subHtml}
           </div>
@@ -1376,17 +1387,19 @@
     }
 
     menu.classList.add("show");
-    positionComboMenu(wrap, menu);
+    positionDropdownMenu(wrap, menu);
   }
 
-  function positionComboMenu(wrap, menu) {
+  function positionDropdownMenu(wrap, menu) {
     const rect = wrap.getBoundingClientRect();
+    const menuW = Math.max(rect.width, 150);
+    const clampedLeft = Math.max(8, Math.min(rect.left, window.innerWidth - menuW - 10));
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
     const menuMaxH = 260;
 
-    menu.style.width = `${rect.width}px`;
-    menu.style.left = `${rect.left}px`;
+    menu.style.width = `${menuW}px`;
+    menu.style.left = `${clampedLeft}px`;
 
     if (spaceBelow < 180 && spaceAbove > spaceBelow) {
       menu.style.top = "auto";
@@ -1399,16 +1412,19 @@
     }
   }
 
-  function toggleComboMenu(ev, inputId) {
+  function toggleDropdownMenu(ev, inputId) {
     ev.stopPropagation();
     const menu = document.getElementById("globalComboMenu");
     if (activeComboId === inputId && menu && menu.classList.contains("show")) {
       closeComboMenu();
       return;
     }
-    const inp = document.getElementById(inputId);
-    if (inp) inp.focus();
-    openComboMenu(inputId, true);
+    const wrap = document.getElementById(`comboWrap_${inputId}`);
+    if (wrap && wrap.dataset.editable === "1") {
+      const inp = document.getElementById(inputId);
+      if (inp) inp.focus();
+    }
+    openDropdownMenu(inputId, true);
   }
 
   function closeComboMenu() {
@@ -1418,26 +1434,25 @@
     activeComboId = null;
   }
 
-  function onComboInput(inputId) {
-    openComboMenu(inputId, false);
-    const wrap = document.getElementById(`comboWrap_${inputId}`);
-    if (wrap && wrap.dataset.onSelect === "onBindFilterChange") {
-      onBindFilterChange(wrap.dataset.rowId);
-    }
+  function triggerDropdownHandler(wrap) {
+    if (!wrap) return;
+    const handlerName = wrap.dataset.onChange;
+    const handler = handlerName && DROPDOWN_HANDLERS[handlerName];
+    if (handler) handler(wrap.dataset.rowId || "");
   }
 
-  function selectComboOption(itemEl) {
+  function onDropdownInput(inputId) {
+    openDropdownMenu(inputId, false);
+    triggerDropdownHandler(document.getElementById(`comboWrap_${inputId}`));
+  }
+
+  function selectDropdownOption(itemEl) {
     if (!activeComboId || !itemEl) return;
     const inputId = activeComboId;
     const wrap = document.getElementById(`comboWrap_${inputId}`);
-    const inp = document.getElementById(inputId);
-    if (inp) {
-      inp.value = itemEl.dataset.val || "";
-    }
+    setDropdownValue(inputId, itemEl.dataset.val ?? "");
     closeComboMenu();
-    if (wrap && wrap.dataset.onSelect === "onBindFilterChange") {
-      onBindFilterChange(wrap.dataset.rowId);
-    }
+    triggerDropdownHandler(wrap);
   }
 
   function repositionActiveCombo() {
@@ -1445,7 +1460,7 @@
     const wrap = document.getElementById(`comboWrap_${activeComboId}`);
     const menu = document.getElementById("globalComboMenu");
     if (wrap && menu && menu.classList.contains("show")) {
-      positionComboMenu(wrap, menu);
+      positionDropdownMenu(wrap, menu);
     }
   }
 
@@ -1466,6 +1481,99 @@
     }
   });
 
+  /* ================= REUSABLE ENGINE 2: MULTI-CHECK FILTERS & CHECKLISTS ================= */
+
+  function buildChecklistInnerHtml(key) {
+    const cfg = MULTI_CONFIGS[key];
+    return `
+      <label class="multi-option">
+        <input type="checkbox" id="multiAll_${key}" onchange="onMultiAllToggle('${key}', this.checked)" checked />
+        <b>Select All</b>
+      </label>
+      <div class="multi-divider"></div>
+      ${cfg.options.map(o => `
+        <label class="multi-option">
+          <input type="checkbox" class="multi-cb-${key}" value="${esc(o.value)}" onchange="onMultiItemToggle('${key}')" checked />
+          <span>${esc(o.label)}</span>
+        </label>
+      `).join("")}
+    `;
+  }
+
+  function mountMultiFilter(key) {
+    const cfg = MULTI_CONFIGS[key];
+    const host = document.getElementById(cfg.containerId);
+    if (!host) return;
+    if (cfg.prefix) {
+      host.innerHTML = `
+        <button type="button" class="multi-select-btn" onclick="toggleMultiDropdown(event, '${esc(cfg.containerId)}')">
+          <span id="multiBtnText_${key}">${esc(cfg.prefix)}: All</span>
+          ${CHEVRON_SVG}
+        </button>
+        <div class="multi-select-menu" onclick="event.stopPropagation()">
+          ${buildChecklistInnerHtml(key)}
+        </div>
+      `;
+      updateMultiBtnLabel(key);
+    } else {
+      host.innerHTML = buildChecklistInnerHtml(key);
+    }
+  }
+
+  function toggleMultiDropdown(ev, containerId) {
+    ev.stopPropagation();
+    closeComboMenu();
+    document.querySelectorAll(".multi-select.open").forEach(el => {
+      if (el.id !== containerId) el.classList.remove("open");
+    });
+    const wrap = document.getElementById(containerId);
+    if (wrap) wrap.classList.toggle("open");
+  }
+
+  function getMultiValues(key) {
+    return Array.from(document.querySelectorAll(`.multi-cb-${key}:checked`)).map(cb => cb.value);
+  }
+
+  function setMultiValues(key, values) {
+    const targetSet = new Set(values || []);
+    const cbs = Array.from(document.querySelectorAll(`.multi-cb-${key}`));
+    cbs.forEach(cb => { cb.checked = targetSet.has(cb.value); });
+    const allCb = document.getElementById(`multiAll_${key}`);
+    if (allCb) allCb.checked = cbs.length > 0 && cbs.every(cb => cb.checked);
+    updateMultiBtnLabel(key);
+  }
+
+  function updateMultiBtnLabel(key) {
+    const cfg = MULTI_CONFIGS[key];
+    const btnText = document.getElementById(`multiBtnText_${key}`);
+    if (!cfg || !btnText) return;
+    const selected = getMultiValues(key);
+    if (selected.length === cfg.options.length) {
+      btnText.textContent = `${cfg.prefix}: All`;
+    } else if (selected.length === 0) {
+      btnText.textContent = `${cfg.prefix}: None`;
+    } else {
+      const map = Object.fromEntries(cfg.options.map(o => [o.value, o.short || o.label]));
+      btnText.textContent = `${cfg.shortPrefix || cfg.prefix}: ${selected.map(v => map[v] || v).join(", ")}`;
+    }
+  }
+
+  function onMultiAllToggle(key, checked) {
+    document.querySelectorAll(`.multi-cb-${key}`).forEach(cb => { cb.checked = checked; });
+    updateMultiBtnLabel(key);
+    if (MULTI_CONFIGS[key].triggerRender) renderTable();
+  }
+
+  function onMultiItemToggle(key) {
+    const cbs = Array.from(document.querySelectorAll(`.multi-cb-${key}`));
+    const allCb = document.getElementById(`multiAll_${key}`);
+    if (allCb) allCb.checked = cbs.length > 0 && cbs.every(cb => cb.checked);
+    updateMultiBtnLabel(key);
+    if (MULTI_CONFIGS[key].triggerRender) renderTable();
+  }
+
+  /* ================= SESSION, WELCOME & PRINT ================= */
+
   function getSessionUserLabelKey(email) {
     return `${SESSION_USER_LABEL_PREFIX}${String(email || "").trim().toLowerCase()}`;
   }
@@ -1478,16 +1586,10 @@
     title.textContent = `Welcome, ${display}`;
   }
 
-  /* ================= Print Status Selector (Ctrl+P) ================= */
-
   function openPrintModal() {
     closeComboMenu();
-    const currentSel = getCheckedValues("print-status-cb");
-    const initial = currentSel.length > 0 ? currentSel : ALL_STATUS_VALUES;
-    document.querySelectorAll(".print-status-cb").forEach(cb => {
-      cb.checked = initial.includes(cb.value);
-    });
-    syncPrintSelectAll();
+    const currentSel = getMultiValues("status");
+    setMultiValues("printStatus", currentSel.length > 0 ? currentSel : STATUS_OPTIONS.map(o => o.value));
     document.getElementById("printSelectModal").classList.add("show");
   }
 
@@ -1495,46 +1597,28 @@
     document.getElementById("printSelectModal").classList.remove("show");
   }
 
-  function syncPrintSelectAll() {
-    const cbs = Array.from(document.querySelectorAll(".print-status-cb"));
-    const allCb = document.getElementById("printSelectAll");
-    if (allCb) allCb.checked = cbs.length > 0 && cbs.every(cb => cb.checked);
-  }
-
-  function onPrintAllChange(checked) {
-    document.querySelectorAll(".print-status-cb").forEach(cb => {
-      cb.checked = checked;
-    });
-  }
-
-  function onPrintItemChange() {
-    syncPrintSelectAll();
-  }
-
   function executePrintWithSelection() {
-    const chosen = getCheckedValues("print-status-cb");
+    const chosen = getMultiValues("printStatus");
     if (chosen.length === 0) {
       showIsland("Select at least 1 status to print", "err", false);
       return;
     }
-    savedStatusesBeforePrint = getCheckedValues("status-opt-cb");
+    savedStatusesBeforePrint = getMultiValues("status");
     savedSortBeforePrint = { col: currentState.sortCol, dir: currentState.sortDir };
     printActiveMode = true;
 
-    setCheckedValues("status-opt-cb", chosen, "statusSelectAll", updateStatusBtnLabel);
+    setMultiValues("status", chosen);
     renderTable();
     updatePrintFooter();
     closePrintModal();
-    setTimeout(() => {
-      window.print();
-    }, 80);
+    setTimeout(() => window.print(), 80);
   }
 
   window.addEventListener("afterprint", () => {
     if (printActiveMode) {
       printActiveMode = false;
       if (savedStatusesBeforePrint !== null) {
-        setCheckedValues("status-opt-cb", savedStatusesBeforePrint, "statusSelectAll", updateStatusBtnLabel);
+        setMultiValues("status", savedStatusesBeforePrint);
         savedStatusesBeforePrint = null;
       }
       if (savedSortBeforePrint !== null) {
@@ -1545,91 +1629,6 @@
       renderTable();
     }
   });
-
-  /* ================= Generic Multi-Select Helpers ================= */
-
-  function toggleMultiDropdown(ev, containerId) {
-    ev.stopPropagation();
-    document.querySelectorAll(".multi-select.open").forEach(el => {
-      if (el.id !== containerId) el.classList.remove("open");
-    });
-    const wrap = document.getElementById(containerId);
-    if (wrap) wrap.classList.toggle("open");
-  }
-
-  function getCheckedValues(cbClass) {
-    return Array.from(document.querySelectorAll(`.${cbClass}:checked`)).map(cb => cb.value);
-  }
-
-  function setCheckedValues(cbClass, values, selectAllId, labelFn) {
-    const targetSet = new Set(values || []);
-    document.querySelectorAll(`.${cbClass}`).forEach(cb => {
-      cb.checked = targetSet.has(cb.value);
-    });
-    const allCbs = Array.from(document.querySelectorAll(`.${cbClass}`));
-    const selectAllCb = document.getElementById(selectAllId);
-    if (selectAllCb) {
-      selectAllCb.checked = allCbs.length > 0 && allCbs.every(cb => cb.checked);
-    }
-    if (labelFn) labelFn();
-  }
-
-  function onMultiAllChange(cbClass, selectAllId, labelFn, checked) {
-    document.querySelectorAll(`.${cbClass}`).forEach(cb => {
-      cb.checked = checked;
-    });
-    if (labelFn) labelFn();
-    renderTable();
-  }
-
-  function onMultiItemChange(cbClass, selectAllId, labelFn) {
-    const allCbs = Array.from(document.querySelectorAll(`.${cbClass}`));
-    const selectAllCb = document.getElementById(selectAllId);
-    if (selectAllCb) {
-      selectAllCb.checked = allCbs.length > 0 && allCbs.every(cb => cb.checked);
-    }
-    if (labelFn) labelFn();
-    renderTable();
-  }
-
-  function updateStatusBtnLabel() {
-    const selected = getCheckedValues("status-opt-cb");
-    const btnText = document.getElementById("statusBtnText");
-    if (!btnText) return;
-    if (selected.length === ALL_STATUS_VALUES.length) {
-      btnText.textContent = "Status: All";
-    } else if (selected.length === 0) {
-      btnText.textContent = "Status: None";
-    } else {
-      btnText.textContent = "Status: " + selected.map(s => STATUS_SHORT_LABELS[s] || s).join(", ");
-    }
-  }
-
-  function updateNotifBtnLabel() {
-    const selected = getCheckedValues("notif-opt-cb");
-    const btnText = document.getElementById("notifBtnText");
-    if (!btnText) return;
-    if (selected.length === ALL_NOTIF_VALUES.length) {
-      btnText.textContent = "Notified: All";
-    } else if (selected.length === 0) {
-      btnText.textContent = "Notified: None";
-    } else {
-      btnText.textContent = "Notified: " + selected.map(v => v === "TRUE" ? "TRUE" : "FALSE").join(", ");
-    }
-  }
-
-  function updateUsageBtnLabel() {
-    const selected = getCheckedValues("usage-opt-cb");
-    const btnText = document.getElementById("usageBtnText");
-    if (!btnText) return;
-    if (selected.length === ALL_USAGE_VALUES.length) {
-      btnText.textContent = "Machine Usage: All";
-    } else if (selected.length === 0) {
-      btnText.textContent = "Machine Usage: None";
-    } else {
-      btnText.textContent = "Usage: " + selected.join(", ");
-    }
-  }
 
   function updatePrintFooter() {
     const byEl = document.getElementById("printByLabel");
@@ -1671,15 +1670,13 @@
     localStorage.setItem(THEME_KEY, clean);
     if (clean === "auto") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", clean);
-    const labelMap = { auto: "Auto", dark: "Dark", light: "Light" };
     const el = document.getElementById("themeText");
-    if (el) el.textContent = labelMap[clean];
+    if (el) el.textContent = { auto: "Auto", dark: "Dark", light: "Light" }[clean];
   }
 
   function cycleTheme() {
     const cur = localStorage.getItem(THEME_KEY) || "auto";
-    const next = cur === "auto" ? "dark" : (cur === "dark" ? "light" : "auto");
-    applyTheme(next);
+    applyTheme(cur === "auto" ? "dark" : (cur === "dark" ? "light" : "auto"));
   }
 
   function setCookie(name, value, days) {
@@ -1689,8 +1686,7 @@
 
   function getCookie(name) {
     const target = encodeURIComponent(name) + "=";
-    const parts = document.cookie.split(";");
-    for (let p of parts) {
+    for (let p of document.cookie.split(";")) {
       p = p.trim();
       if (p.indexOf(target) === 0) return decodeURIComponent(p.substring(target.length));
     }
@@ -1699,23 +1695,15 @@
 
   function clearAllClientCaches() {
     setCookie(COOKIE_KEY, "", -1);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(VIEW_AS_KEY);
     const lsKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k && k.startsWith("wf_")) lsKeys.push(k);
     }
     lsKeys.forEach(k => localStorage.removeItem(k));
-
-    try {
-      sessionStorage.clear();
-    } catch (_) {}
-
+    try { sessionStorage.clear(); } catch (_) {}
     if (window.caches && typeof caches.keys === "function") {
-      caches.keys().then(names => {
-        names.forEach(n => caches.delete(n));
-      }).catch(() => {});
+      caches.keys().then(names => names.forEach(n => caches.delete(n))).catch(() => {});
     }
   }
 
@@ -1742,6 +1730,7 @@
   }
 
   function openAuditPage() {
+    closeComboMenu();
     document.getElementById("dashboardView").style.display = "none";
     document.getElementById("auditPageView").style.display = "block";
     document.getElementById("auditPageTitle").textContent = `Audit Log — ${currentState.activeSheet}`;
@@ -1750,6 +1739,7 @@
   }
 
   function closeAuditPage() {
+    closeComboMenu();
     document.getElementById("auditPageView").style.display = "none";
     document.getElementById("dashboardView").style.display = "block";
   }
@@ -1784,24 +1774,19 @@
     return "";
   }
 
-  function mountGreenCycleCombo(initialVal = "") {
-    const host = document.getElementById("fGreenCycleComboHost");
-    if (!host) return;
-    host.innerHTML = buildComboBoxHtml({
-      id: "fGreenCycleInput",
-      value: initialVal,
-      placeholder: "Select or type days...",
-      type: "number",
-      source: "cycle"
-    });
-  }
-
   async function initApp() {
     applyTheme(localStorage.getItem(THEME_KEY) || "auto");
-    updateStatusBtnLabel();
-    updateNotifBtnLabel();
-    updateUsageBtnLabel();
-    mountGreenCycleCombo(String(getPresetDefaultCycle()));
+
+    // Mount all reusable multi-check controls once
+    Object.keys(MULTI_CONFIGS).forEach(mountMultiFilter);
+
+    // Mount all reusable static/toolbar dropdowns once
+    const savedViewAs = localStorage.getItem(VIEW_AS_KEY) || "";
+    mountDropdown("sheetSelectHost", { id: "sheetSelect", value: "", source: "sheet", editable: false, compact: true, onChange: "onSheetChange" });
+    mountDropdown("viewAsSelectHost", { id: "viewAsSelect", value: savedViewAs, source: "viewAs", editable: false, compact: true, onChange: "onViewAsChange" });
+    mountDropdown("auditActionFilterHost", { id: "auditActionFilter", value: "ALL", source: "auditAction", editable: false, compact: true, onChange: "onAuditFilterChange" });
+    mountDropdown("fUsageHost", { id: "fUsage", value: "TRUE", source: "machineUsage", editable: false });
+    mountDropdown("fGreenCycleHost", { id: "fGreenCycleInput", value: String(getPresetDefaultCycle()), placeholder: "Select or type days...", type: "number", source: "cycle", editable: true });
 
     const email = await resolveZeroTrustEmail();
     if (!email) {
@@ -1812,20 +1797,16 @@
       return;
     }
     currentState.email = email;
-    const savedViewAs = localStorage.getItem(VIEW_AS_KEY) || "";
-    if (savedViewAs) document.getElementById("viewAsSelect").value = savedViewAs;
 
-    const initialSheet = document.getElementById("sheetSelect").value || "";
-    const initialViewAs = document.getElementById("viewAsSelect").value || "";
+    const initialSheet = getDropdownValue("sheetSelect");
     const hasAnyCache = Boolean(
-      localStorage.getItem(getSnapshotCacheKey(initialSheet, initialViewAs)) ||
-      localStorage.getItem(getSnapshotCacheKey("RED", initialViewAs)) ||
-      localStorage.getItem(getSnapshotCacheKey("GREEN", initialViewAs))
+      localStorage.getItem(getSnapshotCacheKey(initialSheet, savedViewAs)) ||
+      localStorage.getItem(getSnapshotCacheKey("RED", savedViewAs)) ||
+      localStorage.getItem(getSnapshotCacheKey("GREEN", savedViewAs))
     );
 
     if (!hasAnyCache) {
-      const currentUserSavedLabel = localStorage.getItem(getSessionUserLabelKey(email)) || email;
-      showWelcomeScreen(currentUserSavedLabel);
+      showWelcomeScreen(localStorage.getItem(getSessionUserLabelKey(email)) || email);
     }
 
     showDashboardImmediate();
@@ -1850,17 +1831,16 @@
     if (sub) sub.textContent = "Workspace ready";
     setTimeout(() => {
       ov.classList.add("fade-out");
-      setTimeout(() => {
-        ov.className = "welcome-overlay";
-      }, 460);
+      setTimeout(() => { ov.className = "welcome-overlay"; }, 460);
     }, 260);
   }
 
   document.addEventListener("keydown", (ev) => {
     const printOpen = document.getElementById("printSelectModal").classList.contains("show");
+    const modalOpen = document.getElementById("editModal").classList.contains("show");
+
     if ((ev.ctrlKey || ev.metaKey) && String(ev.key || "").toLowerCase() === "p") {
       const isDashVisible = document.getElementById("dashboardView").style.display === "block";
-      const modalOpen = document.getElementById("editModal").classList.contains("show");
       if (isDashVisible && !modalOpen && !printOpen) {
         ev.preventDefault();
         openPrintModal();
@@ -1868,48 +1848,26 @@
       }
     }
 
-    const modalOpen = document.getElementById("editModal").classList.contains("show");
     if (ev.key === "Escape") {
-      if (activeComboId) {
-        ev.preventDefault();
-        closeComboMenu();
-        return;
-      }
-      if (printOpen) {
-        ev.preventDefault();
-        closePrintModal();
-        return;
-      }
-      if (modalOpen) {
-        ev.preventDefault();
-        closeModal();
-        return;
-      }
+      if (activeComboId) { ev.preventDefault(); closeComboMenu(); return; }
+      if (printOpen) { ev.preventDefault(); closePrintModal(); return; }
+      if (modalOpen) { ev.preventDefault(); closeModal(); return; }
     }
 
     if (ev.key === "Enter") {
-      if (printOpen) {
-        ev.preventDefault();
-        executePrintWithSelection();
-        return;
-      }
-      if (modalOpen) {
-        ev.preventDefault();
-        submitModal();
-        return;
-      }
+      if (printOpen) { ev.preventDefault(); executePrintWithSelection(); return; }
+      if (modalOpen) { ev.preventDefault(); submitModal(); return; }
       const tag = (document.activeElement && document.activeElement.tagName) || "";
       const isDashVisible = document.getElementById("dashboardView").style.display === "block";
       if (isDashVisible && !["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(tag)) {
         ev.preventDefault();
-        openCreateModal();
+        openRecordModal(null);
       }
     }
   });
 
   function onViewAsChange() {
-    const val = document.getElementById("viewAsSelect").value || "";
-    localStorage.setItem(VIEW_AS_KEY, val);
+    localStorage.setItem(VIEW_AS_KEY, getDropdownValue("viewAsSelect"));
     currentState.pendingOps = {};
     updateBatchBar();
     loadData(false);
@@ -1930,17 +1888,9 @@
         if (script.parentNode) script.parentNode.removeChild(script);
       }
 
-      window[cbName] = (data) => {
-        cleanup();
-        resolve(data);
-      };
-
-      const sep = url.indexOf("?") === -1 ? "?" : "&";
-      script.src = `${url}${sep}callback=${encodeURIComponent(cbName)}`;
-      script.onerror = () => {
-        cleanup();
-        reject(new Error("Failed to connect to GAS backend."));
-      };
+      window[cbName] = (data) => { cleanup(); resolve(data); };
+      script.src = `${url}${url.includes("?") ? "&" : "?"}callback=${encodeURIComponent(cbName)}`;
+      script.onerror = () => { cleanup(); reject(new Error("Failed to connect to GAS backend.")); };
       document.body.appendChild(script);
     });
   }
@@ -1951,8 +1901,7 @@
 
   function getPresetDefaultCycle() {
     const cycles = (currentState.dropdownOptions && currentState.dropdownOptions.cycles) || [90, 180, 270, 360, 540];
-    if (cycles.includes(180)) return 180;
-    return cycles[0] || 180;
+    return cycles.includes(180) ? 180 : (cycles[0] || 180);
   }
 
   function applyDashboardPayload(data, isFromCache) {
@@ -1966,14 +1915,11 @@
     currentState.sheetHeaders = (data.sheetHeaders && data.sheetHeaders.length > 0)
       ? data.sheetHeaders
       : ["ID", "Name", "Filter / Service Name", "Machine Usage", "Last Changed Date", "Change Cycle (Days)", "Next Change Date", "Notification Date", "Status", "Notification Status", "Importance"];
-    if (data.auditLogs && data.auditLogs.length > 0) {
-      currentState.auditLogs = data.auditLogs;
-    }
+    if (data.auditLogs && data.auditLogs.length > 0) currentState.auditLogs = data.auditLogs;
     if (data.dropdownOptions) {
       currentState.dropdownOptions = Object.assign({
         redFilter: [],
         filterCycles: {},
-        greenPlan: [],
         cycles: [90, 180, 270, 360, 540]
       }, data.dropdownOptions);
     }
@@ -1987,9 +1933,7 @@
     });
 
     if (currentState.email && currentState.roleDisplayName) {
-      try {
-        localStorage.setItem(getSessionUserLabelKey(currentState.email), currentState.roleDisplayName);
-      } catch (_) {}
+      try { localStorage.setItem(getSessionUserLabelKey(currentState.email), currentState.roleDisplayName); } catch (_) {}
     }
 
     updatePrintFooter();
@@ -2000,39 +1944,39 @@
       ? `IT Admin → ${currentState.roleDisplayName}`
       : `${currentState.roleDisplayName}`;
 
-    const syncTag = document.getElementById("syncTag");
-    syncTag.textContent = isFromCache
+    document.getElementById("syncTag").textContent = isFromCache
       ? "Cached"
       : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
-    const viewAsSel = document.getElementById("viewAsSelect");
-    if (currentState.canSwitchView) {
-      viewAsSel.style.display = "inline-block";
-      const labels = currentState.roleLabels;
-      viewAsSel.options[0].text = `View As: ${labels.IT || "IT Admin"}`;
-      viewAsSel.options[1].text = `View As: ${labels.BOSS || "Boss"}`;
-      viewAsSel.options[2].text = `View As: ${labels.ADMIN_H || "Hafila"}`;
-      viewAsSel.options[3].text = `View As: ${labels.ADMIN_A || "Atira"}`;
-      viewAsSel.options[4].text = `View As: ${labels.ADMIN_L || "Ms. Lai"}`;
-    } else {
-      viewAsSel.style.display = "none";
-    }
+    // Refresh unified toolbar dropdowns with latest allowedSheets & roleLabels
+    mountDropdown("sheetSelectHost", {
+      id: "sheetSelect",
+      value: data.activeSheet,
+      source: "sheet",
+      editable: false,
+      compact: true,
+      disabled: currentState.allowedSheets.length <= 1,
+      onChange: "onSheetChange"
+    });
 
-    const sheetSel = document.getElementById("sheetSelect");
-    const sheetNameMap = {
-      "RED": "RED: Water Filter Service",
-      "GREEN": "GREEN: Itsaso Filter"
-    };
-    sheetSel.innerHTML = currentState.allowedSheets
-      .map(code => `<option value="${code}">${sheetNameMap[code] || code}</option>`)
-      .join("");
-    sheetSel.value = data.activeSheet;
-    sheetSel.disabled = (currentState.allowedSheets.length <= 1);
+    const viewAsHost = document.getElementById("viewAsSelectHost");
+    if (currentState.canSwitchView) {
+      viewAsHost.style.display = "inline-flex";
+      mountDropdown("viewAsSelectHost", {
+        id: "viewAsSelect",
+        value: localStorage.getItem(VIEW_AS_KEY) || "",
+        source: "viewAs",
+        editable: false,
+        compact: true,
+        onChange: "onViewAsChange"
+      });
+    } else {
+      viewAsHost.style.display = "none";
+    }
 
     const isRed = (data.activeSheet === "RED");
     document.getElementById("addNewBtnText").textContent = isRed ? "Add New (RED)" : "Add New (GREEN)";
-    const canViewAudit = ["IT", "BOSS", "ADMIN_H"].includes(data.effectiveRole);
-    document.getElementById("auditNavBtn").style.display = canViewAudit ? "inline-flex" : "none";
+    document.getElementById("auditNavBtn").style.display = ["IT", "BOSS", "ADMIN_H"].includes(data.effectiveRole) ? "inline-flex" : "none";
     document.getElementById("usageMultiSelect").style.display = isRed ? "inline-block" : "none";
 
     updateKpis(data.summary || {}, currentState.records);
@@ -2041,10 +1985,8 @@
   }
 
   async function loadData(forceFresh = false) {
-    const sheetSel = document.getElementById("sheetSelect");
-    const viewAsSel = document.getElementById("viewAsSelect");
-    const requestedSheet = sheetSel.value || "";
-    const viewAs = viewAsSel.value || "";
+    const requestedSheet = getDropdownValue("sheetSelect");
+    const viewAs = getDropdownValue("viewAsSelect");
     const snapKey = getSnapshotCacheKey(requestedSheet, viewAs);
 
     if (!forceFresh) {
@@ -2052,9 +1994,7 @@
         const cachedRaw = localStorage.getItem(snapKey);
         if (cachedRaw) {
           const cachedData = JSON.parse(cachedRaw);
-          if (cachedData && cachedData.ok) {
-            applyDashboardPayload(cachedData, true);
-          }
+          if (cachedData && cachedData.ok) applyDashboardPayload(cachedData, true);
         }
       } catch (_) {}
     }
@@ -2076,9 +2016,7 @@
 
       const resolvedName = data.roleDisplayName || data.effectiveRole || "";
       if (resolvedName && currentState.email) {
-        try {
-          localStorage.setItem(getSessionUserLabelKey(currentState.email), resolvedName);
-        } catch (_) {}
+        try { localStorage.setItem(getSessionUserLabelKey(currentState.email), resolvedName); } catch (_) {}
         setWelcomeGreetingName(resolvedName);
       }
 
@@ -2103,7 +2041,7 @@
 
   async function fetchAuditLogsNow() {
     const sheet = currentState.activeSheet || "RED";
-    const viewAs = document.getElementById("viewAsSelect").value || "";
+    const viewAs = getDropdownValue("viewAsSelect");
     document.getElementById("auditCountLabel").textContent = "Loading logs...";
     showIsland("Loading audit logs...", "syncing", true);
     const url = `${GAS_URL}?action=getDashboardData&email=${encodeURIComponent(currentState.email)}&sheet=${encodeURIComponent(sheet)}&viewAs=${encodeURIComponent(viewAs)}&includeLogs=1`;
@@ -2114,7 +2052,7 @@
         renderAuditPage();
         showIsland("Audit logs loaded", "ok", false);
       }
-    } catch (err) {
+    } catch (_) {
       showIsland("Failed to load logs", "err", false);
     }
   }
@@ -2133,19 +2071,13 @@
   }
 
   function quickFilterStatus(st) {
-    if (st === "ALL") {
-      setCheckedValues("status-opt-cb", ALL_STATUS_VALUES, "statusSelectAll", updateStatusBtnLabel);
-    } else {
-      setCheckedValues("status-opt-cb", [st], "statusSelectAll", updateStatusBtnLabel);
-    }
+    setMultiValues("status", st === "ALL" ? STATUS_OPTIONS.map(o => o.value) : [st]);
     renderTable();
   }
 
   function resetSortAndFilters() {
     document.getElementById("searchInput").value = "";
-    setCheckedValues("status-opt-cb", ALL_STATUS_VALUES, "statusSelectAll", updateStatusBtnLabel);
-    setCheckedValues("notif-opt-cb", ALL_NOTIF_VALUES, "notifSelectAll", updateNotifBtnLabel);
-    setCheckedValues("usage-opt-cb", ALL_USAGE_VALUES, "usageSelectAll", updateUsageBtnLabel);
+    ["status", "notif", "usage"].forEach(k => setMultiValues(k, MULTI_CONFIGS[k].options.map(o => o.value)));
     currentState.sortCol = "id";
     currentState.sortDir = "asc";
     renderTable();
@@ -2161,13 +2093,14 @@
     renderTable();
   }
 
+  /* ================= BATCH STAGING ================= */
+
   function stageOperation(opKey, opObj) {
     currentState.pendingOps[opKey] = Object.assign({ key: opKey }, opObj);
     updateBatchBar();
     renderApprovals();
     renderTable();
-    const n = Object.keys(currentState.pendingOps).length;
-    showIsland(`${n} change(s) ready • Click Save`, "syncing", true);
+    showIsland(`${Object.keys(currentState.pendingOps).length} change(s) ready • Click Save`, "syncing", true);
   }
 
   function unstageOperation(opKey) {
@@ -2176,8 +2109,7 @@
     renderApprovals();
     renderTable();
     const n = Object.keys(currentState.pendingOps).length;
-    if (n === 0) showIsland("Change reverted", "ok", false);
-    else showIsland(`${n} change(s) ready • Click Save`, "syncing", true);
+    showIsland(n === 0 ? "Change reverted" : `${n} change(s) ready • Click Save`, n === 0 ? "ok" : "syncing", n > 0);
   }
 
   function discardBatchChanges() {
@@ -2189,16 +2121,9 @@
 
   function updateBatchBar() {
     const count = Object.keys(currentState.pendingOps).length;
-    const saveBtn = document.getElementById("batchSaveBtn");
-    const discBtn = document.getElementById("batchDiscardBtn");
-    if (count > 0) {
-      saveBtn.style.display = "inline-flex";
-      discBtn.style.display = "inline-flex";
-      document.getElementById("batchSaveLabel").textContent = `Save (${count})`;
-    } else {
-      saveBtn.style.display = "none";
-      discBtn.style.display = "none";
-    }
+    document.getElementById("batchSaveBtn").style.display = count > 0 ? "inline-flex" : "none";
+    document.getElementById("batchDiscardBtn").style.display = count > 0 ? "inline-flex" : "none";
+    if (count > 0) document.getElementById("batchSaveLabel").textContent = `Save (${count})`;
   }
 
   async function commitBatchChanges() {
@@ -2206,7 +2131,7 @@
     if (ops.length === 0) return;
 
     const sheet = currentState.activeSheet;
-    const viewAs = document.getElementById("viewAsSelect").value || "";
+    const viewAs = getDropdownValue("viewAsSelect");
     showIsland(`Saving ${ops.length} change(s)...`, "syncing", true);
 
     try {
@@ -2214,13 +2139,7 @@
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "batchSave",
-          email: currentState.email,
-          viewAs: viewAs,
-          sheet: sheet,
-          operations: ops
-        })
+        body: JSON.stringify({ action: "batchSave", email: currentState.email, viewAs, sheet, operations: ops })
       });
 
       localStorage.removeItem(getSnapshotCacheKey(sheet, viewAs));
@@ -2241,15 +2160,13 @@
       return r.approvalStatus === "PENDING_DELETE";
     });
     const card = document.getElementById("approvalCard");
-    const tbody = document.getElementById("approvalTbody");
-
     if (!canApprove || pendingItems.length === 0) {
       card.style.display = "none";
       return;
     }
     card.style.display = "block";
     document.getElementById("approvalCountBadge").textContent = `${pendingItems.length} pending`;
-    tbody.innerHTML = pendingItems.map(r => `
+    document.getElementById("approvalTbody").innerHTML = pendingItems.map(r => `
       <tr>
         <td>${esc(r.id)}</td>
         <td style="text-align:left;"><b>${esc(r.name)}</b></td>
@@ -2265,25 +2182,28 @@
     `).join("");
   }
 
+  /* ================= TABLE RENDERING ================= */
+
   function renderDynamicHeaders() {
     const visibleHeaders = currentState.sheetHeaders.filter(h => h !== "Approval Status");
-    const sortKeyForHeader = (h) => {
-      if (h === "ID") return "id";
-      if (h === "Name") return "name";
-      if (h === "Filter / Service Name" || h === "Phone Number") return "filterOrPhone";
-      if (h === "Machine Usage" || h === "Machine usage") return "machineUsage";
-      if (h === "Last Changed Date") return "lastChangedDate";
-      if (h === "Change Cycle (Days)") return "cycleDays";
-      if (h === "Next Change Date") return "nextChangeDate";
-      if (h === "Notification Date") return "notificationDate";
-      if (h === "Status") return "statusRank";
-      if (h === "Notification Status") return "notified";
-      if (h === "Importance") return "importance";
-      return `cell:${h}`;
+    const headerSortMap = {
+      "ID": "id",
+      "Name": "name",
+      "Filter / Service Name": "filterOrPhone",
+      "Phone Number": "filterOrPhone",
+      "Machine Usage": "machineUsage",
+      "Machine usage": "machineUsage",
+      "Last Changed Date": "lastChangedDate",
+      "Change Cycle (Days)": "cycleDays",
+      "Next Change Date": "nextChangeDate",
+      "Notification Date": "notificationDate",
+      "Status": "statusRank",
+      "Notification Status": "notified",
+      "Importance": "importance"
     };
 
     const ths = visibleHeaders.map(h => {
-      const sk = sortKeyForHeader(h);
+      const sk = headerSortMap[h] || `cell:${h}`;
       const ind = (currentState.sortCol === sk) ? (currentState.sortDir === "asc" ? "▲" : "▼") : "";
       return `<th onclick="toggleSort('${esc(sk)}')"><span class="th-inner">${esc(h)} <span class="sort-ind">${ind}</span></span></th>`;
     });
@@ -2296,16 +2216,13 @@
   function renderCellContent(rec, headerName) {
     const cells = rec.cells || {};
     const diffs = rec._cellDiffs || {};
-    let val = cells[headerName];
+    const val = cells[headerName];
 
-    const wrapDiff = (htmlContent, diffKey) => {
-      if (!diffs[diffKey]) return htmlContent;
-      return `${htmlContent}<span class="diff-old">${esc(diffs[diffKey].oldVal)}</span>`;
-    };
+    const wrapDiff = (htmlContent, diffKey) =>
+      diffs[diffKey] ? `${htmlContent}<span class="diff-old">${esc(diffs[diffKey].oldVal)}</span>` : htmlContent;
 
     if (headerName === "ID") {
-      const stagedTag = rec._staged ? ` <span class="badge dirty">Unsaved</span>` : "";
-      return `<b>${esc(rec.id)}</b>${stagedTag}`;
+      return `<b>${esc(rec.id)}</b>${rec._staged ? ` <span class="badge dirty">Unsaved</span>` : ""}`;
     }
     if (headerName === "Name") {
       const cnt = rec._visibleGroupCount || 1;
@@ -2326,10 +2243,7 @@
       return wrapDiff(`<span class="badge ${badgeClass}">${esc(label)}</span>`, "Status");
     }
     if (headerName === "Notification Status") {
-      const badge = rec.notified
-        ? `<span class="badge info">Notified</span>`
-        : `<span class="badge neutral">Unnotified</span>`;
-      return wrapDiff(badge, "Notification Status");
+      return wrapDiff(`<span class="badge ${rec.notified ? "info" : "neutral"}">${rec.notified ? "Notified" : "Unnotified"}</span>`, "Notification Status");
     }
     if (headerName === "Last Changed Date") return wrapDiff(esc(rec.lastChangedDate || val || ""), "Last Changed Date");
     if (headerName === "Change Cycle (Days)") return wrapDiff(esc(rec.cycleDays || val || ""), "Change Cycle (Days)");
@@ -2342,16 +2256,15 @@
     if (!rec._staged) return false;
     if (rec._staged.type === "create") return true;
     const diffs = rec._cellDiffs || {};
-    if (headerName === "Machine usage") return Boolean(diffs["Machine Usage"]);
-    return Boolean(diffs[headerName]);
+    return Boolean(headerName === "Machine usage" ? diffs["Machine Usage"] : diffs[headerName]);
   }
 
   function renderTable() {
     const visibleHeaders = renderDynamicHeaders();
     const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-    const selectedStatuses = getCheckedValues("status-opt-cb");
-    const selectedNotifs = getCheckedValues("notif-opt-cb");
-    const selectedUsages = getCheckedValues("usage-opt-cb");
+    const selectedStatuses = getMultiValues("status");
+    const selectedNotifs = getMultiValues("notif");
+    const selectedUsages = getMultiValues("usage");
     const isRed = (currentState.activeSheet === "RED");
     const role = currentState.effectiveRole;
     const canApproveOrRestore = ["IT", "BOSS", "ADMIN_H"].includes(role);
@@ -2360,9 +2273,8 @@
     const stagedCreates = Object.values(currentState.pendingOps)
       .filter(op => op.type === "create")
       .map((op, idx) => {
-        const extra = isRed
-          ? (op.payload["Filter / Service Name"] || "")
-          : (op.payload["Phone Number"] || "");
+        const extra = isRed ? (op.payload["Filter / Service Name"] || "") : (op.payload["Phone Number"] || "");
+        const cyc = op.payload["Change Cycle (Days)"] || getPresetDefaultCycle();
         return {
           _opKey: op.key,
           _staged: op,
@@ -2372,7 +2284,7 @@
           filterOrPhone: extra,
           machineUsage: op.payload["Machine usage"] !== false,
           lastChangedDate: op.payload["Last Changed Date"] || "",
-          cycleDays: op.payload["Change Cycle (Days)"] || getPresetDefaultCycle(),
+          cycleDays: cyc,
           nextChangeDate: "Auto on Save",
           notificationDate: "-",
           status: "Normal",
@@ -2388,7 +2300,7 @@
             "Phone Number": op.payload["Phone Number"] || "",
             "Machine Usage": op.payload["Machine usage"] !== false,
             "Last Changed Date": op.payload["Last Changed Date"] || "",
-            "Change Cycle (Days)": op.payload["Change Cycle (Days)"] || getPresetDefaultCycle(),
+            "Change Cycle (Days)": cyc,
             "Status": "Normal",
             "Notification Status": false
           }
@@ -2408,58 +2320,42 @@
         copy.notified = true;
         copy.cells["Notification Status"] = true;
       } else if (op.type === "update" && op.payload) {
-        if (op.payload["Name"] !== undefined && String(op.payload["Name"]).trim() !== String(r.name || "").trim()) {
-          diffs["Name"] = { oldVal: r.name, newVal: op.payload["Name"] };
-          copy.name = op.payload["Name"];
-          copy.cells["Name"] = op.payload["Name"];
+        const p = op.payload;
+        const applyFieldDiff = (key, prop, oldV, newV) => {
+          if (newV !== undefined && String(newV).trim() !== String(oldV || "").trim()) {
+            diffs[key] = { oldVal: oldV, newVal: newV };
+            copy[prop] = newV;
+            copy.cells[key] = newV;
+          }
+        };
+        applyFieldDiff("Name", "name", r.name, p["Name"]);
+        applyFieldDiff("Filter / Service Name", "filterOrPhone", r.filterOrPhone, p["Filter / Service Name"]);
+        applyFieldDiff("Phone Number", "filterOrPhone", r.filterOrPhone, p["Phone Number"]);
+        applyFieldDiff("Last Changed Date", "lastChangedDate", r.lastChangedDate, p["Last Changed Date"]);
+        if (p["Machine usage"] !== undefined && Boolean(p["Machine usage"]) !== Boolean(r.machineUsage)) {
+          diffs["Machine Usage"] = { oldVal: r.machineUsage ? "TRUE" : "FALSE", newVal: p["Machine usage"] ? "TRUE" : "FALSE" };
+          copy.machineUsage = p["Machine usage"];
+          copy.cells["Machine Usage"] = p["Machine usage"];
         }
-        if (op.payload["Filter / Service Name"] !== undefined && String(op.payload["Filter / Service Name"]).trim() !== String(r.filterOrPhone || "").trim()) {
-          diffs["Filter / Service Name"] = { oldVal: r.filterOrPhone, newVal: op.payload["Filter / Service Name"] };
-          copy.filterOrPhone = op.payload["Filter / Service Name"];
-          copy.cells["Filter / Service Name"] = op.payload["Filter / Service Name"];
-        }
-        if (op.payload["Phone Number"] !== undefined && String(op.payload["Phone Number"]).trim() !== String(r.filterOrPhone || "").trim()) {
-          diffs["Phone Number"] = { oldVal: r.filterOrPhone, newVal: op.payload["Phone Number"] };
-          copy.filterOrPhone = op.payload["Phone Number"];
-          copy.cells["Phone Number"] = op.payload["Phone Number"];
-        }
-        if (op.payload["Machine usage"] !== undefined && Boolean(op.payload["Machine usage"]) !== Boolean(r.machineUsage)) {
-          diffs["Machine Usage"] = { oldVal: r.machineUsage ? "TRUE" : "FALSE", newVal: op.payload["Machine usage"] ? "TRUE" : "FALSE" };
-          copy.machineUsage = op.payload["Machine usage"];
-          copy.cells["Machine Usage"] = op.payload["Machine usage"];
-        }
-        if (op.payload["Last Changed Date"] !== undefined && String(op.payload["Last Changed Date"]).trim() !== String(r.lastChangedDate || "").trim()) {
-          diffs["Last Changed Date"] = { oldVal: r.lastChangedDate, newVal: op.payload["Last Changed Date"] };
-          copy.lastChangedDate = op.payload["Last Changed Date"];
-          copy.cells["Last Changed Date"] = op.payload["Last Changed Date"];
-        }
-        if (op.payload["Change Cycle (Days)"] !== undefined && Number(op.payload["Change Cycle (Days)"]) !== Number(r.cycleDays)) {
-          diffs["Change Cycle (Days)"] = { oldVal: String(r.cycleDays), newVal: String(op.payload["Change Cycle (Days)"]) };
-          copy.cycleDays = op.payload["Change Cycle (Days)"];
-          copy.cells["Change Cycle (Days)"] = op.payload["Change Cycle (Days)"];
+        if (p["Change Cycle (Days)"] !== undefined && Number(p["Change Cycle (Days)"]) !== Number(r.cycleDays)) {
+          diffs["Change Cycle (Days)"] = { oldVal: String(r.cycleDays), newVal: String(p["Change Cycle (Days)"]) };
+          copy.cycleDays = p["Change Cycle (Days)"];
+          copy.cells["Change Cycle (Days)"] = p["Change Cycle (Days)"];
         }
       } else if (op.type === "confirmDone") {
         const todayStr = new Date().toISOString().slice(0, 10);
         diffs["Last Changed Date"] = { oldVal: r.lastChangedDate, newVal: todayStr };
         diffs["Status"] = { oldVal: r.status, newVal: "Normal" };
-        copy.lastChangedDate = todayStr;
-        copy.status = "Normal";
-        copy.statusRank = 3;
-        copy.overdueDays = 0;
-        copy.notified = false;
+        Object.assign(copy, { lastChangedDate: todayStr, status: "Normal", statusRank: 3, overdueDays: 0, notified: false });
       } else if (op.type === "directHide" || op.type === "approveDelete") {
         diffs["Status"] = { oldVal: r.status, newVal: "Archived" };
-        copy.status = "Archived";
-        copy.statusRank = 4;
-        copy.isHidden = true;
+        Object.assign(copy, { status: "Archived", statusRank: 4, isHidden: true });
       } else if (op.type === "requestDelete") {
         diffs["Status"] = { oldVal: r.status, newVal: "Pending Delete" };
         copy.approvalStatus = "PENDING_DELETE";
       } else if (op.type === "restoreRow") {
         diffs["Status"] = { oldVal: "Archived", newVal: "Active" };
-        copy.status = "Normal";
-        copy.statusRank = 3;
-        copy.isHidden = false;
+        Object.assign(copy, { status: "Normal", statusRank: 3, isHidden: false });
       }
       return copy;
     });
@@ -2469,15 +2365,8 @@
     let filtered = combined.filter(r => {
       const rowStatus = r.isHidden ? "Archived" : r.status;
       if (!selectedStatuses.includes(rowStatus)) return false;
-
-      const rowNotif = r.notified ? "TRUE" : "FALSE";
-      if (!selectedNotifs.includes(rowNotif)) return false;
-
-      if (isRed) {
-        const rowUsage = r.machineUsage ? "TRUE" : "FALSE";
-        if (!selectedUsages.includes(rowUsage)) return false;
-      }
-
+      if (!selectedNotifs.includes(r.notified ? "TRUE" : "FALSE")) return false;
+      if (isRed && !selectedUsages.includes(r.machineUsage ? "TRUE" : "FALSE")) return false;
       if (!q) return true;
       return String(r.id).toLowerCase().includes(q)
         || String(r.name).toLowerCase().includes(q)
@@ -2493,9 +2382,7 @@
       visibleNameCounts[key] = (visibleNameCounts[key] || 0) + 1;
       const numId = Number(item.id);
       const sortId = !isNaN(numId) ? numId : Number.MAX_SAFE_INTEGER;
-      if (visibleNameMinId[key] === undefined || sortId < visibleNameMinId[key]) {
-        visibleNameMinId[key] = sortId;
-      }
+      if (visibleNameMinId[key] === undefined || sortId < visibleNameMinId[key]) visibleNameMinId[key] = sortId;
     }
     for (const item of filtered) {
       const key = String(item.name || "").trim().toLowerCase();
@@ -2507,53 +2394,37 @@
     const dir = currentState.sortDir === "asc" ? 1 : -1;
     filtered.sort((a, b) => {
       if (printActiveMode) {
-        const sa = a.isHidden ? "Archived" : a.status;
-        const sb = b.isHidden ? "Archived" : b.status;
-        const pa = PRINT_STATUS_ORDER[sa] ?? 99;
-        const pb = PRINT_STATUS_ORDER[sb] ?? 99;
-        if (pa !== pb) return pa - pb;
-        return Number(a.id || 0) - Number(b.id || 0);
+        const pa = PRINT_STATUS_ORDER[a.isHidden ? "Archived" : a.status] ?? 99;
+        const pb = PRINT_STATUS_ORDER[b.isHidden ? "Archived" : b.status] ?? 99;
+        return pa !== pb ? pa - pb : Number(a.id || 0) - Number(b.id || 0);
       }
-
       if (a._staged && a._staged.type === "create") return -1;
       if (b._staged && b._staged.type === "create") return 1;
 
       if (col === "id" && dir === 1) {
         if (a._visibleGroupMinId !== b._visibleGroupMinId) return a._visibleGroupMinId - b._visibleGroupMinId;
-        const nKeyA = String(a.name || "").trim().toLowerCase();
-        const nKeyB = String(b.name || "").trim().toLowerCase();
-        if (nKeyA !== nKeyB) return nKeyA.localeCompare(nKeyB);
+        const nA = String(a.name || "").trim().toLowerCase();
+        const nB = String(b.name || "").trim().toLowerCase();
+        if (nA !== nB) return nA.localeCompare(nB);
         return Number(a.id || 0) - Number(b.id || 0);
       }
 
-      let va, vb;
-      if (col.startsWith("cell:")) {
-        const hName = col.slice(5);
-        va = (a.cells && a.cells[hName]) ?? "";
-        vb = (b.cells && b.cells[hName]) ?? "";
-      } else {
-        va = a[col];
-        vb = b[col];
-      }
+      let va = col.startsWith("cell:") ? ((a.cells && a.cells[col.slice(5)]) ?? "") : a[col];
+      let vb = col.startsWith("cell:") ? ((b.cells && b.cells[col.slice(5)]) ?? "") : b[col];
 
-      if (col === "id" || col === "cycleDays" || col === "statusRank" || col === "importance") {
-        va = Number(va || 0);
-        vb = Number(vb || 0);
-        if (va !== vb) return (va - vb) * dir;
-        return Number(a.id || 0) - Number(b.id || 0);
+      if (["id", "cycleDays", "statusRank", "importance"].includes(col)) {
+        va = Number(va || 0); vb = Number(vb || 0);
+        return va !== vb ? (va - vb) * dir : Number(a.id || 0) - Number(b.id || 0);
       }
       if (col === "machineUsage" || col === "notified") {
-        va = va ? 1 : 0;
-        vb = vb ? 1 : 0;
-        return (va - vb) * dir;
+        return ((va ? 1 : 0) - (vb ? 1 : 0)) * dir;
       }
       return String(va || "").localeCompare(String(vb || ""), undefined, { numeric: true, sensitivity: "base" }) * dir;
     });
 
     document.getElementById("rowCountLabel").textContent = `Showing ${filtered.length} of ${combined.length} records`;
 
-    const tbody = document.getElementById("recordsTbody");
-    tbody.innerHTML = filtered.map(r => {
+    document.getElementById("recordsTbody").innerHTML = filtered.map(r => {
       const trClasses = [];
       if (r._staged) trClasses.push("dirty-row");
       if (r.isHidden) trClasses.push("hidden-row");
@@ -2568,7 +2439,7 @@
           actions += `<button class="info icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'markNotified' })" title="Mark as Notified">${ICONS.bell}</button>`;
         }
         actions += `<button class="success icon-only" onclick="stageOperation('${esc(r._opKey)}', { id: '${esc(r.id)}', type: 'confirmDone' })" title="Confirm Done (Next Cycle)">${ICONS.check}</button>`;
-        actions += `<button class="icon-only" onclick='openEditModal(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="Edit Record">${ICONS.edit}</button>`;
+        actions += `<button class="icon-only" onclick="openEditById('${esc(r.id)}')" title="Edit Record">${ICONS.edit}</button>`;
 
         if (!r.isHidden) {
           actions += `<button class="danger icon-only" onclick="promptStageAction('${esc(r._opKey)}', '${esc(r.id)}', 'directHide', 'Delete reason:')" title="Delete">${ICONS.trash}</button>`;
@@ -2580,10 +2451,7 @@
         }
       }
 
-      const rowCells = visibleHeaders.map(h => {
-        const cls = isCellDirty(r, h) ? ` class="cell-changed"` : "";
-        return `<td${cls}>${renderCellContent(r, h)}</td>`;
-      });
+      const rowCells = visibleHeaders.map(h => `<td${isCellDirty(r, h) ? ` class="cell-changed"` : ""}>${renderCellContent(r, h)}</td>`);
       rowCells.push(`<td><div class="row-actions">${actions}</div></td>`);
       return `<tr class="${trClasses.join(" ")}">${rowCells.join("")}</tr>`;
     }).join("");
@@ -2595,20 +2463,16 @@
     stageOperation(opKey, { id, type, reason });
   }
 
-  /* ================= Unified Binded Filter Rows (RED) ================= */
+  /* ================= REUSABLE ENGINE 3: UNIFIED RECORD MODAL & BINDED FILTERS ================= */
 
   function onBindFilterChange(rowId) {
-    const inp = document.getElementById(`bindFilterInp_${rowId}`);
-    const cycleInp = document.getElementById(`bindCycleInp_${rowId}`);
-    if (!inp || !cycleInp) return;
-
-    const val = inp.value.trim();
-    const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
-    const mappedCycle = filterCycles[val];
-    if (mappedCycle !== undefined && mappedCycle !== null && Number(mappedCycle) > 0) {
-      cycleInp.value = String(Number(mappedCycle));
-    } else if (!cycleInp.value) {
-      cycleInp.value = String(getPresetDefaultCycle());
+    const val = getDropdownValue(`bindFilterInp_${rowId}`).trim();
+    const cycleId = `bindCycleInp_${rowId}`;
+    const mappedCycle = Number(((currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {})[val]);
+    if (!isNaN(mappedCycle) && mappedCycle > 0) {
+      setDropdownValue(cycleId, String(mappedCycle));
+    } else if (!getDropdownValue(cycleId)) {
+      setDropdownValue(cycleId, String(getPresetDefaultCycle()));
     }
   }
 
@@ -2618,15 +2482,10 @@
     const list = document.getElementById("filterBindList");
     const filterCycles = (currentState.dropdownOptions && currentState.dropdownOptions.filterCycles) || {};
 
-    // Always default to blank ("") for new rows — never auto-fill the first filter option
     const chosenFilter = String(opts.filter || "");
-
-    let chosenCycle = opts.cycle;
-    if (chosenCycle === null || chosenCycle === undefined || chosenCycle === "") {
-      chosenCycle = (chosenFilter && filterCycles[chosenFilter] && Number(filterCycles[chosenFilter]) > 0)
-        ? Number(filterCycles[chosenFilter])
-        : getPresetDefaultCycle();
-    }
+    const chosenCycle = (opts.cycle !== null && opts.cycle !== undefined && opts.cycle !== "")
+      ? opts.cycle
+      : ((chosenFilter && Number(filterCycles[chosenFilter]) > 0) ? Number(filterCycles[chosenFilter]) : getPresetDefaultCycle());
 
     const firstExistingDateInp = list.querySelector('input[type="date"]');
     const defaultDate = opts.date || (firstExistingDateInp && firstExistingDateInp.value) || new Date().toISOString().slice(0, 10);
@@ -2643,24 +2502,6 @@
     card.dataset.isNewExtra = isNewExtra ? "1" : "0";
 
     const canRemove = list.children.length > 0;
-    const filterComboHtml = buildComboBoxHtml({
-      id: `bindFilterInp_${rowId}`,
-      value: chosenFilter,
-      placeholder: "Select or type filter...",
-      type: "text",
-      source: "redFilter",
-      onSelect: "onBindFilterChange",
-      rowId: rowId
-    });
-    const cycleComboHtml = buildComboBoxHtml({
-      id: `bindCycleInp_${rowId}`,
-      value: String(chosenCycle),
-      placeholder: "Days...",
-      type: "number",
-      source: "cycle",
-      rowId: rowId
-    });
-
     card.innerHTML = `
       <div class="filter-bind-top">
         <span></span>
@@ -2669,11 +2510,11 @@
       <div class="bind-grid-2">
         <div class="field" style="margin-bottom:8px;">
           <label>Filter / Service Name *</label>
-          ${filterComboHtml}
+          ${buildDropdownHtml({ id: `bindFilterInp_${rowId}`, value: chosenFilter, placeholder: "Select or type filter...", type: "text", source: "redFilter", editable: true, onChange: "onBindFilterChange", rowId })}
         </div>
         <div class="field" style="margin-bottom:8px;">
           <label>Change Cycle (Days)</label>
-          ${cycleComboHtml}
+          ${buildDropdownHtml({ id: `bindCycleInp_${rowId}`, value: String(chosenCycle), placeholder: "Days...", type: "number", source: "cycle", editable: true, rowId })}
         </div>
       </div>
       <div class="field" style="margin-bottom:0;">
@@ -2693,90 +2534,62 @@
   }
 
   function refreshBindTitles() {
-    const cards = Array.from(document.querySelectorAll("#filterBindList .filter-bind-card"));
-    cards.forEach((c, idx) => {
+    Array.from(document.querySelectorAll("#filterBindList .filter-bind-card")).forEach((c, idx) => {
       const labelEl = c.querySelector(".filter-bind-top span");
-      if (!labelEl) return;
-      if (c.dataset.isNewExtra === "1") labelEl.textContent = `Additional Filter (New Row #${idx + 1})`;
-      else labelEl.textContent = `Filter #${idx + 1}`;
+      if (labelEl) labelEl.textContent = c.dataset.isNewExtra === "1" ? `Additional Filter (New Row #${idx + 1})` : `Filter #${idx + 1}`;
     });
   }
 
   function readBindRows() {
     const todayStr = new Date().toISOString().slice(0, 10);
-    const cards = Array.from(document.querySelectorAll("#filterBindList .filter-bind-card"));
-    return cards.map(c => {
+    return Array.from(document.querySelectorAll("#filterBindList .filter-bind-card")).map(c => {
       const id = c.dataset.bindId;
-      const fInp = document.getElementById(`bindFilterInp_${id}`);
-      const cInp = document.getElementById(`bindCycleInp_${id}`);
+      const cycleRaw = Number(getDropdownValue(`bindCycleInp_${id}`));
       const dateInp = document.getElementById(`bindLastDate_${id}`);
-      const cycleRaw = Number(cInp ? cInp.value : 0);
       return {
         bindId: id,
-        isNewExtra: c.dataset.isNewExtra === "1",
-        filterName: fInp ? fInp.value.trim() : "",
+        filterName: getDropdownValue(`bindFilterInp_${id}`).trim(),
         cycleDays: (!isNaN(cycleRaw) && cycleRaw > 0) ? cycleRaw : getPresetDefaultCycle(),
         lastDate: (dateInp && dateInp.value) || todayStr
       };
     });
   }
 
-  function configureModalForSheet(isRed) {
+  function openEditById(id) {
+    const rec = currentState.records.find(r => String(r.id) === String(id));
+    if (rec) openRecordModal(rec);
+  }
+
+  function openRecordModal(rec = null) {
+    closeComboMenu();
+    const isRed = (currentState.activeSheet === "RED");
+    const isEdit = Boolean(rec);
+    const todayStr = new Date().toISOString().slice(0, 10);
+
     document.getElementById("fRedBindSection").style.display = isRed ? "block" : "none";
     document.getElementById("fUsageGroup").style.display = isRed ? "block" : "none";
     document.getElementById("fGreenPhoneGroup").style.display = isRed ? "none" : "block";
     document.getElementById("fGreenDateGroup").style.display = isRed ? "none" : "block";
     document.getElementById("fGreenCycleGroup").style.display = isRed ? "none" : "block";
-  }
 
-  function openCreateModal() {
-    closeComboMenu();
-    const isRed = (currentState.activeSheet === "RED");
-    configureModalForSheet(isRed);
-
-    const todayStr = new Date().toISOString().slice(0, 10);
-    document.getElementById("modalTitle").textContent = isRed ? "Add New — RED (Water Filter)" : "Add New — GREEN (Itsaso Filter)";
+    document.getElementById("modalTitle").textContent = isEdit
+      ? `Edit Record #${rec.id} (${isRed ? "RED" : "GREEN"})`
+      : (isRed ? "Add New — RED (Water Filter)" : "Add New — GREEN (Itsaso Filter)");
     document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
-    document.getElementById("editRecordId").value = "";
-    document.getElementById("fName").value = "";
+    document.getElementById("editRecordId").value = isEdit ? rec.id : "";
+    document.getElementById("fName").value = isEdit ? (rec.name || "") : "";
 
     if (isRed) {
-      document.getElementById("fUsage").value = "TRUE";
+      setDropdownValue("fUsage", isEdit ? (rec.machineUsage ? "TRUE" : "FALSE") : "TRUE");
       document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow({ date: todayStr });
+      addFilterBindRow(isEdit
+        ? { filter: rec.filterOrPhone || "", cycle: rec.cycleDays || getPresetDefaultCycle(), date: rec.lastChangedDate || "", isNewExtra: false }
+        : { date: todayStr }
+      );
     } else {
-      document.getElementById("fGreenPhone").value = "";
-      document.getElementById("fLastDate").value = todayStr;
-      mountGreenCycleCombo(String(getPresetDefaultCycle()));
-    }
-
-    document.getElementById("editModal").classList.add("show");
-    setTimeout(() => document.getElementById("fName").focus(), 50);
-  }
-
-  function openEditModal(rec) {
-    closeComboMenu();
-    const isRed = (currentState.activeSheet === "RED");
-    configureModalForSheet(isRed);
-
-    document.getElementById("modalTitle").textContent = `Edit Record #${rec.id} (${isRed ? "RED" : "GREEN"})`;
-    document.getElementById("modalSubmitBtn").textContent = "Stage (Enter)";
-    document.getElementById("editRecordId").value = rec.id;
-    document.getElementById("fName").value = rec.name || "";
-
-    if (isRed) {
-      document.getElementById("fUsage").value = rec.machineUsage ? "TRUE" : "FALSE";
-      document.getElementById("filterBindList").innerHTML = "";
-      addFilterBindRow({
-        filter: rec.filterOrPhone || "",
-        cycle: rec.cycleDays || getPresetDefaultCycle(),
-        date: rec.lastChangedDate || "",
-        isNewExtra: false
-      });
-    } else {
-      document.getElementById("fGreenPhone").value = (rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "";
-      document.getElementById("fLastDate").value = rec.lastChangedDate || "";
-      mountGreenCycleCombo(String(rec.cycleDays || getPresetDefaultCycle()));
+      document.getElementById("fGreenPhone").value = isEdit ? ((rec.cells && rec.cells["Phone Number"]) || rec.filterOrPhone || "") : "";
+      document.getElementById("fLastDate").value = isEdit ? (rec.lastChangedDate || "") : todayStr;
+      setDropdownValue("fGreenCycleInput", String((isEdit && rec.cycleDays) || getPresetDefaultCycle()));
     }
 
     document.getElementById("editModal").classList.add("show");
@@ -2786,6 +2599,30 @@
   function closeModal() {
     closeComboMenu();
     document.getElementById("editModal").classList.remove("show");
+  }
+
+  function buildRedRowPayload(name, row, usageBool) {
+    return {
+      "Name": name,
+      "Filter / Service Name": row.filterName,
+      "Change Cycle (Days)": row.cycleDays,
+      "Machine usage": usageBool,
+      "Last Changed Date": row.lastDate
+    };
+  }
+
+  function hasRecordChanges(orig, payload, isRed) {
+    if (!orig) return true;
+    if (String(payload["Name"]).trim() !== String(orig.name || "").trim()) return true;
+    if (String(payload["Last Changed Date"]).trim() !== String(orig.lastChangedDate || "").trim()) return true;
+    if (Number(payload["Change Cycle (Days)"]) !== Number(orig.cycleDays)) return true;
+    if (isRed) {
+      if (String(payload["Filter / Service Name"]).trim() !== String(orig.filterOrPhone || "").trim()) return true;
+      if (Boolean(payload["Machine usage"]) !== Boolean(orig.machineUsage)) return true;
+    } else {
+      if (String(payload["Phone Number"]).trim() !== String(orig.filterOrPhone || "").trim()) return true;
+    }
+    return false;
   }
 
   function submitModal() {
@@ -2801,34 +2638,24 @@
     }
 
     if (!isRed) {
-      const lastDate = document.getElementById("fLastDate").value;
-      const phone = document.getElementById("fGreenPhone").value.trim();
-      const cycleInp = document.getElementById("fGreenCycleInput");
-      const cycleVal = Number((cycleInp && cycleInp.value) || getPresetDefaultCycle());
+      const cycleVal = Number(getDropdownValue("fGreenCycleInput") || getPresetDefaultCycle());
       const payload = {
         "Name": name,
-        "Phone Number": phone,
-        "Last Changed Date": lastDate,
+        "Phone Number": document.getElementById("fGreenPhone").value.trim(),
+        "Last Changed Date": document.getElementById("fLastDate").value,
         "Change Cycle (Days)": cycleVal > 0 ? cycleVal : getPresetDefaultCycle()
       };
       closeModal();
 
       if (id) {
         const orig = currentState.records.find(r => String(r.id) === String(id));
-        if (orig) {
-          const sameName = String(payload["Name"]).trim() === String(orig.name || "").trim();
-          const samePhone = String(payload["Phone Number"]).trim() === String(orig.filterOrPhone || "").trim();
-          const sameDate = String(payload["Last Changed Date"]).trim() === String(orig.lastChangedDate || "").trim();
-          const sameCycle = Number(payload["Change Cycle (Days)"]) === Number(orig.cycleDays);
-          if (sameName && samePhone && sameDate && sameCycle) {
-            showIsland("No changes made", "ok", false);
-            return;
-          }
+        if (!hasRecordChanges(orig, payload, false)) {
+          showIsland("No changes made", "ok", false);
+          return;
         }
         stageOperation(`row_${id}`, { id, type: "update", payload });
       } else {
-        const newKey = `new_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        stageOperation(newKey, { id: null, type: "create", payload });
+        stageOperation(`new_${Date.now()}_${Math.floor(Math.random() * 1000)}`, { id: null, type: "create", payload });
       }
       return;
     }
@@ -2842,86 +2669,54 @@
     const emptyRow = bindRows.find(r => !r.filterName);
     if (emptyRow) {
       showIsland("Please select or type a Filter / Service Name", "err", false);
-      const targetInp = document.getElementById(`bindFilterInp_${emptyRow.bindId}`);
+      const targetId = `bindFilterInp_${emptyRow.bindId}`;
+      const targetInp = document.getElementById(targetId);
       if (targetInp) {
         targetInp.focus();
-        openComboMenu(`bindFilterInp_${emptyRow.bindId}`, true);
+        openDropdownMenu(targetId, true);
       }
       return;
     }
 
-    const usageBool = (document.getElementById("fUsage").value === "TRUE");
+    const usageBool = (getDropdownValue("fUsage") === "TRUE");
     closeModal();
 
     if (id) {
-      const firstRow = bindRows[0];
-      const payload = {
-        "Name": name,
-        "Filter / Service Name": firstRow.filterName,
-        "Change Cycle (Days)": firstRow.cycleDays,
-        "Machine usage": usageBool,
-        "Last Changed Date": firstRow.lastDate
-      };
-
       const orig = currentState.records.find(r => String(r.id) === String(id));
-      let hasAnyStaged = false;
+      const firstPayload = buildRedRowPayload(name, bindRows[0], usageBool);
+      let stagedAny = false;
 
-      if (orig) {
-        const sameName = String(payload["Name"]).trim() === String(orig.name || "").trim();
-        const sameFilter = String(payload["Filter / Service Name"]).trim() === String(orig.filterOrPhone || "").trim();
-        const sameCycle = Number(payload["Change Cycle (Days)"]) === Number(orig.cycleDays);
-        const sameUsage = Boolean(payload["Machine usage"]) === Boolean(orig.machineUsage);
-        const sameDate = String(payload["Last Changed Date"]).trim() === String(orig.lastChangedDate || "").trim();
-        if (!(sameName && sameFilter && sameCycle && sameUsage && sameDate)) {
-          stageOperation(`row_${id}`, { id, type: "update", payload });
-          hasAnyStaged = true;
-        }
-      } else {
-        stageOperation(`row_${id}`, { id, type: "update", payload });
-        hasAnyStaged = true;
+      if (hasRecordChanges(orig, firstPayload, true)) {
+        stageOperation(`row_${id}`, { id, type: "update", payload: firstPayload });
+        stagedAny = true;
       }
 
       for (let i = 1; i < bindRows.length; i++) {
-        const extra = bindRows[i];
-        const newKey = `new_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`;
-        stageOperation(newKey, {
+        stageOperation(`new_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`, {
           id: null,
           type: "create",
-          payload: {
-            "Name": name,
-            "Filter / Service Name": extra.filterName,
-            "Change Cycle (Days)": extra.cycleDays,
-            "Machine usage": usageBool,
-            "Last Changed Date": extra.lastDate
-          }
+          payload: buildRedRowPayload(name, bindRows[i], usageBool)
         });
-        hasAnyStaged = true;
+        stagedAny = true;
       }
 
-      if (!hasAnyStaged) {
-        showIsland("No changes made", "ok", false);
-      }
+      if (!stagedAny) showIsland("No changes made", "ok", false);
     } else {
-      bindRows.forEach((bItem, idx) => {
-        const newKey = `new_${Date.now()}_${idx}_${Math.floor(Math.random() * 1000)}`;
-        stageOperation(newKey, {
+      bindRows.forEach((row, idx) => {
+        stageOperation(`new_${Date.now()}_${idx}_${Math.floor(Math.random() * 1000)}`, {
           id: null,
           type: "create",
-          payload: {
-            "Name": name,
-            "Filter / Service Name": bItem.filterName,
-            "Change Cycle (Days)": bItem.cycleDays,
-            "Machine usage": usageBool,
-            "Last Changed Date": bItem.lastDate
-          }
+          payload: buildRedRowPayload(name, row, usageBool)
         });
       });
     }
   }
 
+  /* ================= AUDIT LOG PAGE ================= */
+
   function renderAuditPage() {
     const q = (document.getElementById("auditSearchInput").value || "").trim().toLowerCase();
-    const act = document.getElementById("auditActionFilter").value;
+    const act = getDropdownValue("auditActionFilter") || "ALL";
     const logs = (currentState.auditLogs || []).filter(l => {
       if (act !== "ALL" && l.action !== act) return false;
       if (!q) return true;
